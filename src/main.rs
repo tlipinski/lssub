@@ -1,25 +1,22 @@
-use anyhow::{Error, Result};
-use log::info;
+use anyhow::Result;
+use log::{error, info};
 use secrecy::SecretBox;
+use serde::Deserialize;
+use std::env;
 use std::fs::OpenOptions;
 use std::io::Read;
 use std::path::PathBuf;
-use std::{env, io};
-use secrecy::zeroize::DefaultIsZeroes;
-use toml::Value;
-use serde::{Deserialize, Serialize};
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     match get_config() {
         Ok(conf) => {
-            println!(
-                "{:?}",
-                conf
-            );
+            info!("{:?}", conf.api.key);
         }
         Err(e) => {
-            eprintln!("{:?}", e);
+            error!("{:?}", e);
         }
     };
 }
@@ -31,7 +28,7 @@ pub struct Config {
 
 #[derive(Debug, Deserialize)]
 struct Api {
-    key: SecretBox<String>
+    key: SecretBox<String>,
 }
 
 fn get_config() -> Result<Config> {
@@ -41,9 +38,7 @@ fn get_config() -> Result<Config> {
     let mut opened = OpenOptions::new().read(true).open(config_path)?;
     let mut contents = String::new();
     opened.read_to_string(&mut contents)?;
-
     let c: Config = toml::from_str(&contents)?;
-
-    println!("{:?}", c);
+    info!("Config loaded {:?}", c);
     Ok(c)
 }
