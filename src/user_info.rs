@@ -1,6 +1,6 @@
 use crate::config::Config;
 use anyhow::Result;
-use log::{debug, info, log};
+use log::debug;
 use secrecy::ExposeSecret;
 
 pub async fn get_user_info(config: &Config) -> Result<()> {
@@ -15,6 +15,14 @@ pub async fn get_user_info(config: &Config) -> Result<()> {
         .header("User-Agent", "subster v0.1.0") // Replace with actual header and value
         .send()
         .await?;
-    debug!("{:?}", resp);
+
+    let body = pretty(&resp.text().await?)?;
+    debug!("Body {}", body);
+
     Ok(())
+}
+
+fn pretty(s: &str) -> Result<String> {
+    let json = serde_json::from_str::<serde_json::Value>(s)?;
+    Ok(serde_json::to_string_pretty(&json)?)
 }
