@@ -1,10 +1,11 @@
 use crate::config::Config;
+use crate::login::ApiToken;
 use crate::USER_AGENT;
 use anyhow::Result;
-use log::debug;
+use log::{debug, error};
+use reqwest::Error;
 use secrecy::ExposeSecret;
 use serde::Deserialize;
-use crate::login::ApiToken;
 
 pub async fn get_user_info(config: &Config, token: &ApiToken) -> Result<()> {
     let url = format!("{}/infos/user", config.api.url);
@@ -19,20 +20,30 @@ pub async fn get_user_info(config: &Config, token: &ApiToken) -> Result<()> {
         .send()
         .await?;
 
-    let user_info_response: UserInfoResponse = resp.json().await?;
-    debug!("Body {:?}", user_info_response);
+    let text_body = resp.text().await?;
+
+    let json: Result<UserInfoResponse, _> = serde_json::from_str(&text_body);
+
+    match json {
+        Ok(user_info_response) => {
+            debug!("{:?}", user_info_response);
+        }
+        Err(e) => {
+            error!("Failed decoding body {:?} {}", e, text_body);
+        }
+    }
 
     Ok(())
 }
 
 #[derive(Deserialize, Debug)]
 struct UserInfoResponse {
-    // data: UserData
+    data: UserData,
 }
 
 #[derive(Deserialize, Debug)]
 struct UserData {
-    // username: String,
-    // allowed_downloads: i32,
-    // remaining_downloads: i32,
+    username: String,
+    allowed_downloads: i32,
+    remaining_downloads: i32,
 }

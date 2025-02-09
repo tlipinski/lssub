@@ -11,23 +11,21 @@ pub async fn store(api_token: &ApiToken, username: &str) -> Result<()> {
     let token = api_token.0.expose_secret().clone();
     let un = username.to_string();
     task::spawn_blocking(move || {
-        let mut attributes = HashMap::new();
-        attributes.insert("username", SchemaAttributeType::String);
-
-        let collection = libsecret::COLLECTION_DEFAULT;
-        let schema = Schema::new("com.subster", SchemaFlags::NONE, attributes);
+        let schema = create_schema();
 
         let mut attributes = HashMap::new();
         attributes.insert("username", un.as_str());
 
-        let _ = libsecret::password_store_sync(
+        if let Err(e) = libsecret::password_store_sync(
             Some(&schema),
             attributes,
-            Some(&collection),
+            Some(&libsecret::COLLECTION_DEFAULT),
             "Subster",
             token.as_str(),
             None::<&gio::Cancellable>,
-        );
+        ) {
+            error!("Storing API token failed: {e}")
+        };
     })
     .await?;
 
@@ -38,11 +36,7 @@ pub async fn store(api_token: &ApiToken, username: &str) -> Result<()> {
 
 pub async fn retrieve() -> Result<Option<ApiToken>> {
     task::spawn_blocking(move || {
-        let mut attributes = HashMap::new();
-        attributes.insert("username", SchemaAttributeType::String);
-
-        let schema = Schema::new("com.subster", SchemaFlags::NONE, attributes);
-
+        let schema = create_schema();
         match libsecret::password_lookup_sync(
             Some(&schema),
             HashMap::new(),
@@ -59,4 +53,11 @@ pub async fn retrieve() -> Result<Option<ApiToken>> {
         }
     })
     .await?
+}
+
+fn create_schema() -> Schema {
+    let mut attributes = HashMap::new();
+    attributes.insert("username", SchemaAttributeType::String);
+
+    Schema::new("com.subster", SchemaFlags::NONE, attributes)
 }
