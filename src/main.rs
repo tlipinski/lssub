@@ -9,7 +9,7 @@ use crate::user_info::get_user_info;
 use anyhow::Result;
 use log::{error, info};
 use secrecy::{ExposeSecret, SecretBox};
-use crate::secret::store;
+use crate::secret::{retrieve, store};
 
 const USER_AGENT: &str = "subster v0.1.0";
 
@@ -28,16 +28,26 @@ async fn main() {
 async fn run() -> Result<()> {
     let config = get_config()?;
 
-    let username = std::env::var("USER")?;
-    let password = std::env::var("PASS")?;
+    let token = if let Some(token) = retrieve().await? {
+        token
+    } else {
+        let username = std::env::var("USER")?;
+        let password = std::env::var("PASS")?;
 
-    let credentials = Credentials { username, password };
+        let credentials = Credentials { username: username.clone(), password };
 
-    let api_token = login(&config, &credentials).await?;
+        let api_token = login(&config, &credentials).await?;
 
-    let _ = store(&api_token).await?;
+        let _ = store(&api_token, &username).await?;
 
-    let _ = get_user_info(&config, &api_token).await?;
+        api_token
+    };
+
+
+    println!("{:?}", token);
+
+
+    // let _ = get_user_info(&config, &api_token).await?;
 
     Ok(())
 }
