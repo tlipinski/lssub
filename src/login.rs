@@ -2,6 +2,7 @@ use crate::config::Config;
 use anyhow::Result;
 use log::debug;
 use secrecy::ExposeSecret;
+use serde::Deserialize;
 
 pub async fn login(config: &Config, username: &str, password: &str) -> Result<String> {
     let url = format!("{}/login", config.api.url);
@@ -11,14 +12,26 @@ pub async fn login(config: &Config, username: &str, password: &str) -> Result<St
         .header("Api-Key", config.api.key.expose_secret().as_str())
         .header("User-Agent", "subster v0.1.0") // Replace with actual header and value
         .json(&serde_json::json!({
-                "username": username,
-                "password": password
-            }));
+            "username": username,
+            "password": password
+        }));
     debug!("Request {:?}", req);
-
     let response = req.send().await?;
-    let body = crate::user_info::pretty(&response.text().await?)?;
-    debug!("Body {}", body);
 
-    Ok("token".to_owned())
+    let login_response: LoginResponse = response.json().await?;
+
+    debug!("{:?}", login_response);
+
+    Ok(login_response.token.to_owned())
+}
+
+#[derive(Deserialize, Debug)]
+struct LoginResponse {
+    token: String,
+    user: User,
+}
+
+#[derive(Deserialize, Debug)]
+struct User {
+    allowed_downloads: i32,
 }
