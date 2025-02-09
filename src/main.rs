@@ -3,7 +3,7 @@ mod login;
 mod user_info;
 
 use crate::config::get_config;
-use crate::login::login;
+use crate::login::{login, Credentials};
 use crate::user_info::get_user_info;
 use anyhow::Result;
 use log::{error, info};
@@ -23,14 +23,16 @@ async fn main() {
 async fn run() -> Result<()> {
     let config = get_config()?;
 
-    let user = std::env::var("USER")?;
-    let pass = std::env::var("PASS")?;
+    let username = std::env::var("USER")?;
+    let password = std::env::var("PASS")?;
 
-    println!("{}", user);
-    println!("{}", pass);
+    println!("{}", username);
+    println!("{}", password);
 
+    let credentials = Credentials { username, password };
 
-    let t = login(&config, &user, &pass).await?;
+    let t = login(&config, &credentials).await?;
+
     let r = get_user_info(&config).await?;
 
     Ok(())

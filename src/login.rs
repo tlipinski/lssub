@@ -4,7 +4,7 @@ use log::debug;
 use secrecy::ExposeSecret;
 use serde::Deserialize;
 
-pub async fn login(config: &Config, username: &str, password: &str) -> Result<String> {
+pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToken> {
     let url = format!("{}/login", config.api.url);
 
     let req = reqwest::Client::new()
@@ -12,8 +12,8 @@ pub async fn login(config: &Config, username: &str, password: &str) -> Result<St
         .header("Api-Key", config.api.key.expose_secret().as_str())
         .header("User-Agent", "subster v0.1.0") // Replace with actual header and value
         .json(&serde_json::json!({
-            "username": username,
-            "password": password
+            "username": credentials.username,
+            "password": credentials.password
         }));
     debug!("Request {:?}", req);
     let response = req.send().await?;
@@ -22,8 +22,14 @@ pub async fn login(config: &Config, username: &str, password: &str) -> Result<St
 
     debug!("{:?}", login_response);
 
-    Ok(login_response.token.to_owned())
+    Ok(ApiToken(login_response.token.to_owned()))
 }
+pub struct Credentials {
+    pub username: String,
+    pub password: String
+}
+
+pub struct ApiToken(String);
 
 #[derive(Deserialize, Debug)]
 struct LoginResponse {
