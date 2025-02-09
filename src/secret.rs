@@ -1,5 +1,5 @@
 use crate::login::ApiToken;
-use anyhow::{Error, Result};
+use anyhow::Result;
 use libsecret::{Schema, SchemaAttributeType, SchemaFlags};
 use log::{debug, error};
 use secrecy::{ExposeSecret, SecretBox};

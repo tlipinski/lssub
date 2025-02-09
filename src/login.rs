@@ -53,5 +53,5 @@ struct LoginResponse {
 
 #[derive(Deserialize, Debug)]
 struct User {
-    // allowed_downloads: i32,
+    allowed_downloads: i32,
 }

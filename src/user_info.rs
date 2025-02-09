@@ -3,7 +3,6 @@ use crate::login::ApiToken;
 use crate::USER_AGENT;
 use anyhow::Result;
 use log::{debug, error};
-use reqwest::Error;
 use secrecy::ExposeSecret;
 use serde::Deserialize;
 
