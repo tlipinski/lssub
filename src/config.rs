@@ -3,8 +3,6 @@ use log::info;
 use secrecy::SecretBox;
 use serde::Deserialize;
 use std::{env, fs};
-use std::fs::OpenOptions;
-use std::io::Read;
 use std::path::PathBuf;
 
 #[derive(Debug, Deserialize)]

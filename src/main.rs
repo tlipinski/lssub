@@ -8,6 +8,8 @@ use crate::user_info::get_user_info;
 use anyhow::Result;
 use log::{error, info};
 
+const USER_AGENT: &str = "subster v0.1.0";
+
 #[tokio::main]
 async fn main() {
     env_logger::init();
@@ -26,14 +28,11 @@ async fn run() -> Result<()> {
     let username = std::env::var("USER")?;
     let password = std::env::var("PASS")?;
 
-    println!("{}", username);
-    println!("{}", password);
-
     let credentials = Credentials { username, password };
 
-    let t = login(&config, &credentials).await?;
+    let _ = login(&config, &credentials).await?;
 
-    let r = get_user_info(&config).await?;
+    let _ = get_user_info(&config).await?;
 
     Ok(())
 }
