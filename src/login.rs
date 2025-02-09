@@ -22,7 +22,7 @@ pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToke
         .header("Api-Key", config.api.key.expose_secret().as_str())
         .header("User-Agent", USER_AGENT) // Replace with actual header and value
         .json(&login);
-    debug!("Request {:?}", req);
+
     let response = req.send().await?;
 
     let login_response: LoginResponse = response.json().await?;
@@ -36,7 +36,7 @@ pub struct Credentials {
     pub password: String,
 }
 
-pub struct ApiToken(SecretBox<String>);
+pub struct ApiToken(pub SecretBox<String>);
 
 #[derive(Serialize, Debug)]
 struct LoginRequest<'a> {
