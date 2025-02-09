@@ -4,11 +4,10 @@ mod user_info;
 mod secret;
 
 use crate::config::get_config;
-use crate::login::{login, ApiToken, Credentials};
+use crate::login::{login, Credentials};
 use crate::user_info::get_user_info;
 use anyhow::Result;
-use log::{error, info};
-use secrecy::{ExposeSecret, SecretBox};
+use log::error;
 use crate::secret::{retrieve, store};
 
 const USER_AGENT: &str = "subster v0.1.0";

@@ -27,12 +27,12 @@ pub async fn get_user_info(config: &Config, token: &ApiToken) -> Result<()> {
 
 #[derive(Deserialize, Debug)]
 struct UserInfoResponse {
-    data: UserData
+    // data: UserData
 }
 
 #[derive(Deserialize, Debug)]
 struct UserData {
-    username: String,
-    allowed_downloads: i32,
-    remaining_downloads: i32,
+    // username: String,
+    // allowed_downloads: i32,
+    // remaining_downloads: i32,
 }
