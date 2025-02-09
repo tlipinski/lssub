@@ -2,7 +2,7 @@ use anyhow::Result;
 use log::info;
 use secrecy::SecretBox;
 use serde::Deserialize;
-use std::env;
+use std::{env, fs};
 use std::fs::OpenOptions;
 use std::io::Read;
 use std::path::PathBuf;
@@ -23,10 +23,8 @@ pub fn get_config() -> Result<Config> {
     info!("Loading config");
     let home = env::var("HOME")?;
     let config_path = PathBuf::from(home).join(".config/subster/config.toml");
-    let mut opened = OpenOptions::new().read(true).open(config_path)?;
-    let mut contents = String::new();
-    opened.read_to_string(&mut contents)?;
-    let c: Config = toml::from_str(&contents)?;
-    info!("Config loaded {:?}", c);
-    Ok(c)
+    let contents = fs::read_to_string(config_path)?;
+    let config: Config = toml::from_str(&contents)?;
+    info!("Config loaded {:?}", config);
+    Ok(config)
 }

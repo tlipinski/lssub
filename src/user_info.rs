@@ -22,7 +22,7 @@ pub async fn get_user_info(config: &Config) -> Result<()> {
     Ok(())
 }
 
-fn pretty(s: &str) -> Result<String> {
+pub fn pretty(s: &str) -> Result<String> {
     let json = serde_json::from_str::<serde_json::Value>(s)?;
     Ok(serde_json::to_string_pretty(&json)?)
 }
