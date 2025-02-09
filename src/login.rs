@@ -29,14 +29,17 @@ pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToke
 
     debug!("{:?}", login_response);
 
-    Ok(ApiToken(login_response.token))
+    Ok(ApiToken{username: credentials.username.clone(), token: login_response.token})
 }
 pub struct Credentials {
     pub username: String,
     pub password: String,
 }
 
-pub struct ApiToken(pub SecretBox<String>);
+pub struct ApiToken {
+    pub username: String,
+    pub token: SecretBox<String>,
+}
 
 #[derive(Serialize, Debug)]
 struct LoginRequest<'a> {

@@ -1,6 +1,7 @@
 mod config;
 mod login;
 mod user_info;
+mod secret;
 
 use crate::config::get_config;
 use crate::login::{login, ApiToken, Credentials};
@@ -8,6 +9,7 @@ use crate::user_info::get_user_info;
 use anyhow::Result;
 use log::{error, info};
 use secrecy::{ExposeSecret, SecretBox};
+use crate::secret::store;
 
 const USER_AGENT: &str = "subster v0.1.0";
 
@@ -32,6 +34,8 @@ async fn run() -> Result<()> {
     let credentials = Credentials { username, password };
 
     let api_token = login(&config, &credentials).await?;
+
+    let _ = store(&api_token).await?;
 
     let _ = get_user_info(&config, &api_token).await?;
 

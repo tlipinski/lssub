@@ -12,7 +12,7 @@ pub async fn get_user_info(config: &Config, token: &ApiToken) -> Result<()> {
         .get(url)
         .header(
             "Authorization",
-            format!("Bearer {}", token.0.expose_secret()),
+            format!("Bearer {}", token.token.expose_secret()),
         )
         .header("Api-Key", config.api.key.expose_secret().as_str())
         .header("User-Agent", USER_AGENT) // Replace with actual header and value
