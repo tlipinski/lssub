@@ -24,14 +24,14 @@ async fn main() {
     };
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Config {
     api: Api,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct Api {
-    key: String
+    key: SecretBox<String>
 }
 
 fn get_config() -> Result<Config> {

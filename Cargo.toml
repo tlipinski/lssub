@@ -8,6 +8,5 @@ toml = "0.8.20"
 anyhow = "1.0.95"
 tokio = { version = "1.43.0", features = ["rt", "rt-multi-thread", "macros"] }
 log = "0.4.25"
-secrecy = { version = "0.10.3", features = ["serde"] }
 serde = { version = "1.0.217", features = ["derive"] }
-serde_toml = "0.0.1"
+secrecy = { version = "0.10.3", features = ["serde"] }
