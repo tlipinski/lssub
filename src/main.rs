@@ -28,7 +28,7 @@ async fn main() {
 async fn run() -> Result<()> {
     let config = get_config()?;
 
-    let token = if let Some(token) = retrieve().await? {
+    let api_token = if let Some(token) = retrieve().await? {
         token
     } else {
         let username = std::env::var("USER")?;
@@ -43,11 +43,7 @@ async fn run() -> Result<()> {
         api_token
     };
 
-
-    println!("{:?}", token);
-
-
-    // let _ = get_user_info(&config, &api_token).await?;
+    let _ = get_user_info(&config, &api_token).await?;
 
     Ok(())
 }
