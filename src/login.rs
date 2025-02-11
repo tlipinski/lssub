@@ -1,11 +1,12 @@
 use crate::config::Config;
 use crate::USER_AGENT;
-use anyhow::Result;
-use log::debug;
+use anyhow::{Error, Result};
+use log::{debug, error, info};
 use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
 
 pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToken> {
+    info!("Login");
     let url = format!("{}/login", config.api.url);
 
     // let mut body = HashMap::new();
@@ -25,11 +26,21 @@ pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToke
 
     let response = req.send().await?;
 
-    let login_response: LoginResponse = response.json().await?;
+    let text_body = response.text().await?;
 
-    debug!("{:?}", login_response);
+    let json: Result<LoginResponse, _> = serde_json::from_str(&text_body);
 
-    Ok(ApiToken(login_response.token))
+    match json {
+        Ok(login_response) => {
+            debug!("{:?}", login_response);
+            Ok(ApiToken(login_response.token))
+        }
+        Err(e) => {
+            error!("Failed decoding body {:?} {}", e, text_body);
+            Err(Error::from(e))
+        }
+    }
+
 }
 pub struct Credentials {
     pub username: String,
