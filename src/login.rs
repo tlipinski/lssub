@@ -1,7 +1,8 @@
 use crate::config::Config;
 use crate::USER_AGENT;
 use anyhow::{Error, Result};
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
+use reqwest::StatusCode;
 use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
 
@@ -26,21 +27,38 @@ pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToke
 
     let response = req.send().await?;
 
+    let status = response.status();
+
     let text_body = response.text().await?;
 
-    let json: Result<LoginResponse, _> = serde_json::from_str(&text_body);
-
-    match json {
-        Ok(login_response) => {
-            debug!("{:?}", login_response);
-            Ok(ApiToken(login_response.token))
+    match status {
+        s if s.is_success() => {
+            let json: Result<LoginResponse, _> = serde_json::from_str(&text_body);
+            match json {
+                Ok(login_response) => {
+                    debug!("{:?}", login_response);
+                    Ok(ApiToken(login_response.token))
+                }
+                Err(e) => {
+                    error!("Failed decoding body {:?} {}", e, text_body);
+                    Err(Error::from(e))
+                }
+            }
         }
-        Err(e) => {
-            error!("Failed decoding body {:?} {}", e, text_body);
-            Err(Error::from(e))
+        s if s.is_client_error() => {
+            let error_response: ErrorResponse = serde_json::from_str(&text_body)?;
+            info!("Client error {:?}", error_response);
+            if error_response.message.contains("invalid username/password") {
+                Err(Error::msg("Invalid username or password"))
+            } else {
+                Err(Error::msg("Unknown error"))
+            }
+        }
+        s => {
+            error!("Server error [{}]: {}", s.as_u16(), text_body);
+            Err(Error::msg("Server error"))
         }
     }
-
 }
 pub struct Credentials {
     pub username: String,
@@ -65,4 +83,10 @@ struct LoginResponse {
 #[derive(Deserialize, Debug)]
 struct User {
     allowed_downloads: i32,
+}
+
+#[derive(Deserialize, Debug)]
+struct ErrorResponse {
+    message: String,
+    status: u32,
 }
