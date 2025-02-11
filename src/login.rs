@@ -1,9 +1,8 @@
 use crate::config::Config;
 use crate::USER_AGENT;
-use anyhow::{Context, Error, Result};
-use log::{debug, error, info, warn};
-use reqwest::StatusCode;
-use secrecy::{ExposeSecret, SecretBox};
+use anyhow::{Error, Result};
+use log::{debug, error, info};
+use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
 
 pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToken> {
