@@ -1,13 +1,13 @@
 use crate::config::Config;
 use crate::USER_AGENT;
-use anyhow::{Error, Result};
+use anyhow::{Context, Error, Result};
 use log::{debug, error, info, warn};
 use reqwest::StatusCode;
 use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
 
 pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToken> {
-    info!("Login");
+    info!("Loggin in");
     let url = format!("{}/login", config.api.url);
 
     // let mut body = HashMap::new();
@@ -21,7 +21,7 @@ pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToke
 
     let req = reqwest::Client::new()
         .post(url)
-        .header("Api-Key", config.api.key.expose_secret().as_str())
+        // .header("Api-Key", config.api.key.expose_secret().as_str())
         .header("User-Agent", USER_AGENT) // Replace with actual header and value
         .json(&login);
 
@@ -32,7 +32,7 @@ pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToke
     let text_body = response.text().await?;
 
     match status {
-        s if s.is_success() => {
+        s if s.is_success() || s.is_redirection() => {
             let json: Result<LoginResponse, _> = serde_json::from_str(&text_body);
             match json {
                 Ok(login_response) => {
@@ -88,5 +88,5 @@ struct User {
 #[derive(Deserialize, Debug)]
 struct ErrorResponse {
     message: String,
-    status: u32,
+    status: Option<u32>,
 }
