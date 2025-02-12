@@ -7,12 +7,10 @@ use std::path::PathBuf;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    pub api: Api,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Api {
-    // pub key: SecretBox<String>
 }
 
 pub fn get_config() -> Result<Config> {

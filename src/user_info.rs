@@ -15,7 +15,7 @@ pub async fn get_user_info(config: &Config, token: &ApiToken) -> Result<()> {
             "Authorization",
             format!("Bearer {}", token.0.expose_secret()),
         )
-        .header("Api-Key", KEY)
+        .header("Api-Key", KEY.clone())
         .header("User-Agent", USER_AGENT) // Replace with actual header and value
         .send()
         .await?;

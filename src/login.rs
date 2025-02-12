@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::values::USER_AGENT;
+use crate::values::{KEY, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use secrecy::SecretBox;
@@ -21,8 +21,8 @@ pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToke
 
     let req = reqwest::Client::new()
         .post(url)
-        // .header("Api-Key", config.api.key.expose_secret().as_str())
-        .header("User-Agent", USER_AGENT) // Replace with actual header and value
+        .header("Api-Key", KEY.clone())
+        .header("User-Agent", USER_AGENT)
         .json(&login);
 
     let response = req.send().await?;
@@ -33,6 +33,7 @@ pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToke
 
     match status {
         s if s.is_success() || s.is_redirection() => {
+            debug!("Response {}", text_body);
             let json: Result<LoginResponse, _> = serde_json::from_str(&text_body);
             match json {
                 Ok(login_response) => {

@@ -14,6 +14,9 @@ use anyhow::Result;
 use clap::Parser;
 use log::{error, info};
 use std::io::{stdin, stdout, Write};
+use hex_literal::hex;
+use secrecy::ExposeSecret;
+use crate::values::{xor, API_URL, KEY, USER_AGENT};
 
 #[tokio::main]
 async fn main() {
@@ -87,6 +90,8 @@ async fn run(args: Args) -> Result<()> {
 
         api_token
     };
+
+    println!("{}", api_token.0.expose_secret());
 
     let _ = get_user_info(&config, &api_token).await?;
 
