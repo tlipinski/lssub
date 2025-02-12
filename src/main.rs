@@ -3,6 +3,7 @@ mod config;
 mod login;
 mod secret;
 mod user_info;
+mod values;
 
 use crate::cli::Command;
 use crate::config::get_config;
@@ -13,8 +14,6 @@ use anyhow::Result;
 use clap::Parser;
 use log::{error, info};
 use std::io::{stdin, stdout, Write};
-
-const USER_AGENT: &str = "subster v0.1.0";
 
 #[tokio::main]
 async fn main() {
@@ -27,7 +26,7 @@ async fn main() {
     match run(args).await {
         Ok(_) => {}
         Err(e) => {
-            error!("Error: {e}")
+            error!("{e}")
         }
     };
 }

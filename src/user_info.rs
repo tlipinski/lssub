@@ -1,20 +1,21 @@
 use crate::config::Config;
 use crate::login::ApiToken;
-use crate::USER_AGENT;
+use crate::values::{KEY, USER_AGENT};
 use anyhow::Result;
 use log::{debug, error};
 use secrecy::ExposeSecret;
 use serde::Deserialize;
+use crate::values::API_URL;
 
 pub async fn get_user_info(config: &Config, token: &ApiToken) -> Result<()> {
-    let url = format!("{}/infos/user", config.api.url);
+    let url = format!("{}/infos/user", API_URL);
     let resp = reqwest::Client::new()
         .get(url)
         .header(
             "Authorization",
             format!("Bearer {}", token.0.expose_secret()),
         )
-        .header("Api-Key", config.api.key.expose_secret().as_str())
+        .header("Api-Key", KEY)
         .header("User-Agent", USER_AGENT) // Replace with actual header and value
         .send()
         .await?;

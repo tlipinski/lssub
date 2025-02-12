@@ -12,8 +12,7 @@ pub struct Config {
 
 #[derive(Debug, Deserialize)]
 pub struct Api {
-    pub url: String,
-    pub key: SecretBox<String>
+    // pub key: SecretBox<String>
 }
 
 pub fn get_config() -> Result<Config> {

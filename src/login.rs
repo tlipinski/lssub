@@ -1,13 +1,14 @@
 use crate::config::Config;
-use crate::USER_AGENT;
+use crate::values::USER_AGENT;
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
+use crate::values::API_URL;
 
 pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToken> {
     info!("Loggin in");
-    let url = format!("{}/login", config.api.url);
+    let url = format!("{}/login", API_URL);
 
     // let mut body = HashMap::new();
     // body.insert("username", &credentials.username);
@@ -50,7 +51,7 @@ pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToke
             if error_response.message.contains("invalid username/password") {
                 Err(Error::msg("Invalid username or password"))
             } else {
-                Err(Error::msg("Unknown error"))
+                Err(Error::msg("Error calling OSB"))
             }
         }
         s => {
