@@ -4,5 +4,6 @@ use clap::Subcommand;
 pub enum Command {
     Login,
     Logout,
-    UserInfo
+    UserInfo,
+    Search { title: String },
 }
