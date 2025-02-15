@@ -2,5 +2,6 @@ use clap::Subcommand;
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    Login
+    Login,
+    UserInfo
 }
