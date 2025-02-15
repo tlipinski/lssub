@@ -55,6 +55,24 @@ pub async fn retrieve() -> Result<Option<ApiToken>> {
     .await?
 }
 
+pub async fn clear() -> Result<()> {
+    task::spawn_blocking(move || {
+        let schema = create_schema();
+        match libsecret::password_clear_sync(
+            Some(&schema),
+            HashMap::new(),
+            None::<&gio::Cancellable>,
+        ) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                error!("{}", e);
+                Err(anyhow::Error::new(e))
+            }
+        }
+    })
+    .await?
+}
+
 fn create_schema() -> Schema {
     let mut attributes = HashMap::new();
     attributes.insert("username", SchemaAttributeType::String);
