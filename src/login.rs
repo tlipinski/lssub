@@ -1,4 +1,3 @@
-use crate::config::Config;
 use crate::values::{KEY, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info};

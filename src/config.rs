@@ -1,6 +1,5 @@
 use anyhow::Result;
 use log::info;
-use secrecy::SecretBox;
 use serde::Deserialize;
 use std::{env, fs};
 use std::path::PathBuf;

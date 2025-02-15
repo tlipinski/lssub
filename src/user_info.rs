@@ -7,7 +7,7 @@ use secrecy::ExposeSecret;
 use serde::Deserialize;
 use crate::values::API_URL;
 
-pub async fn get_user_info(config: &Config, token: &ApiToken) -> Result<()> {
+pub async fn get_user_info(token: &ApiToken) -> Result<()> {
     let url = format!("{}/infos/user", API_URL);
     let resp = reqwest::Client::new()
         .get(url)
