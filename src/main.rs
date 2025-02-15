@@ -4,6 +4,7 @@ mod login;
 mod secret;
 mod user_info;
 mod values;
+mod login_cmd;
 
 use crate::cli::Command;
 use crate::config::get_config;
@@ -16,6 +17,7 @@ use log::{error, info};
 use std::io::{stdin, stdout, Write};
 use hex_literal::hex;
 use secrecy::ExposeSecret;
+use crate::login_cmd::handle_login_cmd;
 use crate::values::{xor, API_URL, KEY, USER_AGENT};
 
 #[tokio::main]
@@ -46,30 +48,7 @@ async fn run(args: Args) -> Result<()> {
 
     match args.command {
         Command::Login => {
-            let mut username = String::new();
-            let mut password = String::new();
-
-            print!("Username: ");
-            stdout().flush()?;
-            stdin().read_line(&mut username)?;
-
-            print!("Password: ");
-            stdout().flush()?;
-            stdin().read_line(&mut password)?;
-
-            username = username.trim().to_string();
-            password = password.trim().to_string();
-
-            let credentials = Credentials {
-                username: username.clone(),
-                password: password,
-            };
-
-            let api_token = login(&credentials).await?;
-
-            let _ = store(&api_token, &username).await?;
-
-            println!("Logged in successfully")
+            handle_login_cmd().await?;
         }
     }
 
@@ -90,8 +69,6 @@ async fn run(args: Args) -> Result<()> {
 
         api_token
     };
-
-    println!("{}", api_token.0.expose_secret());
 
     let _ = get_user_info(&config, &api_token).await?;
 
