@@ -6,7 +6,7 @@ use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
 use crate::values::API_URL;
 
-pub async fn login(config: &Config, credentials: &Credentials) -> Result<ApiToken> {
+pub async fn login(credentials: &Credentials) -> Result<ApiToken> {
     info!("Loggin in");
     let url = format!("{}/login", API_URL);
 

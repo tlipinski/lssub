@@ -65,7 +65,7 @@ async fn run(args: Args) -> Result<()> {
                 password: password,
             };
 
-            let api_token = login(&config, &credentials).await?;
+            let api_token = login(&credentials).await?;
 
             let _ = store(&api_token, &username).await?;
 
@@ -84,7 +84,7 @@ async fn run(args: Args) -> Result<()> {
             password,
         };
 
-        let api_token = login(&config, &credentials).await?;
+        let api_token = login(&credentials).await?;
 
         let _ = store(&api_token, &username).await?;
 
