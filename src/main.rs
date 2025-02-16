@@ -12,7 +12,6 @@ use osb::user_info::get_user_info;
 use anyhow::{Error, Result};
 use clap::Parser;
 use log::{error, info};
-use osb::guess::guess;
 
 #[tokio::main]
 async fn main() {

@@ -1,4 +1,3 @@
-use crate::login::ApiToken;
 use crate::values::{API_URL, KEY, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
