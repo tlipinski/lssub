@@ -52,7 +52,7 @@ async fn run(args: Args) -> Result<()> {
             }
         },
         Command::Search{title} => {
-            handle_search_cmd(&title).await?;
+            handle_search_cmd(&title, vec!["pl"]).await?;
             Ok(())
         }
     }

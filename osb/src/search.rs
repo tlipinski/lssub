@@ -1,22 +1,26 @@
+use crate::guess::GuessResponse;
 use crate::login::ApiToken;
 use crate::values::{API_URL, KEY, USER_AGENT};
 use anyhow::{Error, Result};
-use log::{debug, error, info};
-use serde::Deserialize;
+use log::{debug, error, info, trace};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub async fn guess(title: &str) -> Result<GuessResponse> {
-    info!("Searching for {title}");
-    let url = format!("{}/utilities/guessit", API_URL);
+pub async fn search(filename: &str, languages: Vec<&str>) -> Result<()> {
+    let url = format!("{}/subtitles", API_URL);
 
-    let mut query_params = HashMap::new();
-    query_params.insert("filename", title);
+    let mut params = HashMap::new();
+    params.insert("query", filename);
+    let langs = languages.join(",");
+    params.insert("languages", langs.as_str());
 
     let req = reqwest::Client::new()
         .get(url)
         .header("Api-Key", KEY.clone())
         .header("User-Agent", USER_AGENT)
-        .query(&query_params);
+        .query(&params);
+
+    println!("{:?}", req);
 
     let response = req.send().await?;
 
@@ -26,12 +30,12 @@ pub async fn guess(title: &str) -> Result<GuessResponse> {
 
     match status {
         s if s.is_success() || s.is_redirection() => {
-            debug!("Response {}", text_body);
-            let json: Result<GuessResponse, _> = serde_json::from_str(&text_body);
+            trace!("Response {}", text_body);
+            let json: Result<SearchResponse, _> = serde_json::from_str(&text_body);
             match json {
-                Ok(guess_response) => {
-                    debug!("{:?}", guess_response);
-                    Ok(guess_response)
+                Ok(search_response) => {
+                    debug!("{}", serde_json::to_string_pretty(&search_response)?);
+                    Ok(())
                 }
                 Err(e) => {
                     error!("Failed decoding body {:?} {}", e, text_body);
@@ -55,22 +59,27 @@ pub async fn guess(title: &str) -> Result<GuessResponse> {
     }
 }
 
-#[derive(Deserialize, Debug)]
-pub struct GuessResponse {
-    pub title: String,
-    pub year: Option<i32>,
-    pub language: Option<String>,
-    pub subtitle_language: Option<String>,
-    pub screen_size: Option<String>,
-    pub streaming_service: Option<String>,
-    pub other: Option<String>,
-    pub audio_codec: Option<String>,
-    pub audio_channels: Option<String>,
-    pub video_codec: Option<String>,
-    pub release_group: Option<String>,
-    pub container: Option<String>,
-    pub r#type: Option<String>,
+#[derive(Deserialize, Serialize, Debug)]
+struct SearchResponse {
+    total_pages: i32,
+    data: Vec<Data>,
+}
 
-    pub episode: Option<i32>,
-    pub season: Option<i32>,
+#[derive(Deserialize, Serialize, Debug)]
+struct Data {
+    r#type: String,
+    attributes: Attributes,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+struct FeatureDetails {
+    movie_name: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+struct Attributes {
+    feature_details: FeatureDetails,
+    download_count: i32,
+    upload_date: String,
+    release: String,
 }
