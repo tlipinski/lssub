@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub mod guess;
 pub mod login;
 pub mod values;
