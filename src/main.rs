@@ -5,6 +5,7 @@ mod secret;
 use crate::cli::command::Command;
 use crate::cli::login_cmd::handle_login_cmd;
 use crate::cli::logout_cmd::handle_logout_cmd;
+use crate::cli::search_cmd::handle_search_cmd;
 use crate::config::get_config;
 use crate::secret::retrieve;
 use osb::user_info::get_user_info;
@@ -51,7 +52,7 @@ async fn run(args: Args) -> Result<()> {
             }
         },
         Command::Search{title} => {
-            guess(&title).await?;
+            handle_search_cmd(&title).await?;
             Ok(())
         }
     }
