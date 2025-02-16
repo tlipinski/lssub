@@ -1,4 +1,3 @@
-use crate::config::Config;
 use crate::login::ApiToken;
 use crate::values::{KEY, USER_AGENT};
 use anyhow::Result;

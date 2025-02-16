@@ -1,4 +1,4 @@
-use crate::login::ApiToken;
+use osb::login::ApiToken;
 use anyhow::Result;
 use libsecret::{Schema, SchemaAttributeType, SchemaFlags};
 use log::{debug, error};

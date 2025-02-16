@@ -18,17 +18,11 @@ pub async fn guess(title: &str) -> Result<GuessResponse> {
         .header("User-Agent", USER_AGENT)
         .query(&query_params);
 
-    println!("{:?}", req);
-
     let response = req.send().await?;
 
     let status = response.status();
 
-    println!("{}", status);
-
     let text_body = response.text().await?;
-
-    println!("{}", text_body);
 
     match status {
         s if s.is_success() || s.is_redirection() => {
@@ -69,7 +63,6 @@ pub struct GuessResponse {
     subtitle_language: Option<String>,
     screen_size: Option<String>,
     streaming_service: Option<String>,
-    source: Option<Vec<String>>,
     other: Option<String>,
     audio_codec: Option<String>,
     audio_channels: Option<String>,

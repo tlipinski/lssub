@@ -1,21 +1,17 @@
 mod cli;
 mod config;
-mod login;
 mod secret;
-mod user_info;
-mod values;
-mod guess;
 
 use crate::cli::command::Command;
 use crate::cli::login_cmd::handle_login_cmd;
 use crate::cli::logout_cmd::handle_logout_cmd;
 use crate::config::get_config;
 use crate::secret::retrieve;
-use crate::user_info::get_user_info;
+use osb::user_info::get_user_info;
 use anyhow::{Error, Result};
 use clap::Parser;
 use log::{error, info};
-use crate::guess::guess;
+use osb::guess::guess;
 
 #[tokio::main]
 async fn main() {

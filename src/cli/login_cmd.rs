@@ -1,4 +1,4 @@
-use crate::login::{login, Credentials};
+use osb::login::{login, Credentials};
 use crate::secret::store;
 use anyhow::Result;
 use std::io::{stdin, stdout, Write};
