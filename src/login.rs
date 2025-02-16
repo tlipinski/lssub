@@ -86,7 +86,7 @@ struct User {
 }
 
 #[derive(Deserialize, Debug)]
-struct ErrorResponse {
-    message: String,
-    status: Option<u32>,
+pub(crate) struct ErrorResponse {
+    pub message: String,
+    pub status: Option<u32>,
 }

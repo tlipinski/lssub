@@ -4,6 +4,7 @@ mod login;
 mod secret;
 mod user_info;
 mod values;
+mod guess;
 
 use crate::cli::command::Command;
 use crate::cli::login_cmd::handle_login_cmd;
@@ -14,6 +15,7 @@ use crate::user_info::get_user_info;
 use anyhow::{Error, Result};
 use clap::Parser;
 use log::{error, info};
+use crate::guess::guess;
 
 #[tokio::main]
 async fn main() {
@@ -26,7 +28,8 @@ async fn main() {
     match run(args).await {
         Ok(_) => {}
         Err(e) => {
-            error!("{e}")
+            // error!("{e:?}");
+            error!("{e}");
         }
     };
 }
@@ -52,7 +55,7 @@ async fn run(args: Args) -> Result<()> {
             }
         },
         Command::Search{title} => {
-            println!("Searching for: {title}");
+            guess(&title).await?;
             Ok(())
         }
     }
