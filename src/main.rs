@@ -3,6 +3,7 @@
 mod cli;
 mod config;
 mod secret;
+mod app;
 
 use crate::cli::command::Command;
 use crate::cli::login_cmd::handle_login_cmd;
@@ -14,6 +15,7 @@ use anyhow::{Error, Result};
 use clap::Parser;
 use log::{error, info};
 use osb::user_info::get_user_info;
+use crate::app::App;
 
 #[tokio::main]
 async fn main() {
@@ -66,6 +68,13 @@ async fn run(args: Args) -> Result<()> {
             languages,
         } => {
             handle_search_cmd(&file_path, languages).await?;
+            Ok(())
+        }
+
+        Command::Gui => {
+            let mut terminal = ratatui::init();
+            let _ = App::default().run(&mut terminal);
+            ratatui::restore();
             Ok(())
         }
     }

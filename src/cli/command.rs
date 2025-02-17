@@ -9,4 +9,5 @@ pub enum Command {
         file_path: String,
         languages: Vec<String>,
     },
+    Gui
 }
