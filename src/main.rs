@@ -10,10 +10,10 @@ use crate::cli::logout_cmd::handle_logout_cmd;
 use crate::cli::search_cmd::handle_search_cmd;
 use crate::config::get_config;
 use crate::secret::retrieve;
-use osb::user_info::get_user_info;
 use anyhow::{Error, Result};
 use clap::Parser;
 use log::{error, info};
+use osb::user_info::get_user_info;
 
 #[tokio::main]
 async fn main() {
@@ -51,9 +51,12 @@ async fn run(args: Args) -> Result<()> {
             } else {
                 Err(Error::msg("Login first"))
             }
-        },
-        Command::Search{title} => {
-            handle_search_cmd(&title, vec!["pl"]).await?;
+        }
+        Command::Search {
+            file_path,
+            languages,
+        } => {
+            handle_search_cmd(&file_path, languages).await?;
             Ok(())
         }
     }

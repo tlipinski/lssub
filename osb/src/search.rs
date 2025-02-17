@@ -4,7 +4,7 @@ use log::{debug, error, info, trace};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub async fn search(filename: &str, languages: Vec<&str>) -> Result<()> {
+pub async fn search(filename: &str, languages: Vec<String>) -> Result<()> {
     let url = format!("{}/subtitles", API_URL);
 
     let mut params = HashMap::new();
@@ -77,6 +77,7 @@ struct FeatureDetails {
 #[derive(Deserialize, Serialize, Debug)]
 struct Attributes {
     feature_details: FeatureDetails,
+    language: String,
     download_count: i32,
     upload_date: String,
     release: String,

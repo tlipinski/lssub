@@ -5,5 +5,8 @@ pub enum Command {
     Login,
     Logout,
     UserInfo,
-    Search { title: String },
+    Search {
+        file_path: String,
+        languages: Vec<String>,
+    },
 }
