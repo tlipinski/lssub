@@ -44,7 +44,15 @@ async fn run(args: Args) -> Result<()> {
 
     match args.command {
         Command::Login => handle_login_cmd().await,
-        Command::Logout => handle_logout_cmd().await,
+
+        Command::Logout => {
+            if let Some(_) = retrieve().await? {
+                handle_logout_cmd().await
+            } else {
+                Err(Error::msg("Already logged out"))
+            }
+        }
+
         Command::UserInfo => {
             if let Some(token) = retrieve().await? {
                 get_user_info(&token).await
@@ -52,6 +60,7 @@ async fn run(args: Args) -> Result<()> {
                 Err(Error::msg("Login first"))
             }
         }
+
         Command::Search {
             file_path,
             languages,

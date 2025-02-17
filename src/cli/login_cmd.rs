@@ -5,7 +5,6 @@ use std::io::{stdin, stdout, Write};
 
 pub async fn handle_login_cmd() -> Result<()> {
     let mut username = String::new();
-    let mut password = String::new();
 
     print!("Username: ");
     stdout().flush()?;
@@ -13,10 +12,9 @@ pub async fn handle_login_cmd() -> Result<()> {
 
     print!("Password: ");
     stdout().flush()?;
-    stdin().read_line(&mut password)?;
+    let password = rpassword::read_password()?;
 
     username = username.trim().to_string();
-    password = password.trim().to_string();
 
     let credentials = Credentials {
         username: username.clone(),
