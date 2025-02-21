@@ -1,5 +1,4 @@
-use std::io;
-
+use anyhow::{bail, Context, Result};
 use ratatui::crossterm::event;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
@@ -23,18 +22,27 @@ impl App {
         self.exit = true;
     }
 
-    fn increment_counter(&mut self) {
+    fn increment_counter(&mut self) -> Result<()> {
         self.counter += 1;
+        if self.counter > 3 {
+            bail!("counter overflow");
+        }
+        Ok(())
     }
 
-    fn decrement_counter(&mut self) {
+    fn decrement_counter(&mut self) -> Result<()> {
+        if self.counter == 0 {
+            bail!("counter overflow");
+        }
         self.counter -= 1;
+        Ok(())
     }
     /// runs the application's main loop until the user quits
-    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         while !self.exit {
+            // println!("loop");
             terminal.draw(|frame| self.draw(frame))?;
-            self.handle_events()?;
+            self.handle_events();
         }
         Ok(())
     }
@@ -43,25 +51,25 @@ impl App {
         frame.render_widget(self, frame.area())
     }
 
-    fn handle_events(&mut self) -> io::Result<()> {
+    fn handle_events(&mut self) -> Result<()> {
         match event::read()? {
-            // it's important to check that the event is a key press event as
-            // crossterm also emits key release and repeat events on Windows.
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                 self.handle_key_event(key_event)
             }
-            _ => {}
-        };
+            // .with_context(|| format!("handling key event failed:\n{key_event:#?}")),
+            _ => Ok(()),
+        }?;
         Ok(())
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent) {
+    fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
-            KeyCode::Left => self.decrement_counter(),
-            KeyCode::Right => self.increment_counter(),
+            KeyCode::Left => self.decrement_counter()?,
+            KeyCode::Right => self.increment_counter()?,
             _ => {}
         }
+        Ok(())
     }
 }
 
