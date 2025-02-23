@@ -12,7 +12,8 @@ pub struct Api {}
 pub fn get_config() -> Result<Config> {
     info!("Loading config");
     let xdg_dirs = xdg::BaseDirectories::with_prefix("subster")?;
-    let config_path = xdg_dirs.get_config_home().join("config.toml");
+    println!("XDG: {:?}", xdg_dirs);
+    let config_path = xdg_dirs.get_config_file("config.toml");
     let contents = fs::read_to_string(config_path)?;
     let config: Config = toml::from_str(&contents)?;
     info!("Config loaded {:?}", config);
