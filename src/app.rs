@@ -1,19 +1,21 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use ratatui::crossterm::event;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
+use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{
+    DefaultTerminal, Frame,
     buffer::Buffer,
     layout::Rect,
     style::Stylize,
     symbols::border,
     text::{Line, Text},
     widgets::{Block, Paragraph, Widget},
-    DefaultTerminal, Frame,
 };
 
 #[derive(Debug, Default)]
 pub struct App {
-    counter: u8,
+    current_screen: CurrentScreen,
+    search_text: String,
     exit: bool,
 }
 
@@ -22,22 +24,6 @@ impl App {
         self.exit = true;
     }
 
-    fn increment_counter(&mut self) -> Result<()> {
-        self.counter += 1;
-        if self.counter > 3 {
-            bail!("counter overflow");
-        }
-        Ok(())
-    }
-
-    fn decrement_counter(&mut self) -> Result<()> {
-        if self.counter == 0 {
-            bail!("counter overflow");
-        }
-        self.counter -= 1;
-        Ok(())
-    }
-    /// runs the application's main loop until the user quits
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         while !self.exit {
             // println!("loop");
@@ -63,11 +49,25 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
-        match key_event.code {
-            KeyCode::Char('q') => self.exit(),
-            KeyCode::Left => self.decrement_counter()?,
-            KeyCode::Right => self.increment_counter()?,
-            _ => {}
+        match self.current_screen {
+            CurrentScreen::Main => {
+                match key_event.code {
+                    KeyCode::Char('q') => self.exit(),
+                    KeyCode::Char('s') => self.current_screen = CurrentScreen::Searching,
+                    _ => {}
+                }
+            }
+            CurrentScreen::Searching => {
+                match key_event.code {
+                    KeyCode::Backspace => {
+                        self.search_text.pop();
+                    },
+                    KeyCode::Char(key) => {
+                        self.search_text.push(key);
+                    }
+                    _ => {}
+                }
+            }
         }
         Ok(())
     }
@@ -75,28 +75,40 @@ impl App {
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Line::from(" Counter App Tutorial ".bold());
-        let instructions = Line::from(vec![
-            " Decrement ".into(),
-            "<Left>".blue().bold(),
-            " Increment ".into(),
-            "<Right>".blue().bold(),
-            " Quit ".into(),
-            "<Q> ".blue().bold(),
-        ]);
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(3), Constraint::Min(10)])
+            .split(area);
+
+        let title = Line::from("Search".bold());
+        let span = match self.current_screen {
+            CurrentScreen::Main => "Search".bold(),
+            CurrentScreen::Searching => "Search".bold().red(),
+        };
         let block = Block::bordered()
-            .title(title.centered())
-            .title_bottom(instructions.centered())
+            .title(span)
+            // .title_bottom(instructions.centered())
             .border_set(border::THICK);
 
-        let counter_text = Text::from(vec![Line::from(vec![
-            "Value: ".into(),
-            self.counter.to_string().yellow(),
-        ])]);
+        let block_bot = Block::bordered()
+            .title("Results".bold())
+            // .title_bottom(instructions.centered())
+            .border_set(border::THICK);
 
-        Paragraph::new(counter_text)
+        let par = Line::from(self.search_text.clone().bold());
+
+        Paragraph::new(par).block(block).render(layout[0], buf);
+
+        Paragraph::new("ar")
             .centered()
-            .block(block)
-            .render(area, buf);
+            .block(block_bot)
+            .render(layout[1], buf);
     }
+}
+
+#[derive(Debug, Default)]
+enum CurrentScreen {
+    #[default]
+    Main,
+    Searching,
 }
