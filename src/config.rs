@@ -1,6 +1,6 @@
 use std::fs;
 use anyhow::Result;
-use log::info;
+use log::{debug, info};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -12,7 +12,7 @@ pub struct Api {}
 pub fn get_config() -> Result<Config> {
     info!("Loading config");
     let xdg_dirs = xdg::BaseDirectories::with_prefix("subster")?;
-    println!("XDG: {:?}", xdg_dirs);
+    debug!("XDG: {:?}", xdg_dirs);
     let config_path = xdg_dirs.get_config_file("config.toml");
     let contents = fs::read_to_string(config_path)?;
     let config: Config = toml::from_str(&contents)?;
