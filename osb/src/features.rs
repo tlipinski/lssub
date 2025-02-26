@@ -58,6 +58,7 @@ struct FeaturesResponse {
 
 #[derive(Deserialize, Serialize, Debug)]
 struct Data {
+    id: String,
     r#type: String,
     attributes: Attributes
 }
