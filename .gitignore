@@ -2,3 +2,4 @@ target
 .*
 !.gitignore
 src/bin/*
+logs.txt

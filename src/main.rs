@@ -5,6 +5,7 @@ mod cli;
 mod config;
 mod secret;
 
+use std::fs::OpenOptions;
 use crate::app::App;
 use crate::cli::command::Command;
 use crate::cli::login_cmd::handle_login_cmd;
@@ -14,13 +15,25 @@ use crate::config::get_config;
 use crate::secret::retrieve;
 use anyhow::{Error, Result};
 use clap::Parser;
-use log::{error, info};
+use env_logger::{Builder, Target};
+use log::{error, info, LevelFilter};
 use osb::user_info::get_user_info;
 use crate::cli::features_cmd::handle_features_cmd;
 
 #[tokio::main]
 async fn main() {
-    env_logger::init();
+    let file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open("logs.txt")
+        .expect("Failed to open log file");
+
+    // Configure env_logger to write logs to the file
+    Builder::new()
+        .target(Target::Pipe(Box::new(file)))
+        .filter_level(LevelFilter::Debug)
+        .init();
 
     info!("Starting");
 
