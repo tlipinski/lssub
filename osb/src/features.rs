@@ -16,7 +16,7 @@ pub async fn features(query: &str) -> Result<()> {
         .header("User-Agent", USER_AGENT)
         .query(&params);
 
-    println!("{:?}", req);
+    debug!("{:?}", req);
 
     let response = req.send().await?;
 

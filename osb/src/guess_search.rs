@@ -27,7 +27,7 @@ pub async fn guess_search(guess_response: GuessResponse) -> Result<()> {
         .header("User-Agent", USER_AGENT)
         .query(&params);
 
-    println!("{:?}", req);
+    debug!("{:?}", req);
 
     let response = req.send().await?;
 

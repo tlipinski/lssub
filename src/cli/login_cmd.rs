@@ -2,6 +2,7 @@ use osb::login::{login, Credentials};
 use crate::secret::store;
 use anyhow::Result;
 use std::io::{stdin, stdout, Write};
+use log::info;
 
 pub async fn handle_login_cmd() -> Result<()> {
     let mut username = String::new();
@@ -25,7 +26,7 @@ pub async fn handle_login_cmd() -> Result<()> {
 
     let _ = store(&api_token, &username).await?;
 
-    println!("Logged in successfully");
+    info!("Logged in successfully");
 
     Ok(())
 }

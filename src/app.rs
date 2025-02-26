@@ -1,4 +1,6 @@
 use anyhow::{Context, Result, bail};
+use log::{debug, error};
+use osb::features::features;
 use ratatui::crossterm::event;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::layout::{Constraint, Direction, Layout};
@@ -11,6 +13,8 @@ use ratatui::{
     text::{Line, Text},
     widgets::{Block, Paragraph, Widget},
 };
+use std::sync::mpsc;
+use std::sync::mpsc::Sender;
 
 #[derive(Debug, Default)]
 pub struct App {
@@ -25,10 +29,22 @@ impl App {
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
+        let (tx, rx) = mpsc::channel::<String>();
+        tokio::spawn(async move {
+            loop {
+                if let Ok(text) = rx.recv() {
+                    features(&text).await;
+                } else {
+                    error!("Error while receiving")
+                }
+            }
+        });
         while !self.exit {
             // println!("loop");
             terminal.draw(|frame| self.draw(frame))?;
-            self.handle_events();
+            self.handle_events(tx.clone()); // todo should not clone in loop?
+            // let z = rx.recv();
+            // debug!("{:?}", z)
         }
         Ok(())
     }
@@ -37,10 +53,10 @@ impl App {
         frame.render_widget(self, frame.area())
     }
 
-    fn handle_events(&mut self) -> Result<()> {
+    fn handle_events(&mut self, tx: Sender<String>) -> Result<()> {
         match event::read()? {
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                self.handle_key_event(key_event)
+                self.handle_key_event(key_event, tx)
             }
             // .with_context(|| format!("handling key event failed:\n{key_event:#?}")),
             _ => Ok(()),
@@ -48,26 +64,23 @@ impl App {
         Ok(())
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
+    fn handle_key_event(&mut self, key_event: KeyEvent, tx: Sender<String>) -> Result<()> {
         match self.current_screen {
-            CurrentScreen::Main => {
-                match key_event.code {
-                    KeyCode::Char('q') => self.exit(),
-                    KeyCode::Char('s') => self.current_screen = CurrentScreen::Searching,
-                    _ => {}
+            CurrentScreen::Main => match key_event.code {
+                KeyCode::Char('q') => self.exit(),
+                KeyCode::Char('s') => self.current_screen = CurrentScreen::Searching,
+                _ => {}
+            },
+            CurrentScreen::Searching => match key_event.code {
+                KeyCode::Backspace => {
+                    self.search_text.pop();
                 }
-            }
-            CurrentScreen::Searching => {
-                match key_event.code {
-                    KeyCode::Backspace => {
-                        self.search_text.pop();
-                    },
-                    KeyCode::Char(key) => {
-                        self.search_text.push(key);
-                    }
-                    _ => {}
+                KeyCode::Char(key) => {
+                    self.search_text.push(key);
+                    tx.send(self.search_text.clone());
                 }
-            }
+                _ => {}
+            },
         }
         Ok(())
     }

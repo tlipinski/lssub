@@ -18,7 +18,7 @@ pub async fn search(filename: &str, languages: Vec<String>) -> Result<()> {
         .header("User-Agent", USER_AGENT)
         .query(&params);
 
-    println!("{:?}", req);
+    debug!("{:?}", req);
 
     let response = req.send().await?;
 
