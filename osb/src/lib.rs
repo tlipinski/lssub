@@ -6,3 +6,4 @@ pub mod values;
 pub mod user_info;
 pub mod search;
 pub mod guess_search;
+pub mod features;
