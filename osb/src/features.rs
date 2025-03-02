@@ -4,7 +4,7 @@ use log::{debug, error, info, trace};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub async fn features(query: &str) -> Result<()> {
+pub async fn features(query: &str) -> Result<FeaturesResponse> {
     let url = format!("{}/features", API_URL);
 
     let mut params = HashMap::new();
@@ -29,9 +29,9 @@ pub async fn features(query: &str) -> Result<()> {
             trace!("Response {}", text_body);
             let json: Result<FeaturesResponse, _> = serde_json::from_str(&text_body);
             match json {
-                Ok(search_response) => {
-                    debug!("{}", serde_json::to_string_pretty(&search_response)?);
-                    Ok(())
+                Ok(features_response) => {
+                    debug!("{}", serde_json::to_string_pretty(&features_response)?);
+                    Ok(features_response)
                 }
                 Err(e) => {
                     error!("Failed decoding body {:?} {}", e, text_body);
@@ -52,7 +52,7 @@ pub async fn features(query: &str) -> Result<()> {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct FeaturesResponse {
+pub struct FeaturesResponse {
     data: Vec<Data>,
 }
 

@@ -92,7 +92,7 @@ async fn run(args: Args) -> Result<()> {
 
         Command::Gui => {
             let mut terminal = ratatui::init();
-            let _ = App::default().run(&mut terminal);
+            App::default().run(&mut terminal);
             ratatui::restore();
             Ok(())
         }

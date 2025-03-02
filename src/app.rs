@@ -34,7 +34,7 @@ impl App {
         tokio::spawn(async move {
             loop {
                 if let Ok(text) = rx.recv() {
-                    features(&text).await;
+                    let f = features(&text).await;
                 } else {
                     error!("Error while receiving")
                 }
@@ -42,11 +42,8 @@ impl App {
         });
         let events_tx = tx.clone();
         while !self.exit {
-            // println!("loop");
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events(&events_tx);
-            // let z = rx.recv();
-            // debug!("{:?}", z)
         }
         Ok(())
     }
