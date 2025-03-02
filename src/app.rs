@@ -40,10 +40,11 @@ impl App {
                 }
             }
         });
+        let events_tx = tx.clone();
         while !self.exit {
             // println!("loop");
             terminal.draw(|frame| self.draw(frame))?;
-            self.handle_events(tx.clone()); // todo should not clone in loop?
+            self.handle_events(&events_tx);
             // let z = rx.recv();
             // debug!("{:?}", z)
         }
@@ -54,10 +55,10 @@ impl App {
         frame.render_widget(self, frame.area())
     }
 
-    fn handle_events(&mut self, tx: Sender<String>) -> Result<()> {
+    fn handle_events(&mut self, tx: &Sender<String>) -> Result<()> {
         match event::read()? {
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                self.handle_key_event(key_event, tx)
+                self.handle_key_event(key_event, &tx)
             }
             // .with_context(|| format!("handling key event failed:\n{key_event:#?}")),
             _ => Ok(()),
@@ -65,7 +66,7 @@ impl App {
         Ok(())
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent, tx: Sender<String>) -> Result<()> {
+    fn handle_key_event(&mut self, key_event: KeyEvent, tx: &Sender<String>) -> Result<()> {
         match self.current_screen {
             CurrentScreen::Main => match key_event.code {
                 KeyCode::Char('q') => self.exit(),
