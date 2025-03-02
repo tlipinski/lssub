@@ -17,11 +17,14 @@ use ratatui::{
 };
 use std::sync::mpsc;
 use std::sync::mpsc::Sender;
+use std::time::Duration;
+use tokio::time::sleep;
 
 #[derive(Debug, Default)]
 pub struct App {
     current_screen: CurrentScreen,
     search_text: String,
+    subs: Subs,
     exit: bool,
 }
 
@@ -38,22 +41,25 @@ impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
         let (tx, rx) = mpsc::channel::<String>();
-        
+
         let result_update_tx = ui_tx.clone();
         tokio::spawn(async move {
             loop {
-                if let Ok(text) = rx.recv() {
-                    let result = features(&text).await;
-                    match result {
-                        Ok(features) => { result_update_tx.send(ResultsUpdate(features)).unwrap()},
-                        Err(_) => {}
+                let result = rx.recv();
+                if let Ok(text) = result {
+                    if !&text.is_empty() {
+                        let result = features(&text).await;
+                        match result {
+                            Ok(features) => result_update_tx.send(ResultsUpdate(features)).unwrap(),
+                            Err(_) => break,
+                        }
                     }
                 } else {
-                    error!("Error while receiving")
+                    error!("Error while receiving search text [{:?}]", result)
                 }
             }
         });
-        
+
         let key_event_tx = ui_tx.clone();
         tokio::spawn(async move {
             loop {
@@ -61,13 +67,13 @@ impl App {
                     Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                         key_event_tx.send(Input(key_event))
                     }
-                    _ => {Ok(())}
+                    _ => break,
                 };
             }
         });
-        
+
         let events_tx = ui_tx.clone();
-        
+
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             match ui_rx.recv()? {
@@ -77,7 +83,8 @@ impl App {
                     tx.send(self.search_text.clone()).unwrap();
                 }
                 ResultsUpdate(features) => {
-                    info!("ResultsUpdate: {:?}", features)
+                    info!("ResultsUpdate: {:?}", features);
+                    self.handle_features_event(features)?
                 }
             }
         }
@@ -88,10 +95,27 @@ impl App {
         frame.render_widget(self, frame.area())
     }
 
+    fn handle_features_event(&mut self, features_response: FeaturesResponse) -> Result<()> {
+        let subs = features_response
+            .data
+            .iter()
+            .take(20)
+            .map(|resp| Sub {
+                id: resp.id.clone(),
+                title: resp.attributes.title.clone(),
+                year: resp.attributes.year.clone(),
+            })
+            .collect::<Vec<Sub>>();
+
+        self.subs = Subs(subs);
+
+        Ok(())
+    }
+
     fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
         match self.current_screen {
             CurrentScreen::Main => match key_event.code {
-                KeyCode::Char('q') => self.exit(),
+                KeyCode::Esc => self.exit(),
                 KeyCode::Char('s') => self.current_screen = CurrentScreen::Searching,
                 _ => {}
             },
@@ -101,6 +125,9 @@ impl App {
                 }
                 KeyCode::Char(key) => {
                     self.search_text.push(key);
+                }
+                KeyCode::Esc => {
+                    self.exit();
                 }
                 _ => {}
             },
@@ -130,18 +157,7 @@ impl Widget for &App {
 
         Paragraph::new(par).block(block).render(layout[0], buf);
 
-        let sub1 = Sub {
-            id: "1".to_string(),
-            title: "title".into(),
-        };
-        let sub2 = Sub {
-            id: "2".to_string(),
-            title: "title".to_string(),
-        };
-
-        let subs = Subs(vec![sub1, sub2]);
-
-        subs.render(layout[1], buf);
+        self.subs.render(layout[1], buf);
     }
 }
 
@@ -152,11 +168,14 @@ enum CurrentScreen {
     Searching,
 }
 
+#[derive(Debug, Default)]
 struct Subs(Vec<Sub>);
 
+#[derive(Debug, Default)]
 struct Sub {
     id: String,
     title: String,
+    year: String,
 }
 
 impl Widget for &Subs {
@@ -164,7 +183,8 @@ impl Widget for &Subs {
         let rows = self.0.iter().map(|item| {
             let cell = Cell::from(Text::from(item.id.as_str()));
             let cell2 = Cell::from(Text::from(item.title.as_str()));
-            let vec1: Vec<Cell> = vec![cell, cell2];
+            let cell3 = Cell::from(Text::from(item.year.as_str()));
+            let vec1: Vec<Cell> = vec![cell, cell2, cell3];
             Row::from_iter(vec1)
         });
 
@@ -173,7 +193,7 @@ impl Widget for &Subs {
             // .title_bottom(instructions.centered())
             .border_set(border::THICK);
 
-        Table::new(rows, [10, 10])
+        Table::new(rows, [10, 50, 10])
             .block(block_bot)
             .render(area, buf);
     }

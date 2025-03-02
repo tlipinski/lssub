@@ -53,19 +53,19 @@ pub async fn features(query: &str) -> Result<FeaturesResponse> {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct FeaturesResponse {
-    data: Vec<Data>,
+    pub data: Vec<Data>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct Data {
-    id: String,
-    r#type: String,
-    attributes: Attributes
+pub struct Data {
+    pub id: String,
+    pub r#type: String,
+    pub attributes: Attributes
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct Attributes {
-    title: String,
-    year: String,
-    subtitles_count: i32
+pub struct Attributes {
+    pub title: String,
+    pub year: String,
+    pub subtitles_count: i32
 }
