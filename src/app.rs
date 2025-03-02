@@ -4,6 +4,7 @@ use osb::features::features;
 use ratatui::crossterm::event;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::widgets::{Cell, Row, Table};
 use ratatui::{
     DefaultTerminal, Frame,
     buffer::Buffer,
@@ -93,18 +94,13 @@ impl Widget for &App {
             .constraints([Constraint::Length(3), Constraint::Min(10)])
             .split(area);
 
-        let title = Line::from("Search".bold());
+        let title = Line::from(" Search ".bold());
         let span = match self.current_screen {
-            CurrentScreen::Main => "Search".bold(),
-            CurrentScreen::Searching => "Search".bold().red(),
+            CurrentScreen::Main => " Search ".bold(),
+            CurrentScreen::Searching => " Search ".bold().red(),
         };
         let block = Block::bordered()
             .title(span)
-            // .title_bottom(instructions.centered())
-            .border_set(border::THICK);
-
-        let block_bot = Block::bordered()
-            .title("Results".bold())
             // .title_bottom(instructions.centered())
             .border_set(border::THICK);
 
@@ -112,10 +108,18 @@ impl Widget for &App {
 
         Paragraph::new(par).block(block).render(layout[0], buf);
 
-        Paragraph::new("ar")
-            .centered()
-            .block(block_bot)
-            .render(layout[1], buf);
+        let sub1 = Sub {
+            id: "1".to_string(),
+            title: "title".into(),
+        };
+        let sub2 = Sub {
+            id: "2".to_string(),
+            title: "title".to_string(),
+        };
+
+        let subs = Subs(vec![sub1, sub2]);
+
+        subs.render(layout[1], buf);
     }
 }
 
@@ -124,4 +128,31 @@ enum CurrentScreen {
     #[default]
     Main,
     Searching,
+}
+
+struct Subs(Vec<Sub>);
+
+struct Sub {
+    id: String,
+    title: String,
+}
+
+impl Widget for &Subs {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        let rows = self.0.iter().map(|item| {
+            let cell = Cell::from(Text::from(item.id.as_str()));
+            let cell2 = Cell::from(Text::from(item.title.as_str()));
+            let vec1: Vec<Cell> = vec![cell, cell2];
+            Row::from_iter(vec1)
+        });
+
+        let block_bot = Block::bordered()
+            .title(format!(" Results: {} ", self.0.len()).bold())
+            // .title_bottom(instructions.centered())
+            .border_set(border::THICK);
+
+        Table::new(rows, [10, 10])
+            .block(block_bot)
+            .render(area, buf);
+    }
 }
