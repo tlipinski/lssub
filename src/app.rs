@@ -16,7 +16,7 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 use std::sync::mpsc;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{Sender, TryRecvError};
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -28,6 +28,7 @@ pub struct App {
     exit: bool,
 }
 
+#[derive(Debug)]
 enum UiEvent {
     Input(KeyEvent),
     ResultsUpdate(FeaturesResponse),
@@ -40,22 +41,32 @@ impl App {
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
-        let (tx, rx) = mpsc::channel::<String>();
+        let (features_tx, features_rx) = mpsc::channel::<String>();
 
         let result_update_tx = ui_tx.clone();
         tokio::spawn(async move {
-            loop {
-                let result = rx.recv();
-                if let Ok(text) = result {
-                    if !&text.is_empty() {
-                        let result = features(&text).await;
-                        match result {
-                            Ok(features) => result_update_tx.send(ResultsUpdate(features)).unwrap(),
-                            Err(_) => break,
+            'outer: loop {
+                sleep(Duration::from_millis(500)).await;
+                let mut last = String::from("");
+                'debouncing: loop {
+                    match features_rx.try_recv() {
+                        Ok(ev) => {
+                            debug!("Debouncing: {}", ev);
+                            last = ev
+                        }
+                        Err(TryRecvError::Empty) => break 'debouncing,
+                        Err(TryRecvError::Disconnected) => {
+                            error!("Disconnected");
+                            break 'outer;
                         }
                     }
-                } else {
-                    error!("Error while receiving search text [{:?}]", result)
+                }
+                if !last.is_empty() {
+                    let result = features(&last).await;
+                    match result {
+                        Ok(features) => result_update_tx.send(ResultsUpdate(features)).unwrap(),
+                        Err(_) => break,
+                    }
                 }
             }
         });
@@ -72,18 +83,24 @@ impl App {
             }
         });
 
-        let events_tx = ui_tx.clone();
-
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             match ui_rx.recv()? {
                 Input(key_event) => {
                     info!("Input: {:?}", key_event);
                     self.handle_key_event(key_event);
-                    tx.send(self.search_text.clone()).unwrap();
+                    if (!self.search_text.is_empty()) {
+                        features_tx.send(self.search_text.clone()).unwrap();
+                    } else {
+                        // ui_tx
+                        //     .send(ResultsUpdate(FeaturesResponse { data: vec![] }))
+                        //     .unwrap();
+                        // todo blinks with single char search_text
+                        self.handle_features_event(FeaturesResponse { data: vec![] })?
+                    }
                 }
                 ResultsUpdate(features) => {
-                    info!("ResultsUpdate: {:?}", features);
+                    // info!("ResultsUpdate: {:?}", features);
                     self.handle_features_event(features)?
                 }
             }

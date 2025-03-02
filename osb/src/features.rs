@@ -30,7 +30,7 @@ pub async fn features(query: &str) -> Result<FeaturesResponse> {
             let json: Result<FeaturesResponse, _> = serde_json::from_str(&text_body);
             match json {
                 Ok(features_response) => {
-                    debug!("{}", serde_json::to_string_pretty(&features_response)?);
+                    trace!("{}", serde_json::to_string_pretty(&features_response)?);
                     Ok(features_response)
                 }
                 Err(e) => {
