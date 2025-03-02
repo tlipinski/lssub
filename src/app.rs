@@ -1,6 +1,7 @@
+use crate::app::UiEvent::{Input, ResultsUpdate};
 use anyhow::{Context, Result, bail};
-use log::{debug, error};
-use osb::features::features;
+use log::{debug, error, info};
+use osb::features::{FeaturesResponse, features};
 use ratatui::crossterm::event;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::layout::{Constraint, Direction, Layout};
@@ -24,26 +25,61 @@ pub struct App {
     exit: bool,
 }
 
+enum UiEvent {
+    Input(KeyEvent),
+    ResultsUpdate(FeaturesResponse),
+}
+
 impl App {
     fn exit(&mut self) {
         self.exit = true;
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
+        let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
         let (tx, rx) = mpsc::channel::<String>();
+        
+        let result_update_tx = ui_tx.clone();
         tokio::spawn(async move {
             loop {
                 if let Ok(text) = rx.recv() {
-                    let f = features(&text).await;
+                    let result = features(&text).await;
+                    match result {
+                        Ok(features) => { result_update_tx.send(ResultsUpdate(features)).unwrap()},
+                        Err(_) => {}
+                    }
                 } else {
                     error!("Error while receiving")
                 }
             }
         });
-        let events_tx = tx.clone();
+        
+        let key_event_tx = ui_tx.clone();
+        tokio::spawn(async move {
+            loop {
+                match event::read().unwrap() {
+                    Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                        key_event_tx.send(Input(key_event))
+                    }
+                    _ => {Ok(())}
+                };
+            }
+        });
+        
+        let events_tx = ui_tx.clone();
+        
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
-            self.handle_events(&events_tx);
+            match ui_rx.recv()? {
+                Input(key_event) => {
+                    info!("Input: {:?}", key_event);
+                    self.handle_key_event(key_event);
+                    tx.send(self.search_text.clone()).unwrap();
+                }
+                ResultsUpdate(features) => {
+                    info!("ResultsUpdate: {:?}", features)
+                }
+            }
         }
         Ok(())
     }
@@ -52,18 +88,7 @@ impl App {
         frame.render_widget(self, frame.area())
     }
 
-    fn handle_events(&mut self, tx: &Sender<String>) -> Result<()> {
-        match event::read()? {
-            Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                self.handle_key_event(key_event, &tx)
-            }
-            // .with_context(|| format!("handling key event failed:\n{key_event:#?}")),
-            _ => Ok(()),
-        }?;
-        Ok(())
-    }
-
-    fn handle_key_event(&mut self, key_event: KeyEvent, tx: &Sender<String>) -> Result<()> {
+    fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
         match self.current_screen {
             CurrentScreen::Main => match key_event.code {
                 KeyCode::Char('q') => self.exit(),
@@ -76,7 +101,6 @@ impl App {
                 }
                 KeyCode::Char(key) => {
                     self.search_text.push(key);
-                    tx.send(self.search_text.clone());
                 }
                 _ => {}
             },
