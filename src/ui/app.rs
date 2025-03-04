@@ -1,4 +1,5 @@
-use crate::app::UiEvent::{Input, ResultsUpdate};
+use crate::ui::app::UiEvent::{Input, ResultsUpdate};
+use crate::ui::subs_widget::{Sub, Subs};
 use anyhow::{Context, Result, bail};
 use log::{debug, error, info};
 use osb::features::{FeaturesResponse, features};
@@ -187,36 +188,4 @@ enum CurrentScreen {
     Main,
     #[default]
     Searching,
-}
-
-#[derive(Debug, Default)]
-struct Subs(Vec<Sub>);
-
-#[derive(Debug, Default)]
-struct Sub {
-    id: String,
-    title: String,
-    year: String,
-}
-
-impl Widget for &Subs {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let rows = self.0.iter().map(|item| {
-            Row::from_iter(vec![
-                Cell::from(Text::from(item.id.as_str())),
-                Cell::from(Text::from(item.title.as_str())),
-                Cell::from(Text::from(item.year.as_str())),
-            ])
-        });
-
-        let block_bot = Block::bordered()
-            .title(format!(" Results: {} ", self.0.len()).bold())
-            // .title_bottom(instructions.centered())
-            .border_set(border::THICK);
-
-        Table::new(rows, [10, 50, 10])
-            .header(Row::from_iter(vec!["ID", "Title", "Year"]))
-            .block(block_bot)
-            .render(area, buf);
-    }
 }
