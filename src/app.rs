@@ -16,7 +16,7 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 use std::sync::mpsc;
-use std::sync::mpsc::{Sender, TryRecvError};
+use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -39,61 +39,61 @@ impl App {
         self.exit = true;
     }
 
+    async fn features_fetch(rx: Receiver<String>, tx: Sender<UiEvent>) {
+        'outer: loop {
+            sleep(Duration::from_millis(1000)).await;
+
+            let mut last: Option<String> = None;
+
+            // Receive as much as possible within outer loop cycle to reduce OSB calls.
+            'debouncing: loop {
+                match rx.try_recv() {
+                    Ok(ev) => {
+                        // debug!("Debouncing: {}", ev);
+                        last = Some(ev)
+                    }
+
+                    Err(TryRecvError::Empty) => break 'debouncing,
+
+                    Err(TryRecvError::Disconnected) => {
+                        error!("Disconnected");
+                        break 'outer;
+                    }
+                }
+            }
+
+            if let Some(text) = last {
+                if text.is_empty() {
+                    tx.send(ResultsUpdate(FeaturesResponse { data: vec![] }))
+                        .unwrap()
+                } else {
+                    let result = features(&text).await;
+                    match result {
+                        Ok(features) => tx.send(ResultsUpdate(features)).unwrap(),
+                        Err(_) => break,
+                    }
+                }
+            }
+        }
+    }
+
+    async fn input_handler(tx: Sender<UiEvent>) {
+        loop {
+            match event::read().unwrap() {
+                Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                    tx.send(Input(key_event))
+                }
+                _ => break,
+            };
+        }
+    }
+
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
         let (features_tx, features_rx) = mpsc::channel::<String>();
 
-        let result_update_tx = ui_tx.clone();
-        tokio::spawn(async move {
-            'outer: loop {
-                sleep(Duration::from_millis(500)).await;
-
-                let mut last: Option<String> = None;
-
-                // Receive as much as possible within outer loop cycle to reduce OSB calls.
-                'debouncing: loop {
-                    match features_rx.try_recv() {
-                        Ok(ev) => {
-                            // debug!("Debouncing: {}", ev);
-                            last = Some(ev)
-                        }
-
-                        Err(TryRecvError::Empty) => break 'debouncing,
-
-                        Err(TryRecvError::Disconnected) => {
-                            error!("Disconnected");
-                            break 'outer;
-                        }
-                    }
-                }
-
-                if let Some(text) = last {
-                    if text.is_empty() {
-                        result_update_tx
-                            .send(ResultsUpdate(FeaturesResponse { data: vec![] }))
-                            .unwrap()
-                    } else {
-                        let result = features(&text).await;
-                        match result {
-                            Ok(features) => result_update_tx.send(ResultsUpdate(features)).unwrap(),
-                            Err(_) => break,
-                        }
-                    }
-                }
-            }
-        });
-
-        let key_event_tx = ui_tx.clone();
-        tokio::spawn(async move {
-            loop {
-                match event::read().unwrap() {
-                    Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                        key_event_tx.send(Input(key_event))
-                    }
-                    _ => break,
-                };
-            }
-        });
+        tokio::spawn(Self::features_fetch(features_rx, ui_tx.clone()));
+        tokio::spawn(Self::input_handler(ui_tx.clone()));
 
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
@@ -184,8 +184,8 @@ impl Widget for &App {
 
 #[derive(Debug, Default)]
 enum CurrentScreen {
-    #[default]
     Main,
+    #[default]
     Searching,
 }
 
@@ -202,11 +202,11 @@ struct Sub {
 impl Widget for &Subs {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let rows = self.0.iter().map(|item| {
-            let cell = Cell::from(Text::from(item.id.as_str()));
-            let cell2 = Cell::from(Text::from(item.title.as_str()));
-            let cell3 = Cell::from(Text::from(item.year.as_str()));
-            let vec1: Vec<Cell> = vec![cell, cell2, cell3];
-            Row::from_iter(vec1)
+            Row::from_iter(vec![
+                Cell::from(Text::from(item.id.as_str())),
+                Cell::from(Text::from(item.title.as_str())),
+                Cell::from(Text::from(item.year.as_str())),
+            ])
         });
 
         let block_bot = Block::bordered()
@@ -215,6 +215,7 @@ impl Widget for &Subs {
             .border_set(border::THICK);
 
         Table::new(rows, [10, 50, 10])
+            .header(Row::from_iter(vec!["ID", "Title", "Year"]))
             .block(block_bot)
             .render(area, buf);
     }
