@@ -3,6 +3,7 @@ use crate::ui::subs_widget::{Sub, Subs};
 use anyhow::{Context, Result, bail};
 use log::{debug, error, info};
 use osb::features::{FeaturesResponse, features};
+use osb::subtitles::{SubtitlesResponse, subtitles};
 use ratatui::crossterm::event;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::layout::{Constraint, Direction, Layout};
@@ -19,6 +20,7 @@ use ratatui::{
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::time::Duration;
+use clap::Subcommand;
 use tokio::time::sleep;
 
 #[derive(Debug, Default)]
@@ -32,7 +34,7 @@ pub struct App {
 #[derive(Debug)]
 enum UiEvent {
     Input(KeyEvent),
-    ResultsUpdate(FeaturesResponse),
+    ResultsUpdate(SubtitlesResponse),
 }
 
 impl App {
@@ -64,13 +66,13 @@ impl App {
             }
 
             if let Some(text) = last {
-                if text.is_empty() {
-                    tx.send(ResultsUpdate(FeaturesResponse { data: vec![] }))
+                if text.len() < 3 {
+                    tx.send(ResultsUpdate(SubtitlesResponse { data: vec![] }))
                         .unwrap()
                 } else {
-                    let result = features(&text).await;
+                    let result = subtitles(&text, vec![String::from("pl")]).await;
                     match result {
-                        Ok(features) => tx.send(ResultsUpdate(features)).unwrap(),
+                        Ok(subtitles) => tx.send(ResultsUpdate(subtitles)).unwrap(),
                         Err(_) => break,
                     }
                 }
@@ -104,9 +106,9 @@ impl App {
                     self.handle_key_event(key_event);
                     features_tx.send(self.search_text.clone()).unwrap();
                 }
-                ResultsUpdate(features) => {
-                    // info!("ResultsUpdate: {:?}", features);
-                    self.handle_features_event(features)?
+                ResultsUpdate(subtitles) => {
+                    // info!("ResultsUpdate: {:?}", subtitles);
+                    self.handle_features_event(subtitles)?
                 }
             }
         }
@@ -117,15 +119,15 @@ impl App {
         frame.render_widget(self, frame.area())
     }
 
-    fn handle_features_event(&mut self, features_response: FeaturesResponse) -> Result<()> {
-        let subs = features_response
+    fn handle_features_event(&mut self, subtitles_response: SubtitlesResponse) -> Result<()> {
+        let subs = subtitles_response
             .data
             .iter()
             .take(20)
             .map(|resp| Sub {
-                id: resp.id.clone(),
-                title: resp.attributes.title.clone(),
-                year: resp.attributes.year.clone(),
+                title: resp.attributes.release.clone(),
+                language: resp.attributes.language.clone(),
+                upload_date: resp.attributes.upload_date.clone(),
             })
             .collect::<Vec<Sub>>();
 

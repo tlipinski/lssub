@@ -4,7 +4,7 @@ use log::{debug, error, info, trace};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub async fn search(filename: &str, languages: Vec<String>) -> Result<()> {
+pub async fn subtitles(filename: &str, languages: Vec<String>) -> Result<SubtitlesResponse> {
     let url = format!("{}/subtitles", API_URL);
 
     let mut params = HashMap::new();
@@ -29,11 +29,11 @@ pub async fn search(filename: &str, languages: Vec<String>) -> Result<()> {
     match status {
         s if s.is_success() || s.is_redirection() => {
             trace!("Response {}", text_body);
-            let json: Result<SearchResponse, _> = serde_json::from_str(&text_body);
+            let json: Result<SubtitlesResponse, _> = serde_json::from_str(&text_body);
             match json {
-                Ok(search_response) => {
-                    debug!("{}", serde_json::to_string_pretty(&search_response)?);
-                    Ok(())
+                Ok(subtitles_response) => {
+                    debug!("{}", serde_json::to_string_pretty(&subtitles_response)?);
+                    Ok(subtitles_response)
                 }
                 Err(e) => {
                     error!("Failed decoding body {:?} {}", e, text_body);
@@ -58,27 +58,26 @@ pub async fn search(filename: &str, languages: Vec<String>) -> Result<()> {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct SearchResponse {
-    total_pages: i32,
-    data: Vec<Data>,
+pub struct SubtitlesResponse {
+    pub data: Vec<Data>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct Data {
-    r#type: String,
-    attributes: Attributes,
+pub struct Data {
+    pub r#type: String,
+    pub attributes: Attributes,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct FeatureDetails {
-    movie_name: String,
+pub struct FeatureDetails {
+    pub movie_name: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct Attributes {
-    feature_details: FeatureDetails,
-    language: String,
-    download_count: i32,
-    upload_date: String,
-    release: String,
+pub struct Attributes {
+    pub feature_details: FeatureDetails,
+    pub language: String,
+    pub download_count: i32,
+    pub upload_date: String,
+    pub release: String,
 }

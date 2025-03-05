@@ -9,18 +9,18 @@ pub struct Subs(pub Vec<Sub>);
 
 #[derive(Debug, Default)]
 pub struct Sub {
-    pub id: String,
     pub title: String,
-    pub year: String,
+    pub language: String,
+    pub upload_date: String,
 }
 
 impl Widget for &Subs {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let rows = self.0.iter().map(|item| {
             Row::from_iter(vec![
-                Cell::from(Text::from(item.id.as_str())),
                 Cell::from(Text::from(item.title.as_str())),
-                Cell::from(Text::from(item.year.as_str())),
+                Cell::from(Text::from(item.language.as_str())),
+                Cell::from(Text::from(item.upload_date.as_str())),
             ])
         });
 
@@ -29,8 +29,8 @@ impl Widget for &Subs {
             // .title_bottom(instructions.centered())
             .border_set(border::THICK);
 
-        Table::new(rows, [10, 50, 10])
-            .header(Row::from_iter(vec!["ID", "Title", "Year"]))
+        Table::new(rows, [70, 10, 10])
+            .header(Row::from_iter(vec!["Title", "Language", "Uploaded"]))
             .block(block_bot)
             .render(area, buf);
     }

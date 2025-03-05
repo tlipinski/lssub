@@ -4,6 +4,6 @@ pub mod guess;
 pub mod login;
 pub mod values;
 pub mod user_info;
-pub mod search;
+pub mod subtitles;
 pub mod guess_search;
 pub mod features;
