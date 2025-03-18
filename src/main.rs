@@ -19,6 +19,7 @@ use log::{LevelFilter, error, info};
 use osb::user_info::get_user_info;
 use std::fs::OpenOptions;
 use ui::app::App;
+use crate::cli::gui_cmd::handle_gui_cmd;
 
 #[tokio::main]
 async fn main() {
@@ -81,21 +82,15 @@ async fn run(args: Args) -> Result<()> {
             file_path,
             languages,
         } => {
-            handle_search_cmd(&file_path, languages).await?;
-            Ok(())
+            handle_search_cmd(&file_path, languages).await
         }
 
         Command::Features { query } => {
-            handle_features_cmd(&query).await?;
-            Ok(())
+            handle_features_cmd(&query).await
         }
 
         Command::Gui { file_path} => {
-            let mut terminal = ratatui::init();
-            let mut app = App::init(file_path.unwrap_or("".into()));
-            app.run(&mut terminal);
-            ratatui::restore();
-            Ok(())
+            handle_gui_cmd(file_path.as_deref()).await
         }
     }
 }
