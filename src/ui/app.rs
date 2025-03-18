@@ -38,6 +38,13 @@ enum UiEvent {
 }
 
 impl App {
+    pub fn init(file_name: String) -> App {
+        App {
+            search_text: file_name,
+            ..App::default()
+        }
+    }
+    
     fn exit(&mut self) {
         self.exit = true;
     }
@@ -97,6 +104,10 @@ impl App {
 
         tokio::spawn(Self::features_fetch(features_rx, ui_tx.clone()));
         tokio::spawn(Self::input_handler(ui_tx.clone()));
+        
+        if !self.search_text.is_empty() {
+            features_tx.send(self.search_text.clone())?;
+        }
 
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
@@ -104,7 +115,7 @@ impl App {
                 Input(key_event) => {
                     // info!("Input: {:?}", key_event);
                     self.handle_key_event(key_event);
-                    features_tx.send(self.search_text.clone()).unwrap();
+                    features_tx.send(self.search_text.clone())?;
                 }
                 ResultsUpdate(subtitles) => {
                     // info!("ResultsUpdate: {:?}", subtitles);

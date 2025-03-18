@@ -12,5 +12,7 @@ pub enum Command {
     Features {
         query: String
     },
-    Gui
+    Gui {
+        file_path: Option<String>
+    }
 }

@@ -5,9 +5,8 @@ mod config;
 mod secret;
 mod ui;
 
-use std::fs::OpenOptions;
-use ui::app::App;
 use crate::cli::command::Command;
+use crate::cli::features_cmd::handle_features_cmd;
 use crate::cli::login_cmd::handle_login_cmd;
 use crate::cli::logout_cmd::handle_logout_cmd;
 use crate::cli::search_cmd::handle_search_cmd;
@@ -16,9 +15,10 @@ use crate::secret::retrieve;
 use anyhow::{Error, Result};
 use clap::Parser;
 use env_logger::{Builder, Target};
-use log::{error, info, LevelFilter};
+use log::{LevelFilter, error, info};
 use osb::user_info::get_user_info;
-use crate::cli::features_cmd::handle_features_cmd;
+use std::fs::OpenOptions;
+use ui::app::App;
 
 #[tokio::main]
 async fn main() {
@@ -90,9 +90,10 @@ async fn run(args: Args) -> Result<()> {
             Ok(())
         }
 
-        Command::Gui => {
+        Command::Gui { file_path} => {
             let mut terminal = ratatui::init();
-            App::default().run(&mut terminal);
+            let mut app = App::init(file_path.unwrap_or("".into()));
+            app.run(&mut terminal);
             ratatui::restore();
             Ok(())
         }
