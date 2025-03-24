@@ -1,6 +1,7 @@
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::subs_widget::{Sub, Subs};
 use anyhow::{Context, Result, bail};
+use clap::Subcommand;
 use log::{debug, error, info};
 use osb::features::{FeaturesResponse, features};
 use osb::subtitles::{SubtitlesResponse, subtitles};
@@ -17,11 +18,14 @@ use ratatui::{
     text::{Line, Text},
     widgets::{Block, Paragraph, Widget},
 };
-use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
+use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
-use clap::Subcommand;
+use ratatui::crossterm::event::Event::Key;
+use tokio::join;
 use tokio::time::sleep;
+
+const QUIT_KEY: KeyCode = KeyCode::Esc;
 
 #[derive(Debug, Default)]
 pub struct App {
@@ -44,7 +48,7 @@ impl App {
             ..App::default()
         }
     }
-    
+
     fn exit(&mut self) {
         self.exit = true;
     }
@@ -90,6 +94,15 @@ impl App {
     async fn input_handler(tx: Sender<UiEvent>) {
         loop {
             match event::read().unwrap() {
+                Event::Key(key_event)
+                    if key_event.kind == KeyEventKind::Press && key_event.code == QUIT_KEY =>
+                {
+                    tx.send(Input(key_event));
+                    // Handler.abort() on this task doesn't kill it
+                    // Most likely it still hangs on event::read() so
+                    // handling QUIT_KEY explicitly breaks the loop
+                    break;
+                }
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                     tx.send(Input(key_event))
                 }
@@ -150,7 +163,7 @@ impl App {
     fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
         match self.current_screen {
             CurrentScreen::Main => match key_event.code {
-                KeyCode::Esc => self.exit(),
+                QUIT_KEY => self.exit(),
                 KeyCode::Char('s') => self.current_screen = CurrentScreen::Searching,
                 _ => {}
             },
@@ -161,7 +174,7 @@ impl App {
                 KeyCode::Char(key) => {
                     self.search_text.push(key);
                 }
-                KeyCode::Esc => {
+                QUIT_KEY => {
                     self.exit();
                 }
                 _ => {}
