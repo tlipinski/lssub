@@ -25,6 +25,8 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
 use tokio::join;
 use tokio::time::sleep;
+use crate::ui::events::UiEvent;
+use crate::ui::features_fetcher::fetch_features;
 
 const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -42,12 +44,6 @@ pub struct SearchWidget {
     active: bool,
 }
 
-#[derive(Debug)]
-enum UiEvent {
-    Input(KeyEvent),
-    ResultsUpdate(SubtitlesResponse),
-}
-
 impl App {
     pub fn init(file_name: String) -> App {
         App {
@@ -61,44 +57,6 @@ impl App {
 
     fn exit(&mut self) {
         self.exit = true;
-    }
-
-    async fn features_fetch(rx: Receiver<String>, tx: Sender<UiEvent>) {
-        'outer: loop {
-            sleep(Duration::from_millis(1000)).await;
-
-            let mut last: Option<String> = None;
-
-            // Receive as much as possible within outer loop cycle to reduce OSB calls.
-            'debouncing: loop {
-                match rx.try_recv() {
-                    Ok(ev) => {
-                        // debug!("Debouncing: {}", ev);
-                        last = Some(ev)
-                    }
-
-                    Err(TryRecvError::Empty) => break 'debouncing,
-
-                    Err(TryRecvError::Disconnected) => {
-                        error!("Disconnected");
-                        break 'outer;
-                    }
-                }
-            }
-
-            if let Some(text) = last {
-                if text.len() < 3 {
-                    tx.send(ResultsUpdate(SubtitlesResponse { data: vec![] }))
-                        .unwrap()
-                } else {
-                    let result = subtitles(&text, vec![String::from("pl")]).await;
-                    match result {
-                        Ok(subtitles) => tx.send(ResultsUpdate(subtitles)).unwrap(),
-                        Err(_) => break,
-                    }
-                }
-            }
-        }
     }
 
     async fn input_handler(tx: Sender<UiEvent>) {
@@ -125,7 +83,7 @@ impl App {
         let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
         let (features_tx, features_rx) = mpsc::channel::<String>();
 
-        tokio::spawn(Self::features_fetch(features_rx, ui_tx.clone()));
+        tokio::spawn(fetch_features(features_rx, ui_tx.clone()));
         tokio::spawn(Self::input_handler(ui_tx.clone()));
 
         if !self.search_widget.search_text.is_empty() {
