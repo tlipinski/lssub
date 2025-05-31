@@ -10,7 +10,7 @@ use std::time::Duration;
 use tokio::join;
 use tokio::time::sleep;
 
-pub async fn fetch_features(rx: Receiver<String>, tx: Sender<UiEvent>) {
+pub async fn fetch_features_task(rx: Receiver<String>, tx: Sender<UiEvent>) {
     'outer: loop {
         sleep(Duration::from_millis(1000)).await;
 

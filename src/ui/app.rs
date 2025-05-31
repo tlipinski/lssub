@@ -1,7 +1,7 @@
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::events::UiEvent;
-use crate::ui::features_fetcher::fetch_features;
-use crate::ui::input_handler::handle_input;
+use crate::ui::features_fetcher::fetch_features_task;
+use crate::ui::input_handler::handle_input_task;
 use crate::ui::subs_widget::{Sub, Subs};
 use anyhow::Result;
 use osb::subtitles::SubtitlesResponse;
@@ -51,8 +51,8 @@ impl App {
         let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
         let (features_tx, features_rx) = mpsc::channel::<String>();
 
-        tokio::spawn(fetch_features(features_rx, ui_tx.clone()));
-        tokio::spawn(handle_input(ui_tx.clone()));
+        tokio::spawn(fetch_features_task(features_rx, ui_tx.clone()));
+        tokio::spawn(handle_input_task(ui_tx.clone()));
 
         if !self.search_widget.search_text.is_empty() {
             features_tx.send(self.search_widget.search_text.clone())?;

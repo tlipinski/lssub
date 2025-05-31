@@ -6,7 +6,7 @@ use ratatui::crossterm::event::Event::Key;
 use ratatui::crossterm::event::KeyEventKind;
 use std::sync::mpsc::Sender;
 
-pub async fn handle_input(tx: Sender<UiEvent>) {
+pub async fn handle_input_task(tx: Sender<UiEvent>) {
     loop {
         match event::read().unwrap() {
             // Key(key_event)
