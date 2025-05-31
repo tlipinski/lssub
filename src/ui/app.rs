@@ -19,6 +19,7 @@ use ratatui::{
 };
 use std::sync::mpsc;
 use log::info;
+use crate::ui::search_widget::SearchWidget;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -30,11 +31,6 @@ pub struct App {
     exit: bool,
 }
 
-#[derive(Debug, Default)]
-pub struct SearchWidget {
-    search_text: String,
-    active: bool,
-}
 
 impl App {
     pub fn init(file_name: String) -> App {
@@ -142,41 +138,7 @@ impl App {
     }
 }
 
-impl SearchWidget {
-    fn handle_key_event(&mut self, key_event: KeyEvent) {
-        match key_event.code {
-            KeyCode::Backspace => {
-                self.search_text.pop();
-            }
-            KeyCode::Char(key) => {
-                self.search_text.push(key);
-            }
-            QUIT_KEY => {
-                self.active = false;
-            }
-            _ => {}
-        }
-    }
-}
 
-impl Widget for &SearchWidget {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Line::from(" Search ".bold());
-        let span = if self.active {
-            " Search ".bold().red()
-        } else {
-            " Search ".bold()
-        };
-        let block = Block::bordered()
-            .title(span)
-            // .title_bottom(instructions.centered())
-            .border_set(border::THICK);
-
-        let par = Line::from(self.search_text.clone().bold());
-
-        Paragraph::new(par).block(block).render(area, buf);
-    }
-}
 
 #[derive(Debug, Default)]
 enum CurrentScreen {
