@@ -31,7 +31,7 @@ const QUIT_KEY: KeyCode = KeyCode::Esc;
 #[derive(Debug, Default)]
 pub struct App {
     current_screen: CurrentScreen,
-    search_text: String,
+    search_widget: SearchWidget,
     subs: Subs,
     exit: bool,
 }
@@ -51,7 +51,10 @@ enum UiEvent {
 impl App {
     pub fn init(file_name: String) -> App {
         App {
-            search_text: file_name,
+            search_widget: SearchWidget {
+                search_text: file_name,
+                active: true,
+            },
             ..App::default()
         }
     }
@@ -125,8 +128,8 @@ impl App {
         tokio::spawn(Self::features_fetch(features_rx, ui_tx.clone()));
         tokio::spawn(Self::input_handler(ui_tx.clone()));
 
-        if !self.search_text.is_empty() {
-            features_tx.send(self.search_text.clone())?;
+        if !self.search_widget.search_text.is_empty() {
+            features_tx.send(self.search_widget.search_text.clone())?;
         }
 
         while !self.exit {
@@ -135,7 +138,7 @@ impl App {
                 Input(key_event) => {
                     // info!("Input: {:?}", key_event);
                     self.handle_key_event(key_event);
-                    features_tx.send(self.search_text.clone())?;
+                    features_tx.send(self.search_widget.search_text.clone())?;
                 }
                 ResultsUpdate(subtitles) => {
                     // info!("ResultsUpdate: {:?}", subtitles);
@@ -154,12 +157,7 @@ impl App {
             .constraints([Constraint::Length(3), Constraint::Min(10)])
             .split(area);
 
-        let search_widget = SearchWidget {
-            search_text: self.search_text.clone(),
-            active: true,
-        };
-
-        frame.render_widget(&search_widget, layout[0]);
+        frame.render_widget(&self.search_widget, layout[0]);
         frame.render_widget(&self.subs, layout[1]);
     }
 
@@ -191,13 +189,22 @@ impl App {
             },
             CurrentScreen::Searching => match key_event.code {
                 KeyCode::Backspace => {
-                    self.search_text.pop();
+                    self.search_widget.search_text.pop();
                 }
                 KeyCode::Char(key) => {
-                    self.search_text.push(key);
+                    self.search_widget.search_text.push(key);
                 }
                 QUIT_KEY => {
                     self.exit();
+                }
+                _ => {}
+            },
+            CurrentScreen::Table => match key_event.code {
+                KeyCode::Down => {
+                    self.subs.state.select_next();
+                }
+                KeyCode::Up => {
+                    self.subs.state.select_previous();
                 }
                 _ => {}
             },
@@ -230,4 +237,5 @@ enum CurrentScreen {
     Main,
     #[default]
     Searching,
+    Table,
 }
