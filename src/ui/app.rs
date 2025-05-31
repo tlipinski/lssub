@@ -6,9 +6,11 @@ use log::{debug, error, info};
 use osb::features::{FeaturesResponse, features};
 use osb::subtitles::{SubtitlesResponse, subtitles};
 use ratatui::crossterm::event;
+use ratatui::crossterm::event::Event::Key;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::layout::{Constraint, Direction, Layout};
-use ratatui::widgets::{Cell, Row, Table};
+use ratatui::prelude::StatefulWidget;
+use ratatui::widgets::{Cell, Row, Table, TableState};
 use ratatui::{
     DefaultTerminal, Frame,
     buffer::Buffer,
@@ -21,7 +23,6 @@ use ratatui::{
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
-use ratatui::crossterm::event::Event::Key;
 use tokio::join;
 use tokio::time::sleep;
 
@@ -33,6 +34,12 @@ pub struct App {
     search_text: String,
     subs: Subs,
     exit: bool,
+}
+
+#[derive(Debug, Default)]
+pub struct SearchWidget {
+    search_text: String,
+    active: bool,
 }
 
 #[derive(Debug)]
@@ -117,7 +124,7 @@ impl App {
 
         tokio::spawn(Self::features_fetch(features_rx, ui_tx.clone()));
         tokio::spawn(Self::input_handler(ui_tx.clone()));
-        
+
         if !self.search_text.is_empty() {
             features_tx.send(self.search_text.clone())?;
         }
@@ -140,7 +147,20 @@ impl App {
     }
 
     fn draw(&self, frame: &mut Frame) {
-        frame.render_widget(self, frame.area())
+        let area = frame.area();
+
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(3), Constraint::Min(10)])
+            .split(area);
+
+        let search_widget = SearchWidget {
+            search_text: self.search_text.clone(),
+            active: true,
+        };
+
+        frame.render_widget(&search_widget, layout[0]);
+        frame.render_widget(&self.subs, layout[1]);
     }
 
     fn handle_features_event(&mut self, subtitles_response: SubtitlesResponse) -> Result<()> {
@@ -154,8 +174,10 @@ impl App {
                 upload_date: resp.attributes.upload_date.clone(),
             })
             .collect::<Vec<Sub>>();
-
-        self.subs = Subs(subs);
+        self.subs = Subs {
+            data: subs,
+            state: TableState::default().with_selected(0),
+        };
 
         Ok(())
     }
@@ -184,17 +206,13 @@ impl App {
     }
 }
 
-impl Widget for &App {
+impl Widget for &SearchWidget {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let layout = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Min(10)])
-            .split(area);
-
         let title = Line::from(" Search ".bold());
-        let span = match self.current_screen {
-            CurrentScreen::Main => " Search ".bold(),
-            CurrentScreen::Searching => " Search ".bold().red(),
+        let span = if self.active {
+            " Search ".bold().red()
+        } else {
+            " Search ".bold()
         };
         let block = Block::bordered()
             .title(span)
@@ -203,9 +221,7 @@ impl Widget for &App {
 
         let par = Line::from(self.search_text.clone().bold());
 
-        Paragraph::new(par).block(block).render(layout[0], buf);
-
-        self.subs.render(layout[1], buf);
+        Paragraph::new(par).block(block).render(area, buf);
     }
 }
 
