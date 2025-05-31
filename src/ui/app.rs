@@ -9,15 +9,16 @@ use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::widgets::TableState;
 use ratatui::{
-    buffer::Buffer, layout::Rect,
+    DefaultTerminal, Frame,
+    buffer::Buffer,
+    layout::Rect,
     style::Stylize,
     symbols::border,
     text::Line,
     widgets::{Block, Paragraph, Widget},
-    DefaultTerminal,
-    Frame,
 };
 use std::sync::mpsc;
+use log::info;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -111,22 +112,21 @@ impl App {
 
     fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
         match self.current_screen {
-            CurrentScreen::Main => match key_event.code {
-                QUIT_KEY => self.exit(),
-                KeyCode::Char('s') => self.current_screen = CurrentScreen::Searching,
-                _ => {}
+            CurrentScreen::Main => {
+                match key_event.code {
+                    QUIT_KEY => self.exit(),
+                    KeyCode::Char('s') => {
+                        self.current_screen = CurrentScreen::Searching;
+                        self.search_widget.active = true
+                    },
+                    _ => {}
+                }
             },
-            CurrentScreen::Searching => match key_event.code {
-                KeyCode::Backspace => {
-                    self.search_widget.search_text.pop();
+            CurrentScreen::Searching => {
+                self.search_widget.handle_key_event(key_event);
+                if (!self.search_widget.active) {
+                    self.current_screen = CurrentScreen::Main
                 }
-                KeyCode::Char(key) => {
-                    self.search_widget.search_text.push(key);
-                }
-                QUIT_KEY => {
-                    self.exit();
-                }
-                _ => {}
             },
             CurrentScreen::Table => match key_event.code {
                 KeyCode::Down => {
@@ -139,6 +139,23 @@ impl App {
             },
         }
         Ok(())
+    }
+}
+
+impl SearchWidget {
+    fn handle_key_event(&mut self, key_event: KeyEvent) {
+        match key_event.code {
+            KeyCode::Backspace => {
+                self.search_text.pop();
+            }
+            KeyCode::Char(key) => {
+                self.search_text.push(key);
+            }
+            QUIT_KEY => {
+                self.active = false;
+            }
+            _ => {}
+        }
     }
 }
 
