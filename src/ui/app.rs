@@ -1,34 +1,25 @@
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
-use crate::ui::subs_widget::{Sub, Subs};
-use anyhow::{Context, Result, bail};
-use clap::Subcommand;
-use log::{debug, error, info};
-use osb::features::{FeaturesResponse, features};
-use osb::subtitles::{SubtitlesResponse, subtitles};
-use ratatui::crossterm::event;
-use ratatui::crossterm::event::Event::Key;
-use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::layout::{Constraint, Direction, Layout};
-use ratatui::prelude::StatefulWidget;
-use ratatui::widgets::{Cell, Row, Table, TableState};
-use ratatui::{
-    DefaultTerminal, Frame,
-    buffer::Buffer,
-    layout::Rect,
-    style::Stylize,
-    symbols::border,
-    text::{Line, Text},
-    widgets::{Block, Paragraph, Widget},
-};
-use std::sync::mpsc::{Receiver, Sender, TryRecvError};
-use std::sync::{Arc, Mutex, mpsc};
-use std::time::Duration;
-use tokio::join;
-use tokio::time::sleep;
 use crate::ui::events::UiEvent;
 use crate::ui::features_fetcher::fetch_features;
+use crate::ui::input_handler::handle_input;
+use crate::ui::subs_widget::{Sub, Subs};
+use anyhow::Result;
+use osb::subtitles::SubtitlesResponse;
+use ratatui::crossterm::event::{KeyCode, KeyEvent};
+use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::widgets::TableState;
+use ratatui::{
+    buffer::Buffer, layout::Rect,
+    style::Stylize,
+    symbols::border,
+    text::Line,
+    widgets::{Block, Paragraph, Widget},
+    DefaultTerminal,
+    Frame,
+};
+use std::sync::mpsc;
 
-const QUIT_KEY: KeyCode = KeyCode::Esc;
+pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
 #[derive(Debug, Default)]
 pub struct App {
@@ -59,32 +50,12 @@ impl App {
         self.exit = true;
     }
 
-    async fn input_handler(tx: Sender<UiEvent>) {
-        loop {
-            match event::read().unwrap() {
-                Event::Key(key_event)
-                    if key_event.kind == KeyEventKind::Press && key_event.code == QUIT_KEY =>
-                {
-                    tx.send(Input(key_event));
-                    // Handler.abort() on this task doesn't kill it
-                    // Most likely it still hangs on event::read() so
-                    // handling QUIT_KEY explicitly breaks the loop
-                    break;
-                }
-                Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                    tx.send(Input(key_event))
-                }
-                _ => break,
-            };
-        }
-    }
-
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
         let (features_tx, features_rx) = mpsc::channel::<String>();
 
         tokio::spawn(fetch_features(features_rx, ui_tx.clone()));
-        tokio::spawn(Self::input_handler(ui_tx.clone()));
+        tokio::spawn(handle_input(ui_tx.clone()));
 
         if !self.search_widget.search_text.is_empty() {
             features_tx.send(self.search_widget.search_text.clone())?;
