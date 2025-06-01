@@ -107,6 +107,9 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
+        // info!("key {key_event:?}");
+        // let scr = &self.current_screen;
+        // info!("scr before {scr:?}");
         match self.current_screen {
             CurrentScreen::Main => match key_event.code {
                 QUIT_KEY => self.exit(),
@@ -121,15 +124,23 @@ impl App {
                     self.search_widget.active = false;
                     self.current_screen = CurrentScreen::Main
                 }
+                KeyCode::Tab => {
+                    self.current_screen = CurrentScreen::Table;
+                    self.subs.active = true;
+                    self.search_widget.active = false;
+                }
                 _ => self.search_widget.handle_key_event(key_event),
             },
-            CurrentScreen::Table => {
-                self.subs.handle_key_event(key_event);
-                if (!self.subs.active) {
+            CurrentScreen::Table => match key_event.code {
+                QUIT_KEY => {
+                    self.subs.active = false;
                     self.current_screen = CurrentScreen::Main
                 }
-            }
+                _ => self.subs.handle_key_event(key_event),
+            },
         }
+        // let scr = &self.current_screen;
+        // info!("scr after {scr:?}");
         Ok(())
     }
 }

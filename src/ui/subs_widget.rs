@@ -47,9 +47,13 @@ impl Widget for &SubsWidget {
                 Cell::from(Text::from(item.upload_date.as_str())),
             ])
         });
-
+        let mut title = format!(" Results: {} ", self.subs.len()).bold();
+        if (self.active) {
+            title = title.red();
+        }
+        
         let block_bot = Block::bordered()
-            .title(format!(" Results: {} ", self.subs.len()).bold())
+            .title(title)
             // .title_bottom(instructions.centered())
             .border_set(border::THICK);
 

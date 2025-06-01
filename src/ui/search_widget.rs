@@ -28,14 +28,12 @@ impl SearchWidget {
 
 impl Widget for &SearchWidget {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Line::from(" Search ".bold());
-        let span = if self.active {
-            " Search ".bold().red()
-        } else {
-            " Search ".bold()
-        };
+        let mut title = " Search ".bold();
+        if self.active {
+            title = title.red()
+        }
         let block = Block::bordered()
-            .title(span)
+            .title(title)
             // .title_bottom(instructions.centered())
             .border_set(border::THICK);
 
