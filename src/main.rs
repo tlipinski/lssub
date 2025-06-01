@@ -63,7 +63,7 @@ async fn run(args: Args) -> Result<()> {
         Command::Login => handle_login_cmd().await,
 
         Command::Logout => {
-            if let Some(_) = retrieve().await? {
+            if retrieve().await?.is_some() {
                 handle_logout_cmd().await
             } else {
                 Err(Error::msg("Already logged out"))

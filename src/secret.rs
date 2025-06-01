@@ -19,7 +19,7 @@ pub async fn store(api_token: &ApiToken, username: &str) -> Result<()> {
         if let Err(e) = libsecret::password_store_sync(
             Some(&schema),
             attributes,
-            Some(&libsecret::COLLECTION_DEFAULT),
+            Some(libsecret::COLLECTION_DEFAULT),
             "Subster",
             token.as_str(),
             None::<&gio::Cancellable>,

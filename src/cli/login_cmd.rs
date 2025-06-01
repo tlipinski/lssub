@@ -19,12 +19,12 @@ pub async fn handle_login_cmd() -> Result<()> {
 
     let credentials = Credentials {
         username: username.clone(),
-        password: password,
+        password,
     };
 
     let api_token = login(&credentials).await?;
 
-    let _ = store(&api_token, &username).await?;
+    store(&api_token, &username).await?;
 
     info!("Logged in successfully");
 
