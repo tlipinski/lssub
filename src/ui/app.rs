@@ -24,7 +24,7 @@ use std::sync::mpsc::{Receiver, Sender};
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct App {
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
@@ -33,41 +33,36 @@ pub struct App {
 }
 
 impl App {
-    pub fn init(file_name: String) -> App {
-        App {
-            // search_widget: SearchWidget {
-            //     search_text: file_name,
-            //     active: true,
-            // },
-            ..App::default()
-        }
-    }
-
-    fn exit(&mut self) {
-        self.exit = true;
-    }
-
-    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
+    pub fn run(terminal: &mut DefaultTerminal, file_name: String) -> Result<()> {
         let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
         let (features_tx, features_rx) = mpsc::channel::<String>();
 
         tokio::spawn(fetch_features_task(features_rx, ui_tx.clone()));
         tokio::spawn(handle_input_task(ui_tx.clone()));
 
-        self.search_widget = SearchWidget {
-            features_tx: Some(features_tx),
-            search_text: self.search_widget.search_text.clone(),
-            active: true,
+        let mut app = App {
+            current_screen: CurrentScreen::default(),
+            search_widget: SearchWidget {
+                features_tx,
+                search_text: file_name,
+                active: true,
+            },
+            subs_widget: SubsWidget::default(),
+            exit: false
         };
 
-        self.search_widget.init();
+        app.search_widget.init();
 
-        while !self.exit {
-            terminal.draw(|frame| self.draw(frame))?;
+        while !app.exit {
+            terminal.draw(|frame| app.draw(frame))?;
             let ui_event = ui_rx.recv()?;
-            self.handle_ui_events(ui_event)?;
+            app.handle_ui_events(ui_event)?;
         }
         Ok(())
+    }
+    
+    fn exit(&mut self) {
+        self.exit = true;
     }
 
     fn handle_ui_events(&mut self, ui_event: UiEvent) -> Result<()> {
@@ -75,7 +70,6 @@ impl App {
             Input(key_event) => {
                 // info!("Input: {:?}", key_event);
                 self.handle_key_event(key_event);
-                // features_tx.send(self.search_widget.search_text.clone())?;
             }
             ResultsUpdate(subtitles) => {
                 // info!("ResultsUpdate: {:?}", subtitles);

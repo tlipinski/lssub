@@ -8,9 +8,9 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
 use std::sync::mpsc::Sender;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct SearchWidget {
-    pub features_tx: Option<Sender<String>>,
+    pub features_tx: Sender<String>,
     pub search_text: String,
     pub active: bool,
 }
@@ -18,7 +18,7 @@ pub struct SearchWidget {
 impl SearchWidget {
     pub fn init(&self) -> Result<()> {
         if !self.search_text.is_empty() {
-            self.features_tx.as_ref().unwrap().send(self.search_text.clone())?;
+            self.features_tx.send(self.search_text.clone())?;
         }
         Ok(())
     }
@@ -27,11 +27,11 @@ impl SearchWidget {
         match key_event.code {
             KeyCode::Backspace => {
                 self.search_text.pop();
-                self.features_tx.as_ref().unwrap().send(self.search_text.clone())?;
+                self.features_tx.send(self.search_text.clone())?;
             }
             KeyCode::Char(key) => {
                 self.search_text.push(key);
-                self.features_tx.as_ref().unwrap().send(self.search_text.clone())?;
+                self.features_tx.send(self.search_text.clone())?;
             }
             _ => {}
         }
