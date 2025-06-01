@@ -5,9 +5,9 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Cell, Row, Table, TableState};
 
 #[derive(Debug, Default)]
-pub struct Subs{
-    pub data: Vec<Sub>,
-    pub state: TableState
+pub struct SubsWidget {
+    pub subs: Vec<Sub>,
+    pub state: TableState,
 }
 
 #[derive(Debug, Default)]
@@ -17,9 +17,9 @@ pub struct Sub {
     pub upload_date: String,
 }
 
-impl Widget for &Subs {
+impl Widget for &SubsWidget {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let rows = self.data.iter().map(|item| {
+        let rows = self.subs.iter().map(|item| {
             Row::from_iter(vec![
                 Cell::from(Text::from(item.title.as_str())),
                 Cell::from(Text::from(item.language.as_str())),
@@ -28,7 +28,7 @@ impl Widget for &Subs {
         });
 
         let block_bot = Block::bordered()
-            .title(format!(" Results: {} ", self.data.len()).bold())
+            .title(format!(" Results: {} ", self.subs.len()).bold())
             // .title_bottom(instructions.centered())
             .border_set(border::THICK);
 

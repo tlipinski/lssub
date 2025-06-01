@@ -2,7 +2,7 @@ use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::events::UiEvent;
 use crate::ui::features_fetcher::fetch_features_task;
 use crate::ui::input_handler::handle_input_task;
-use crate::ui::subs_widget::{Sub, Subs};
+use crate::ui::subs_widget::{Sub, SubsWidget};
 use anyhow::Result;
 use osb::subtitles::SubtitlesResponse;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
@@ -27,7 +27,7 @@ pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 pub struct App {
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
-    subs: Subs,
+    subs: SubsWidget,
     exit: bool,
 }
 
@@ -98,8 +98,8 @@ impl App {
                 upload_date: resp.attributes.upload_date.clone(),
             })
             .collect::<Vec<Sub>>();
-        self.subs = Subs {
-            data: subs,
+        self.subs = SubsWidget {
+            subs: subs,
             state: TableState::default().with_selected(0),
         };
 
