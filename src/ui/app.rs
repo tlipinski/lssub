@@ -27,7 +27,7 @@ pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 pub struct App {
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
-    subs: SubsWidget,
+    subs_widget: SubsWidget,
     exit: bool,
 }
 
@@ -83,7 +83,7 @@ impl App {
             .split(area);
 
         frame.render_widget(&self.search_widget, layout[0]);
-        frame.render_widget(&self.subs, layout[1]);
+        frame.render_widget(&self.subs_widget, layout[1]);
     }
 
     fn handle_features_event(&mut self, subtitles_response: SubtitlesResponse) -> Result<()> {
@@ -97,7 +97,7 @@ impl App {
                 upload_date: resp.attributes.upload_date.clone(),
             })
             .collect::<Vec<Sub>>();
-        self.subs = SubsWidget {
+        self.subs_widget = SubsWidget {
             subs: subs,
             state: TableState::default().with_selected(0),
             active: false,
@@ -126,17 +126,19 @@ impl App {
                 }
                 KeyCode::Tab => {
                     self.current_screen = CurrentScreen::Table;
-                    self.subs.active = true;
+                    self.subs_widget.active = true;
                     self.search_widget.active = false;
                 }
-                _ => self.search_widget.handle_key_event(key_event),
+                _ => {
+                    self.search_widget.handle_key_event(key_event);
+                }
             },
             CurrentScreen::Table => match key_event.code {
                 QUIT_KEY => {
-                    self.subs.active = false;
+                    self.subs_widget.active = false;
                     self.current_screen = CurrentScreen::Main
                 }
-                _ => self.subs.handle_key_event(key_event),
+                _ => self.subs_widget.handle_key_event(key_event),
             },
         }
         // let scr = &self.current_screen;
