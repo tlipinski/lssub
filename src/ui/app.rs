@@ -67,7 +67,7 @@ impl App {
                 }
                 ResultsUpdate(subtitles) => {
                     // info!("ResultsUpdate: {:?}", subtitles);
-                    self.subs_widget.handle_features_event(subtitles)
+                    self.subs_widget.update_subtitles(subtitles)
                 }
             }
         }
