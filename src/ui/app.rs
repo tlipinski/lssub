@@ -67,7 +67,7 @@ impl App {
                 }
                 ResultsUpdate(subtitles) => {
                     // info!("ResultsUpdate: {:?}", subtitles);
-                    self.handle_features_event(subtitles)?
+                    self.subs_widget.handle_features_event(subtitles)
                 }
             }
         }
@@ -84,26 +84,6 @@ impl App {
 
         frame.render_widget(&self.search_widget, layout[0]);
         frame.render_widget(&self.subs_widget, layout[1]);
-    }
-
-    fn handle_features_event(&mut self, subtitles_response: SubtitlesResponse) -> Result<()> {
-        let subs = subtitles_response
-            .data
-            .iter()
-            .take(20)
-            .map(|resp| Sub {
-                title: resp.attributes.release.clone(),
-                language: resp.attributes.language.clone(),
-                upload_date: resp.attributes.upload_date.clone(),
-            })
-            .collect::<Vec<Sub>>();
-        self.subs_widget = SubsWidget {
-            subs: subs,
-            state: TableState::default().with_selected(0),
-            active: false,
-        };
-
-        Ok(())
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
@@ -137,6 +117,11 @@ impl App {
                 QUIT_KEY => {
                     self.subs_widget.active = false;
                     self.current_screen = CurrentScreen::Main
+                }
+                KeyCode::Tab => {
+                    self.current_screen = CurrentScreen::Searching;
+                    self.subs_widget.active = false;
+                    self.search_widget.active = true;
                 }
                 _ => self.subs_widget.handle_key_event(key_event),
             },

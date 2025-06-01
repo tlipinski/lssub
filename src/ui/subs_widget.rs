@@ -4,6 +4,7 @@ use ratatui::layout::Rect;
 use ratatui::prelude::{Stylize, Text, Widget};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Cell, Row, Table, TableState};
+use osb::subtitles::SubtitlesResponse;
 
 #[derive(Debug, Default)]
 pub struct SubsWidget {
@@ -35,7 +36,21 @@ impl SubsWidget {
             _ => {}
         }
     }
-    
+
+    pub fn handle_features_event(&mut self, subtitles_response: SubtitlesResponse) {
+        let subs = subtitles_response
+            .data
+            .iter()
+            .take(20)
+            .map(|resp| Sub {
+                title: resp.attributes.release.clone(),
+                language: resp.attributes.language.clone(),
+                upload_date: resp.attributes.upload_date.clone(),
+            })
+            .collect::<Vec<Sub>>();
+        
+        self.subs = subs;
+    }
 }
 
 impl Widget for &SubsWidget {
