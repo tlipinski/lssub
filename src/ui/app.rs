@@ -2,8 +2,10 @@ use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::events::UiEvent;
 use crate::ui::features_fetcher::fetch_features_task;
 use crate::ui::input_handler::handle_input_task;
+use crate::ui::search_widget::SearchWidget;
 use crate::ui::subs_widget::{Sub, SubsWidget};
 use anyhow::Result;
+use log::info;
 use osb::subtitles::SubtitlesResponse;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout};
@@ -18,8 +20,6 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 use std::sync::mpsc;
-use log::info;
-use crate::ui::search_widget::SearchWidget;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -30,7 +30,6 @@ pub struct App {
     subs: SubsWidget,
     exit: bool,
 }
-
 
 impl App {
     pub fn init(file_name: String) -> App {
@@ -101,6 +100,7 @@ impl App {
         self.subs = SubsWidget {
             subs: subs,
             state: TableState::default().with_selected(0),
+            active: false
         };
 
         Ok(())
@@ -108,37 +108,30 @@ impl App {
 
     fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
         match self.current_screen {
-            CurrentScreen::Main => {
-                match key_event.code {
-                    QUIT_KEY => self.exit(),
-                    KeyCode::Char('s') => {
-                        self.current_screen = CurrentScreen::Searching;
-                        self.search_widget.active = true
-                    },
-                    _ => {}
+            CurrentScreen::Main => match key_event.code {
+                QUIT_KEY => self.exit(),
+                KeyCode::Char('s') => {
+                    self.current_screen = CurrentScreen::Searching;
+                    self.search_widget.active = true
                 }
+                _ => {}
             },
             CurrentScreen::Searching => {
                 self.search_widget.handle_key_event(key_event);
                 if (!self.search_widget.active) {
                     self.current_screen = CurrentScreen::Main
                 }
-            },
-            CurrentScreen::Table => match key_event.code {
-                KeyCode::Down => {
-                    self.subs.state.select_next();
+            }
+            CurrentScreen::Table => {
+                self.subs.handle_key_event(key_event);
+                if (!self.subs.active) {
+                    self.current_screen = CurrentScreen::Main
                 }
-                KeyCode::Up => {
-                    self.subs.state.select_previous();
-                }
-                _ => {}
-            },
+            }
         }
         Ok(())
     }
 }
-
-
 
 #[derive(Debug, Default)]
 enum CurrentScreen {

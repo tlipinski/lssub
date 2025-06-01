@@ -1,4 +1,5 @@
 use ratatui::buffer::Buffer;
+use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::Rect;
 use ratatui::prelude::{Stylize, Text, Widget};
 use ratatui::symbols::border;
@@ -8,6 +9,7 @@ use ratatui::widgets::{Block, Cell, Row, Table, TableState};
 pub struct SubsWidget {
     pub subs: Vec<Sub>,
     pub state: TableState,
+    pub active: bool
 }
 
 #[derive(Debug, Default)]
@@ -15,6 +17,25 @@ pub struct Sub {
     pub title: String,
     pub language: String,
     pub upload_date: String,
+}
+
+impl SubsWidget {
+
+    pub fn handle_key_event(&mut self, key_event: KeyEvent) {
+        match key_event.code {
+            KeyCode::Up => {
+                self.state.select_previous()
+            }
+            KeyCode::Down => {
+                self.state.select_next()
+            }
+            KeyCode::Esc => {
+                self.active = false;
+            }
+            _ => {}
+        }
+    }
+    
 }
 
 impl Widget for &SubsWidget {
