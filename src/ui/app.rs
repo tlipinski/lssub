@@ -20,6 +20,7 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 use std::sync::mpsc;
+use std::sync::mpsc::{Receiver, Sender};
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -34,10 +35,10 @@ pub struct App {
 impl App {
     pub fn init(file_name: String) -> App {
         App {
-            search_widget: SearchWidget {
-                search_text: file_name,
-                active: true,
-            },
+            // search_widget: SearchWidget {
+            //     search_text: file_name,
+            //     active: true,
+            // },
             ..App::default()
         }
     }
@@ -53,22 +54,32 @@ impl App {
         tokio::spawn(fetch_features_task(features_rx, ui_tx.clone()));
         tokio::spawn(handle_input_task(ui_tx.clone()));
 
-        if !self.search_widget.search_text.is_empty() {
-            features_tx.send(self.search_widget.search_text.clone())?;
-        }
+        self.search_widget = SearchWidget {
+            features_tx: Some(features_tx),
+            search_text: self.search_widget.search_text.clone(),
+            active: true,
+        };
+
+        self.search_widget.init();
 
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
-            match ui_rx.recv()? {
-                Input(key_event) => {
-                    // info!("Input: {:?}", key_event);
-                    self.handle_key_event(key_event);
-                    features_tx.send(self.search_widget.search_text.clone())?;
-                }
-                ResultsUpdate(subtitles) => {
-                    // info!("ResultsUpdate: {:?}", subtitles);
-                    self.subs_widget.update_subtitles(subtitles)
-                }
+            let ui_event = ui_rx.recv()?;
+            self.handle_ui_events(ui_event)?;
+        }
+        Ok(())
+    }
+
+    fn handle_ui_events(&mut self, ui_event: UiEvent) -> Result<()> {
+        match ui_event {
+            Input(key_event) => {
+                // info!("Input: {:?}", key_event);
+                self.handle_key_event(key_event);
+                // features_tx.send(self.search_widget.search_text.clone())?;
+            }
+            ResultsUpdate(subtitles) => {
+                // info!("ResultsUpdate: {:?}", subtitles);
+                self.subs_widget.update_subtitles(subtitles)
             }
         }
         Ok(())
