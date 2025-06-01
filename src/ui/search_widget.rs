@@ -21,9 +21,6 @@ impl SearchWidget {
             KeyCode::Char(key) => {
                 self.search_text.push(key);
             }
-            KeyCode::Esc => {
-                self.active = false;
-            }
             _ => {}
         }
     }

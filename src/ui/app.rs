@@ -100,7 +100,7 @@ impl App {
         self.subs = SubsWidget {
             subs: subs,
             state: TableState::default().with_selected(0),
-            active: false
+            active: false,
         };
 
         Ok(())
@@ -116,12 +116,13 @@ impl App {
                 }
                 _ => {}
             },
-            CurrentScreen::Searching => {
-                self.search_widget.handle_key_event(key_event);
-                if (!self.search_widget.active) {
+            CurrentScreen::Searching => match key_event.code {
+                QUIT_KEY => {
+                    self.search_widget.active = false;
                     self.current_screen = CurrentScreen::Main
                 }
-            }
+                _ => self.search_widget.handle_key_event(key_event),
+            },
             CurrentScreen::Table => {
                 self.subs.handle_key_event(key_event);
                 if (!self.subs.active) {
