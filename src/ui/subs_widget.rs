@@ -45,7 +45,7 @@ impl SubsWidget {
                 upload_date: resp.attributes.upload_date.clone(),
             })
             .collect::<Vec<Sub>>();
-        
+
         self.subs = subs;
     }
 }
@@ -63,7 +63,7 @@ impl Widget for &SubsWidget {
         if (self.active) {
             title = title.red();
         }
-        
+
         let block_bot = Block::bordered()
             .title(title)
             // .title_bottom(instructions.centered())

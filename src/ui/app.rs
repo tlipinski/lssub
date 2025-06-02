@@ -37,8 +37,10 @@ impl App {
         let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
         let (features_tx, features_rx) = mpsc::channel::<String>();
 
+        let (shutdown_tx, shutdown_rx) = mpsc::channel::<()>();
+
         tokio::spawn(fetch_features_task(features_rx, ui_tx.clone()));
-        tokio::spawn(handle_input_task(ui_tx.clone()));
+        tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_rx));
 
         let mut app = App {
             current_screen: CurrentScreen::default(),
@@ -48,7 +50,7 @@ impl App {
                 active: true,
             },
             subs_widget: SubsWidget::default(),
-            exit: false
+            exit: false,
         };
 
         app.search_widget.init();
@@ -58,9 +60,10 @@ impl App {
             let ui_event = ui_rx.recv()?;
             app.handle_ui_events(ui_event)?;
         }
+        shutdown_tx.send(())?;
         Ok(())
     }
-    
+
     fn exit(&mut self) {
         self.exit = true;
     }
