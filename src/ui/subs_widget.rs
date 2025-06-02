@@ -30,9 +30,6 @@ impl SubsWidget {
             KeyCode::Down => {
                 self.state.select_next()
             }
-            KeyCode::Esc => {
-                self.active = false;
-            }
             _ => {}
         }
     }
