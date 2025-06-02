@@ -23,10 +23,35 @@ pub struct Sub {
 }
 
 impl SubsWidget {
-    pub fn render(model: &SubsWidget, frame: &mut Frame, area: Rect) {
-        let table = model.view();
-        let mut state: TableState = model.state.clone(); // can it be done without clone?
-        frame.render_stateful_widget(table, area, &mut state)
+    // fn r(&mut self, f: &mut Frame, area: Rect) {
+    //     let table = self.view();
+    //     f.render_stateful_widget(table, area, &mut self.state)
+    // }
+
+    pub fn render(&mut self, f: &mut Frame, area: Rect) {
+        let rows = self.subs.iter().map(|item| {
+            Row::from_iter(vec![
+                Cell::from(Text::from(item.title.as_str())),
+                Cell::from(Text::from(item.language.as_str())),
+                Cell::from(Text::from(item.upload_date.as_str())),
+            ])
+        });
+        let mut title = format!(" Results: {} ", self.subs.len()).bold();
+        if (self.active) {
+            title = title.red();
+        }
+
+        let block_bot = Block::bordered()
+            .title(title)
+            // .title_bottom(instructions.centered())
+            .border_set(border::THICK);
+
+        let table = Table::new(rows, [70, 10, 10])
+            .header(Row::from_iter(vec!["Title", "Language", "Uploaded"]))
+            .block(block_bot)
+            .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
+
+        f.render_stateful_widget(table, area, &mut self.state)
     }
 
     pub fn handle_key_event(&mut self, key_event: KeyEvent) {
@@ -52,27 +77,4 @@ impl SubsWidget {
         self.subs = subs;
     }
 
-    fn view(&self) -> Table {
-        let rows = self.subs.iter().map(|item| {
-            Row::from_iter(vec![
-                Cell::from(Text::from(item.title.as_str())),
-                Cell::from(Text::from(item.language.as_str())),
-                Cell::from(Text::from(item.upload_date.as_str())),
-            ])
-        });
-        let mut title = format!(" Results: {} ", self.subs.len()).bold();
-        if (self.active) {
-            title = title.red();
-        }
-
-        let block_bot = Block::bordered()
-            .title(title)
-            // .title_bottom(instructions.centered())
-            .border_set(border::THICK);
-
-        Table::new(rows, [70, 10, 10])
-            .header(Row::from_iter(vec!["Title", "Language", "Uploaded"]))
-            .block(block_bot)
-            .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White))
-    }
 }
