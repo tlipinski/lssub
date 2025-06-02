@@ -3,24 +3,13 @@ use crate::ui::events::UiEvent;
 use crate::ui::features_fetcher::fetch_features_task;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::search_widget::SearchWidget;
-use crate::ui::subs_widget::{Sub, SubsWidget};
+use crate::ui::subs_widget::SubsWidget;
 use anyhow::Result;
-use log::info;
-use osb::subtitles::SubtitlesResponse;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout};
-use ratatui::widgets::TableState;
-use ratatui::{
-    DefaultTerminal, Frame,
-    buffer::Buffer,
-    layout::Rect,
-    style::Stylize,
-    symbols::border,
-    text::Line,
-    widgets::{Block, Paragraph, Widget},
-};
+use ratatui::{DefaultTerminal, Frame};
 use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, Sender};
+use tokio::sync::broadcast;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -37,10 +26,10 @@ impl App {
         let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
         let (features_tx, features_rx) = mpsc::channel::<String>();
 
-        let (shutdown_tx, shutdown_rx) = mpsc::channel::<()>();
+        let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
 
+        tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
         tokio::spawn(fetch_features_task(features_rx, ui_tx.clone()));
-        tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_rx));
 
         let mut app = App {
             current_screen: CurrentScreen::default(),
