@@ -7,6 +7,7 @@ use ratatui::prelude::{Line, Stylize, Widget};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
 use std::sync::mpsc::Sender;
+use ratatui::Frame;
 
 #[derive(Debug)]
 pub struct SearchWidget {
@@ -16,6 +17,23 @@ pub struct SearchWidget {
 }
 
 impl SearchWidget {
+    pub fn render(&self, frame: &mut Frame, area: Rect) {
+        let mut title = " Search ".bold();
+        if self.active {
+            title = title.red()
+        }
+        let block = Block::bordered()
+            .title(title)
+            // .title_bottom(instructions.centered())
+            .border_set(border::THICK);
+
+        let par = Line::from(self.search_text.clone().bold());
+
+        let view = Paragraph::new(par).block(block);
+        
+        frame.render_widget(view, area);
+    }
+    
     pub fn init(&self) -> Result<()> {
         if !self.search_text.is_empty() {
             self.features_tx.send(self.search_text.clone())?;
@@ -36,22 +54,5 @@ impl SearchWidget {
             _ => {}
         }
         Ok(())
-    }
-}
-
-impl Widget for &SearchWidget {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let mut title = " Search ".bold();
-        if self.active {
-            title = title.red()
-        }
-        let block = Block::bordered()
-            .title(title)
-            // .title_bottom(instructions.centered())
-            .border_set(border::THICK);
-
-        let par = Line::from(self.search_text.clone().bold());
-
-        Paragraph::new(par).block(block).render(area, buf);
     }
 }
