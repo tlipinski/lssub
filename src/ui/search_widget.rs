@@ -5,7 +5,7 @@ use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::Rect;
 use ratatui::prelude::{Line, Stylize, Widget};
 use ratatui::symbols::border;
-use ratatui::widgets::{Block, Paragraph};
+use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
 use std::sync::mpsc::Sender;
 
 #[derive(Debug)]

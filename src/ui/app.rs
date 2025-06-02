@@ -9,6 +9,7 @@ use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
 use std::sync::mpsc;
+use ratatui::widgets::TableState;
 use tokio::sync::broadcast;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
@@ -71,7 +72,7 @@ impl App {
         Ok(())
     }
 
-    fn draw(&self, frame: &mut Frame) {
+    fn draw(&mut self, frame: &mut Frame) {
         let area = frame.area();
 
         let layout = Layout::default()
@@ -80,7 +81,11 @@ impl App {
             .split(area);
 
         frame.render_widget(&self.search_widget, layout[0]);
-        frame.render_widget(&self.subs_widget, layout[1]);
+
+        SubsWidget::render(&mut self.subs_widget, frame, layout[1]);
+        // self.subs_widget.render(frame, layout[1]);
+        // let mut state = TableState::default().with_selected(0);
+        // frame.render_stateful_widget(&self.subs_widget, layout[1], &mut state);
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {

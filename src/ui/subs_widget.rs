@@ -1,10 +1,12 @@
+use osb::subtitles::SubtitlesResponse;
+use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::Rect;
-use ratatui::prelude::{Stylize, Text, Widget};
+use ratatui::prelude::{Style, Stylize, Text};
+use ratatui::style::Color;
 use ratatui::symbols::border;
-use ratatui::widgets::{Block, Cell, Row, Table, TableState};
-use osb::subtitles::SubtitlesResponse;
+use ratatui::widgets::{Block, Cell, Row, StatefulWidget, Table, TableState};
 
 #[derive(Debug, Default)]
 pub struct SubsWidget {
@@ -21,15 +23,16 @@ pub struct Sub {
 }
 
 impl SubsWidget {
+    pub fn render(model: &SubsWidget, frame: &mut Frame, area: Rect) {
+        let table = model.view();
+        let mut state: TableState = model.state.clone(); // can it be done without clone?
+        frame.render_stateful_widget(table, area, &mut state)
+    }
 
     pub fn handle_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
-            KeyCode::Up => {
-                self.state.select_previous()
-            }
-            KeyCode::Down => {
-                self.state.select_next()
-            }
+            KeyCode::Up => self.state.select_previous(),
+            KeyCode::Down => self.state.select_next(),
             _ => {}
         }
     }
@@ -48,10 +51,8 @@ impl SubsWidget {
 
         self.subs = subs;
     }
-}
 
-impl Widget for &SubsWidget {
-    fn render(self, area: Rect, buf: &mut Buffer) {
+    fn view(&self) -> Table {
         let rows = self.subs.iter().map(|item| {
             Row::from_iter(vec![
                 Cell::from(Text::from(item.title.as_str())),
@@ -72,6 +73,6 @@ impl Widget for &SubsWidget {
         Table::new(rows, [70, 10, 10])
             .header(Row::from_iter(vec!["Title", "Language", "Uploaded"]))
             .block(block_bot)
-            .render(area, buf);
+            .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White))
     }
 }
