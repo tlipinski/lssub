@@ -16,6 +16,7 @@ libsecret = "0.7.0"
 gio = "0.20.7"
 rpassword = "7.3.1"
 ratatui = "0.29.0"
-console-subscriber = "0.4.1"
 xdg = "2.5.2"
+tui-input = "0.11.0"
+
 osb = { path = "osb" }

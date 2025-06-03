@@ -5,7 +5,8 @@ use crate::ui::input_handler::handle_input_task;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::subs_widget::SubsWidget;
 use anyhow::Result;
-use ratatui::crossterm::event::{KeyCode, KeyEvent};
+use log::info;
+use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::widgets::TableState;
 use ratatui::{DefaultTerminal, Frame};
@@ -34,11 +35,7 @@ impl App {
 
         let mut app = App {
             current_screen: CurrentScreen::default(),
-            search_widget: SearchWidget {
-                features_tx,
-                search_text: file_name,
-                active: true,
-            },
+            search_widget: SearchWidget::from(features_tx, file_name),
             subs_widget: SubsWidget::default(),
             exit: false,
         };
@@ -60,9 +57,8 @@ impl App {
 
     fn handle_ui_events(&mut self, ui_event: UiEvent) -> Result<()> {
         match ui_event {
-            Input(key_event) => {
-                // info!("Input: {:?}", key_event);
-                self.handle_key_event(key_event);
+            Input(event) => {
+                self.handle_key_event(event);
             }
             ResultsUpdate(subtitles) => {
                 // info!("ResultsUpdate: {:?}", subtitles);
@@ -84,49 +80,53 @@ impl App {
         self.subs_widget.render(frame, layout[1]);
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
+    fn handle_key_event(&mut self, event: Event) -> Result<()> {
         // info!("key {key_event:?}");
         // let scr = &self.current_screen;
         // info!("scr before {scr:?}");
-        match self.current_screen {
-            CurrentScreen::Main => match key_event.code {
-                QUIT_KEY => self.exit(),
-                KeyCode::Char('s') => {
-                    self.current_screen = CurrentScreen::Searching;
-                    self.search_widget.active = true
-                }
-                _ => {}
-            },
-            CurrentScreen::Searching => match key_event.code {
-                QUIT_KEY => {
-                    self.search_widget.active = false;
-                    self.current_screen = CurrentScreen::Main
-                }
-                KeyCode::Tab => {
-                    self.current_screen = CurrentScreen::Table;
-                    self.subs_widget.active = true;
-                    self.search_widget.active = false;
-                }
-                _ => {
-                    self.search_widget.handle_key_event(key_event);
-                }
-            },
-            CurrentScreen::Table => match key_event.code {
-                QUIT_KEY => {
-                    self.subs_widget.active = false;
-                    self.current_screen = CurrentScreen::Main
-                }
-                KeyCode::Tab => {
-                    self.current_screen = CurrentScreen::Searching;
-                    self.subs_widget.active = false;
-                    self.search_widget.active = true;
-                }
-                _ => self.subs_widget.handle_key_event(key_event),
-            },
+        if let Event::Key(key_event) = event {
+            match self.current_screen {
+                CurrentScreen::Main => match key_event.code {
+                    QUIT_KEY => self.exit(),
+                    KeyCode::Char('s') => {
+                        self.current_screen = CurrentScreen::Searching;
+                        self.search_widget.active = true
+                    }
+                    _ => {}
+                },
+                CurrentScreen::Searching => match key_event.code {
+                    QUIT_KEY => {
+                        self.search_widget.active = false;
+                        self.current_screen = CurrentScreen::Main
+                    }
+                    KeyCode::Tab => {
+                        self.current_screen = CurrentScreen::Table;
+                        self.subs_widget.active = true;
+                        self.search_widget.active = false;
+                    }
+                    _ => {
+                        self.search_widget.handle_key_event(event);
+                    }
+                },
+                CurrentScreen::Table => match key_event.code {
+                    QUIT_KEY => {
+                        self.subs_widget.active = false;
+                        self.current_screen = CurrentScreen::Main
+                    }
+                    KeyCode::Tab => {
+                        self.current_screen = CurrentScreen::Searching;
+                        self.subs_widget.active = false;
+                        self.search_widget.active = true;
+                    }
+                    _ => self.subs_widget.handle_key_event(key_event),
+                },
+            }
+            // let scr = &self.current_screen;
+            // info!("scr after {scr:?}");
+            Ok(())
+        } else {
+            Ok(())
         }
-        // let scr = &self.current_screen;
-        // info!("scr after {scr:?}");
-        Ok(())
     }
 }
 
