@@ -12,6 +12,7 @@ use ratatui::widgets::TableState;
 use ratatui::{DefaultTerminal, Frame};
 use std::sync::mpsc;
 use std::thread::current;
+use tokio::io::split;
 use tokio::sync::broadcast;
 use crate::ui::explorer_widget::Explorer;
 
@@ -43,7 +44,7 @@ impl App {
             explorer_widget: Explorer::new()?,
             exit: false,
         };
-        
+
         app.activate(CurrentScreen::default());
 
         app.search_widget.init();
@@ -78,13 +79,18 @@ impl App {
         let area = frame.area();
 
         let layout = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Length(20), Constraint::Length(3), Constraint::Min(10)])
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
             .split(area);
 
+        let right = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(3), Constraint::Min(10)])
+            .split(layout[1]);
+
         self.explorer_widget.render(frame, layout[0]);
-        self.search_widget.render(frame, layout[1]);
-        self.subs_widget.render(frame, layout[2]);
+        self.search_widget.render(frame, right[0]);
+        self.subs_widget.render(frame, right[1]);
     }
 
     fn activate(&mut self, widget: CurrentScreen) {
@@ -111,7 +117,7 @@ impl App {
             }
         }
     }
-    
+
     fn activate_main(&mut self) {
         self.activate(CurrentScreen::Main)
     }
