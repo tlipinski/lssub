@@ -12,6 +12,7 @@ use ratatui::widgets::TableState;
 use ratatui::{DefaultTerminal, Frame};
 use std::sync::mpsc;
 use tokio::sync::broadcast;
+use crate::ui::explorer_widget::Explorer;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -20,6 +21,7 @@ pub struct App {
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
     subs_widget: SubsWidget,
+    explorer_widget: Explorer,
     exit: bool,
 }
 
@@ -37,6 +39,7 @@ impl App {
             current_screen: CurrentScreen::default(),
             search_widget: SearchWidget::from(features_tx, file_name),
             subs_widget: SubsWidget::default(),
+            explorer_widget: Explorer::new()?,
             exit: false,
         };
 
@@ -73,11 +76,12 @@ impl App {
 
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Min(10)])
+            .constraints([Constraint::Length(20), Constraint::Length(3), Constraint::Min(10)])
             .split(area);
 
-        self.search_widget.render(frame, layout[0]);
-        self.subs_widget.render(frame, layout[1]);
+        self.explorer_widget.render(frame, layout[0]);
+        self.search_widget.render(frame, layout[1]);
+        self.subs_widget.render(frame, layout[2]);
     }
 
     fn handle_key_event(&mut self, event: Event) -> Result<()> {
@@ -108,15 +112,27 @@ impl App {
                         self.search_widget.handle_key_event(event);
                     }
                 },
+                CurrentScreen::Explorer => match key_event.code {
+                    QUIT_KEY => {
+                        self.explorer_widget.active = false;
+                        self.current_screen = CurrentScreen::Main
+                    }
+                    KeyCode::Tab => {
+                        self.current_screen = CurrentScreen::Searching;
+                        self.explorer_widget.active = false;
+                        self.search_widget.active = true;
+                    }
+                    _ => self.explorer_widget.handle_key_event(event)
+                },
                 CurrentScreen::Table => match key_event.code {
                     QUIT_KEY => {
                         self.subs_widget.active = false;
                         self.current_screen = CurrentScreen::Main
                     }
                     KeyCode::Tab => {
-                        self.current_screen = CurrentScreen::Searching;
+                        self.current_screen = CurrentScreen::Explorer;
                         self.subs_widget.active = false;
-                        self.search_widget.active = true;
+                        self.explorer_widget.active = true;
                     }
                     _ => self.subs_widget.handle_key_event(key_event),
                 },
@@ -133,7 +149,8 @@ impl App {
 #[derive(Debug, Default)]
 enum CurrentScreen {
     Main,
-    #[default]
     Searching,
+    #[default]
+    Explorer,
     Table,
 }
