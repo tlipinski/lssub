@@ -11,6 +11,7 @@ use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::widgets::TableState;
 use ratatui::{DefaultTerminal, Frame};
 use std::sync::mpsc;
+use std::thread::current;
 use tokio::sync::broadcast;
 use crate::ui::explorer_widget::Explorer;
 
@@ -42,6 +43,8 @@ impl App {
             explorer_widget: Explorer::new()?,
             exit: false,
         };
+        
+        app.activate(CurrentScreen::default());
 
         app.search_widget.init();
 
@@ -84,6 +87,35 @@ impl App {
         self.subs_widget.render(frame, layout[2]);
     }
 
+    fn activate(&mut self, widget: CurrentScreen) {
+        match widget {
+            CurrentScreen::Main => {
+                self.subs_widget.active = false;
+                self.explorer_widget.active = false;
+                self.search_widget.active = false;
+            }
+            CurrentScreen::Searching => {
+                self.subs_widget.active = false;
+                self.explorer_widget.active = false;
+                self.search_widget.active = true;
+            }
+            CurrentScreen::Explorer => {
+                self.subs_widget.active = false;
+                self.explorer_widget.active = true;
+                self.search_widget.active = false;
+            }
+            CurrentScreen::Table => {
+                self.subs_widget.active = true;
+                self.explorer_widget.active = false;
+                self.search_widget.active = false;
+            }
+        }
+    }
+    
+    fn activate_main(&mut self) {
+        self.activate(CurrentScreen::Main)
+    }
+
     fn handle_key_event(&mut self, event: Event) -> Result<()> {
         // info!("key {key_event:?}");
         // let scr = &self.current_screen;
@@ -100,13 +132,12 @@ impl App {
                 },
                 CurrentScreen::Searching => match key_event.code {
                     QUIT_KEY => {
-                        self.search_widget.active = false;
-                        self.current_screen = CurrentScreen::Main
+                        self.current_screen = CurrentScreen::Main;
+                        self.activate_main();
                     }
                     KeyCode::Tab => {
                         self.current_screen = CurrentScreen::Table;
-                        self.subs_widget.active = true;
-                        self.search_widget.active = false;
+                        self.activate(CurrentScreen::Table);
                     }
                     _ => {
                         self.search_widget.handle_key_event(event);
@@ -114,25 +145,23 @@ impl App {
                 },
                 CurrentScreen::Explorer => match key_event.code {
                     QUIT_KEY => {
-                        self.explorer_widget.active = false;
-                        self.current_screen = CurrentScreen::Main
+                        self.current_screen = CurrentScreen::Main;
+                        self.activate_main();
                     }
                     KeyCode::Tab => {
                         self.current_screen = CurrentScreen::Searching;
-                        self.explorer_widget.active = false;
-                        self.search_widget.active = true;
+                        self.activate(CurrentScreen::Searching);
                     }
                     _ => self.explorer_widget.handle_key_event(event)
                 },
                 CurrentScreen::Table => match key_event.code {
                     QUIT_KEY => {
-                        self.subs_widget.active = false;
-                        self.current_screen = CurrentScreen::Main
+                        self.current_screen = CurrentScreen::Main;
+                        self.activate_main();
                     }
                     KeyCode::Tab => {
                         self.current_screen = CurrentScreen::Explorer;
-                        self.subs_widget.active = false;
-                        self.explorer_widget.active = true;
+                        self.activate(CurrentScreen::Explorer);
                     }
                     _ => self.subs_widget.handle_key_event(key_event),
                 },

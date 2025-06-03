@@ -22,7 +22,7 @@ impl SearchWidget {
     pub fn from(features_tx: Sender<String>, search_text: String) -> Self {
         SearchWidget {
             features_tx,
-            active: true,
+            active: false,
             input: Input::from(search_text),
         }
     }
