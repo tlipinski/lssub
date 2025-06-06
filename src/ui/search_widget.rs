@@ -8,6 +8,7 @@ use ratatui::prelude::{Line, Stylize, Widget};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
 use std::sync::mpsc::Sender;
+use std::thread::sleep;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 
@@ -24,6 +25,14 @@ impl SearchWidget {
             features_tx,
             active: false,
             input: Input::from(search_text),
+        }
+    }
+    
+    pub fn set_input(&mut self, value: &str) {
+        let previous_input = self.input.value();
+        if (previous_input != value) {
+            self.input = Input::new(value.into());
+            self.features_tx.send(self.input.value().into()).unwrap(); // todo unwrap
         }
     }
 

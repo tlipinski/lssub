@@ -14,6 +14,7 @@ use std::sync::mpsc;
 use std::thread::current;
 use tokio::io::split;
 use tokio::sync::broadcast;
+use crate::ui::events::UiEvent::FileSelected;
 use crate::ui::explorer_widget::Explorer;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
@@ -41,7 +42,7 @@ impl App {
             current_screen: CurrentScreen::default(),
             search_widget: SearchWidget::from(features_tx, file_name),
             subs_widget: SubsWidget::default(),
-            explorer_widget: Explorer::new()?,
+            explorer_widget: Explorer::new(ui_tx)?,
             exit: false,
         };
 
@@ -70,6 +71,9 @@ impl App {
             ResultsUpdate(subtitles) => {
                 // info!("ResultsUpdate: {:?}", subtitles);
                 self.subs_widget.update_subtitles(subtitles)
+            }
+            FileSelected(name) => {
+                self.search_widget.set_input(name.as_str())
             }
         }
         Ok(())
@@ -158,7 +162,7 @@ impl App {
                         self.current_screen = CurrentScreen::Searching;
                         self.activate(CurrentScreen::Searching);
                     }
-                    _ => self.explorer_widget.handle_key_event(event)
+                    _ => self.explorer_widget.handle_key_event(event)?
                 },
                 CurrentScreen::Table => match key_event.code {
                     QUIT_KEY => {

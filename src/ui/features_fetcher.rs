@@ -38,7 +38,8 @@ pub async fn fetch_features_task(rx: Receiver<String>, tx: Sender<UiEvent>) {
                 tx.send(ResultsUpdate(SubtitlesResponse { data: vec![] }))
                     .unwrap()
             } else {
-                let result = subtitles(&text, vec![String::from("pl")]).await;
+                // let result = subtitles(&text, vec![String::from("pl")]).await;
+                let result = subtitles(&text, vec![]).await;
                 match result {
                     Ok(subtitles) => tx.send(ResultsUpdate(subtitles)).unwrap(),
                     Err(_) => break,
