@@ -133,7 +133,7 @@ impl App {
         if let Event::Key(key_event) = event {
             match self.current_screen {
                 CurrentScreen::Main => match key_event.code {
-                    QUIT_KEY => self.exit(),
+                    KeyCode::F(10) => self.exit(),
                     KeyCode::Char('s') => {
                         self.current_screen = CurrentScreen::Searching;
                         self.search_widget.active = true
