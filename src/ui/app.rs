@@ -24,7 +24,7 @@ pub struct App {
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
     subs_widget: SubsWidget,
-    explorer_widget: Explorer,
+    // explorer_widget: Explorer,
     exit: bool,
 }
 
@@ -42,7 +42,7 @@ impl App {
             current_screen: CurrentScreen::default(),
             search_widget: SearchWidget::from(features_tx, file_name),
             subs_widget: SubsWidget::default(),
-            explorer_widget: Explorer::new(ui_tx)?,
+            // explorer_widget: Explorer::new(ui_tx)?,
             exit: false,
         };
 
@@ -84,7 +84,8 @@ impl App {
 
         let layout = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+            // .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+            .constraints([Constraint::Percentage(0), Constraint::Percentage(100)])
             .split(area);
 
         let right = Layout::default()
@@ -92,7 +93,7 @@ impl App {
             .constraints([Constraint::Length(3), Constraint::Min(10)])
             .split(layout[1]);
 
-        self.explorer_widget.render(frame, layout[0]);
+        // self.explorer_widget.render(frame, layout[0]);
         self.search_widget.render(frame, right[0]);
         self.subs_widget.render(frame, right[1]);
     }
@@ -101,22 +102,22 @@ impl App {
         match widget {
             CurrentScreen::Main => {
                 self.subs_widget.active = false;
-                self.explorer_widget.active = false;
+                // self.explorer_widget.active = false;
                 self.search_widget.active = false;
             }
             CurrentScreen::Searching => {
                 self.subs_widget.active = false;
-                self.explorer_widget.active = false;
+                // self.explorer_widget.active = false;
                 self.search_widget.active = true;
             }
             CurrentScreen::Explorer => {
                 self.subs_widget.active = false;
-                self.explorer_widget.active = true;
+                // self.explorer_widget.active = true;
                 self.search_widget.active = false;
             }
             CurrentScreen::Table => {
                 self.subs_widget.active = true;
-                self.explorer_widget.active = false;
+                // self.explorer_widget.active = false;
                 self.search_widget.active = false;
             }
         }
@@ -162,7 +163,8 @@ impl App {
                         self.current_screen = CurrentScreen::Searching;
                         self.activate(CurrentScreen::Searching);
                     }
-                    _ => self.explorer_widget.handle_key_event(event)?
+                    // _ => self.explorer_widget.handle_key_event(event)?
+                    _ => ()
                 },
                 CurrentScreen::Table => match key_event.code {
                     QUIT_KEY => {
@@ -188,8 +190,8 @@ impl App {
 #[derive(Debug, Default)]
 enum CurrentScreen {
     Main,
-    Searching,
     #[default]
+    Searching,
     Explorer,
     Table,
 }
