@@ -9,6 +9,7 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
 use std::sync::mpsc::Sender;
 use std::thread::sleep;
+use gio::glib::random_int_range;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 
@@ -17,6 +18,7 @@ pub struct SearchWidget {
     features_tx: Sender<String>,
     pub active: bool,
     input: Input,
+    pub spinner: char
 }
 
 impl SearchWidget {
@@ -25,6 +27,7 @@ impl SearchWidget {
             features_tx,
             active: false,
             input: Input::from(search_text),
+            spinner: ' '
         }
     }
     
@@ -36,8 +39,12 @@ impl SearchWidget {
         }
     }
 
+    pub fn spin(&mut self, chr: char) {
+        self.spinner = chr;
+    }
+
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let mut title = " Search ".bold();
+        let mut title = (" Search ".to_string() + &self.spinner.to_string()).bold();
         if self.active {
             title = title.red()
         }

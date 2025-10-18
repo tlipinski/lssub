@@ -5,6 +5,7 @@ use ratatui::crossterm::event::Event;
 pub enum UiEvent {
     Input(Event),
     ResultsUpdate(SubtitlesResponse),
-    FileSelected(String)
+    FileSelected(String),
+    SpinnerUpdate(char)
 }
 

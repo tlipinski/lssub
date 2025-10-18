@@ -1,10 +1,14 @@
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::events::UiEvent;
+use crate::ui::events::UiEvent::{FileSelected, SpinnerUpdate};
+use crate::ui::explorer_widget::Explorer;
 use crate::ui::features_fetcher::fetch_features_task;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::search_widget::SearchWidget;
+use crate::ui::spinner::handle_spinner;
 use crate::ui::subs_widget::SubsWidget;
 use anyhow::Result;
+use gio::glib::random_int_range;
 use log::info;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout};
@@ -14,8 +18,6 @@ use std::sync::mpsc;
 use std::thread::current;
 use tokio::io::split;
 use tokio::sync::broadcast;
-use crate::ui::events::UiEvent::FileSelected;
-use crate::ui::explorer_widget::Explorer;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -37,6 +39,7 @@ impl App {
 
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
         tokio::spawn(fetch_features_task(features_rx, ui_tx.clone()));
+        tokio::spawn(handle_spinner(ui_tx.clone()));
 
         let mut app = App {
             current_screen: CurrentScreen::default(),
@@ -74,6 +77,9 @@ impl App {
             }
             FileSelected(name) => {
                 self.search_widget.set_input(name.as_str())
+            },
+            SpinnerUpdate(chr) => {
+                self.search_widget.spin(chr)
             }
         }
         Ok(())
@@ -164,7 +170,7 @@ impl App {
                         self.activate(CurrentScreen::Searching);
                     }
                     // _ => self.explorer_widget.handle_key_event(event)?
-                    _ => ()
+                    _ => (),
                 },
                 CurrentScreen::Table => match key_event.code {
                     QUIT_KEY => {
