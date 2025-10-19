@@ -69,10 +69,12 @@ impl App {
     fn handle_ui_events(&mut self, ui_event: UiEvent) -> Result<()> {
         match ui_event {
             Input(event) => {
+                self.search_widget.spinning = true;
                 self.handle_key_event(event);
             }
             ResultsUpdate(subtitles) => {
                 // info!("ResultsUpdate: {:?}", subtitles);
+                self.search_widget.spinning = false;
                 self.subs_widget.update_subtitles(subtitles)
             }
             FileSelected(name) => {

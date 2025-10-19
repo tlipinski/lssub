@@ -18,7 +18,8 @@ pub struct SearchWidget {
     features_tx: Sender<String>,
     pub active: bool,
     input: Input,
-    pub spinner: char
+    pub spinner: char,
+    pub spinning: bool,
 }
 
 impl SearchWidget {
@@ -27,10 +28,11 @@ impl SearchWidget {
             features_tx,
             active: false,
             input: Input::from(search_text),
-            spinner: ' '
+            spinner: ' ',
+            spinning: false,
         }
     }
-    
+
     pub fn set_input(&mut self, value: &str) {
         let previous_input = self.input.value();
         if (previous_input != value) {
@@ -44,7 +46,13 @@ impl SearchWidget {
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let mut title = (" Search ".to_string() + &self.spinner.to_string()).bold();
+        let mut title =
+            if (self.spinning) {
+                (" Search ".to_string() + &self.spinner.to_string()).bold()
+            } else {
+                (" Search ".to_string()).bold()
+            };
+
         if self.active {
             title = title.red()
         }

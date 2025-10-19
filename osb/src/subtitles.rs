@@ -14,6 +14,7 @@ pub async fn subtitles(filename: &str, languages: Vec<String>) -> Result<Subtitl
 
     let req = reqwest::Client::new()
         .get(url)
+        .timeout(std::time::Duration::from_secs(5))
         .header("Api-Key", KEY.clone())
         .header("User-Agent", USER_AGENT)
         .query(&params);
