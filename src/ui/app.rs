@@ -117,11 +117,6 @@ impl App {
                 // self.explorer_widget.active = false;
                 self.search_widget.active = true;
             }
-            CurrentScreen::Explorer => {
-                self.subs_widget.active = false;
-                // self.explorer_widget.active = true;
-                self.search_widget.active = false;
-            }
             CurrentScreen::Table => {
                 self.subs_widget.active = true;
                 // self.explorer_widget.active = false;
@@ -142,9 +137,9 @@ impl App {
             match self.current_screen {
                 CurrentScreen::Main => match key_event.code {
                     KeyCode::F(10) => self.exit(),
-                    KeyCode::Char('s') => {
+                    KeyCode::Char('s') | KeyCode::Tab => {
                         self.current_screen = CurrentScreen::Searching;
-                        self.search_widget.active = true
+                        self.activate(CurrentScreen::Searching);
                     }
                     _ => {}
                 },
@@ -161,7 +156,7 @@ impl App {
                         self.search_widget.handle_key_event(event);
                     }
                 },
-                CurrentScreen::Explorer => match key_event.code {
+                CurrentScreen::Table => match key_event.code {
                     QUIT_KEY => {
                         self.current_screen = CurrentScreen::Main;
                         self.activate_main();
@@ -169,18 +164,6 @@ impl App {
                     KeyCode::Tab => {
                         self.current_screen = CurrentScreen::Searching;
                         self.activate(CurrentScreen::Searching);
-                    }
-                    // _ => self.explorer_widget.handle_key_event(event)?
-                    _ => (),
-                },
-                CurrentScreen::Table => match key_event.code {
-                    QUIT_KEY => {
-                        self.current_screen = CurrentScreen::Main;
-                        self.activate_main();
-                    }
-                    KeyCode::Tab => {
-                        self.current_screen = CurrentScreen::Explorer;
-                        self.activate(CurrentScreen::Explorer);
                     }
                     _ => self.subs_widget.handle_key_event(key_event),
                 },
@@ -199,6 +182,5 @@ enum CurrentScreen {
     Main,
     #[default]
     Searching,
-    Explorer,
     Table,
 }
