@@ -48,14 +48,15 @@ impl SearchWidget {
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let mut title =
             if (self.spinning) {
-                (" Search ".to_string() + &self.spinner.to_string()).bold()
+                (" Search ".to_string() + &self.spinner.to_string() + " ").bold()
             } else {
                 (" Search ".to_string()).bold()
             };
 
-        if self.active {
-            title = title.red()
+        if !self.active {
+            title = title.gray()
         }
+
         let block = Block::bordered()
             .title(title)
             // .title_bottom(instructions.centered())
@@ -81,6 +82,8 @@ impl SearchWidget {
     pub fn handle_key_event(&mut self, event: Event) -> Result<()> {
         if let Some(state_changed) = self.input.handle_event(&event) {
             if state_changed.value {
+                self.spinning = true;
+                // todo should componend send messages directly or just return them?
                 self.features_tx.send(self.input.value().into())?;
             }
         }

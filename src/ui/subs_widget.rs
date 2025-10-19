@@ -37,8 +37,9 @@ impl SubsWidget {
             ])
         });
         let mut title = format!(" Results: {} ", self.subs.len()).bold();
-        if (self.active) {
-            title = title.red();
+        
+        if (!self.active) {
+            title = title.red().gray();
         }
 
         let block_bot = Block::bordered()
