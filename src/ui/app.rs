@@ -8,7 +8,7 @@ use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::handle_spinner;
 use crate::ui::subs_widget::SubsWidget;
-use crate::ui::subtitles_fetcher::subtitles_fetch_task;
+use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use anyhow::Result;
 use gio::glib::random_int_range;
 use log::info;
@@ -16,6 +16,7 @@ use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::widgets::TableState;
 use ratatui::{DefaultTerminal, Frame};
+use serde::de::Unexpected::Str;
 use std::sync::mpsc;
 use std::sync::mpsc::Sender;
 use std::thread::current;
@@ -31,14 +32,14 @@ pub struct App {
     search_widget: SearchWidget,
     subs_widget: SubsWidget,
     language_widget: LanguageWidget,
-    features_tx: Sender<String>,
+    features_tx: Sender<SubtitlesQuery>,
     exit: bool,
 }
 
 impl App {
     pub fn run(terminal: &mut DefaultTerminal, file_name: String) -> Result<()> {
         let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
-        let (features_tx, features_rx) = mpsc::channel::<String>();
+        let (features_tx, features_rx) = mpsc::channel::<SubtitlesQuery>();
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
 
@@ -157,7 +158,13 @@ impl App {
     fn handle_command(&mut self, command: Option<UICommand>) -> Result<()> {
         match command {
             Some(UICommand::QuerySubtitles(q)) => {
-                self.features_tx.send(q)?;
+                let langs: String = self.language_widget.input.value().into();
+                let v = langs.split(",").collect::<Vec<&str>>();
+                let p = v.iter().map(|&x| String::from(x)).collect::<Vec<String>>();
+                self.features_tx.send(SubtitlesQuery {
+                    query: q,
+                    languages: p,
+                })?;
             }
             None => {}
         }

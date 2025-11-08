@@ -10,11 +10,16 @@ use std::time::Duration;
 use tokio::join;
 use tokio::time::sleep;
 
-pub async fn subtitles_fetch_task(rx: Receiver<String>, tx: Sender<UiEvent>) -> Result<()> {
+pub struct SubtitlesQuery {
+    pub query: String,
+    pub languages: Vec<String>
+}
+
+pub async fn subtitles_fetch_task(rx: Receiver<SubtitlesQuery>, tx: Sender<UiEvent>) -> Result<()> {
     'outer: loop {
         sleep(Duration::from_millis(1000)).await;
 
-        let mut last: Option<String> = None;
+        let mut last: Option<SubtitlesQuery> = None;
 
         // Receive as much as possible within outer loop cycle to reduce OSB calls.
         'debouncing: loop {
@@ -34,11 +39,11 @@ pub async fn subtitles_fetch_task(rx: Receiver<String>, tx: Sender<UiEvent>) -> 
         }
 
         if let Some(text) = last {
-            if text.len() < 3 {
+            if text.query.len() < 3 {
                 tx.send(ResultsUpdate(SubtitlesResponse { data: vec![] }))?
             } else {
                 // let result = subtitles(&text, vec![String::from("pl")]).await;
-                let result = subtitles(&text, vec![]).await;
+                let result = subtitles(&text.query, text.languages).await;
                 match result {
                     Ok(subtitles) => tx.send(ResultsUpdate(subtitles))?,
                     Err(_) => break 'outer Ok(()),

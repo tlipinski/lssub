@@ -9,7 +9,7 @@ use tui_input::Input;
 
 #[derive(Debug)]
 pub struct LanguageWidget {
-    input: Input,
+    pub input: Input,
     pub active: bool,
 }
 
