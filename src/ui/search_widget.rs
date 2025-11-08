@@ -17,7 +17,7 @@ use crate::ui::commands::UICommand;
 #[derive(Debug)]
 pub struct SearchWidget {
     pub active: bool,
-    input: Input,
+    pub input: Input,
     pub spinner: char,
     pub spinning: bool,
 }

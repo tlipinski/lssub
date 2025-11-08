@@ -232,6 +232,9 @@ impl App {
                     }
                     KeyCode::Enter => {
                         self.current_screen = CurrentScreen::Searching;
+                        self.activate(CurrentScreen::Searching);
+                        let q = self.search_widget.input.value();
+                        return Some(UICommand::QuerySubtitles(q.into()));
                     }
                     _ => (self.language_widget).handle_key_event(event),
                 },
