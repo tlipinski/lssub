@@ -4,6 +4,7 @@ use crate::ui::events::UiEvent::{FileSelected, SpinnerUpdate};
 use crate::ui::explorer_widget::Explorer;
 use crate::ui::features_fetcher::fetch_features_task;
 use crate::ui::input_handler::handle_input_task;
+use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::handle_spinner;
 use crate::ui::subs_widget::SubsWidget;
@@ -26,7 +27,7 @@ pub struct App {
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
     subs_widget: SubsWidget,
-    // explorer_widget: Explorer,
+    language_widget: LanguageWidget,
     exit: bool,
 }
 
@@ -45,7 +46,7 @@ impl App {
             current_screen: CurrentScreen::default(),
             search_widget: SearchWidget::from(features_tx, file_name),
             subs_widget: SubsWidget::default(),
-            // explorer_widget: Explorer::new(ui_tx)?,
+            language_widget: LanguageWidget::from(),
             exit: false,
         };
 
@@ -76,51 +77,70 @@ impl App {
                 self.search_widget.spinning = false;
                 self.subs_widget.update_subtitles(subtitles)
             }
-            FileSelected(name) => {
-                self.search_widget.set_input(name.as_str())
-            },
-            SpinnerUpdate(chr) => {
-                self.search_widget.spin(chr)
-            }
+            FileSelected(name) => self.search_widget.set_input(name.as_str()),
+            SpinnerUpdate(chr) => self.search_widget.spin(chr),
         }
         Ok(())
     }
 
     fn draw(&mut self, frame: &mut Frame) {
-        let area = frame.area();
+        if (self.language_widget.active) {
+            let area = frame.area();
 
-        let layout = Layout::default()
-            .direction(Direction::Horizontal)
-            // .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
-            .constraints([Constraint::Percentage(0), Constraint::Percentage(100)])
-            .split(area);
+            let layout = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(0), Constraint::Percentage(100)])
+                .split(area);
 
-        let right = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Min(10)])
-            .split(layout[1]);
+            let right = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(3), Constraint::Min(10)])
+                .split(layout[1]);
 
-        // self.explorer_widget.render(frame, layout[0]);
-        self.search_widget.render(frame, right[0]);
-        self.subs_widget.render(frame, right[1]);
+            self.language_widget.render(frame, area);
+        } else {
+            let area = frame.area();
+
+            let layout = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(0), Constraint::Percentage(100)])
+                .split(area);
+
+            let right = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(3), Constraint::Min(10)])
+                .split(layout[1]);
+
+            self.search_widget.render(frame, right[0]);
+            self.subs_widget.render(frame, right[1]);
+        }
     }
 
     fn activate(&mut self, widget: CurrentScreen) {
         match widget {
             CurrentScreen::Main => {
                 self.subs_widget.active = false;
-                // self.explorer_widget.active = false;
+                self.language_widget.active = false;
+
                 self.search_widget.active = false;
             }
             CurrentScreen::Searching => {
                 self.subs_widget.active = false;
-                // self.explorer_widget.active = false;
+                self.language_widget.active = false;
+
                 self.search_widget.active = true;
             }
             CurrentScreen::Table => {
-                self.subs_widget.active = true;
-                // self.explorer_widget.active = false;
                 self.search_widget.active = false;
+                self.language_widget.active = false;
+
+                self.subs_widget.active = true;
+            }
+            CurrentScreen::Language => {
+                self.search_widget.active = false;
+                self.subs_widget.active = false;
+
+                self.language_widget.active = true;
             }
         }
     }
@@ -137,6 +157,10 @@ impl App {
             match self.current_screen {
                 CurrentScreen::Main => match key_event.code {
                     KeyCode::F(10) => self.exit(),
+                    KeyCode::F(2) => {
+                        self.current_screen = CurrentScreen::Language;
+                        self.activate(CurrentScreen::Language);
+                    }
                     KeyCode::Char('s') | KeyCode::Tab => {
                         self.current_screen = CurrentScreen::Searching;
                         self.activate(CurrentScreen::Searching);
@@ -147,6 +171,10 @@ impl App {
                     QUIT_KEY => {
                         self.current_screen = CurrentScreen::Main;
                         self.activate_main();
+                    }
+                    KeyCode::F(2) => {
+                        self.current_screen = CurrentScreen::Language;
+                        self.activate(CurrentScreen::Language);
                     }
                     KeyCode::Tab => {
                         self.current_screen = CurrentScreen::Table;
@@ -161,11 +189,29 @@ impl App {
                         self.current_screen = CurrentScreen::Main;
                         self.activate_main();
                     }
+                    KeyCode::F(2) => {
+                        self.current_screen = CurrentScreen::Language;
+                        self.activate(CurrentScreen::Language);
+                    }
                     KeyCode::Tab => {
                         self.current_screen = CurrentScreen::Searching;
                         self.activate(CurrentScreen::Searching);
                     }
                     _ => self.subs_widget.handle_key_event(key_event),
+                },
+                CurrentScreen::Language => match key_event.code {
+                    QUIT_KEY => {
+                        self.current_screen = CurrentScreen::Main;
+                        self.activate_main();
+                    }
+                    KeyCode::F(2) => {
+                        self.current_screen = CurrentScreen::Main;
+                        self.activate_main();
+                    }
+                    KeyCode::Enter => {
+                        self.current_screen = CurrentScreen::Searching;
+                    }
+                    _ => (self.language_widget).handle_key_event(event),
                 },
             }
             // let scr = &self.current_screen;
@@ -183,4 +229,5 @@ enum CurrentScreen {
     #[default]
     Searching,
     Table,
+    Language,
 }
