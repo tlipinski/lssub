@@ -73,9 +73,9 @@ impl SearchWidget {
     }
 
     pub fn init(&self) -> Result<()> {
-        // if !self.search_text.is_empty() {
-        //     self.features_tx.send(self.search_text.clone())?;
-        // }
+        if !self.input.value().is_empty() {
+            self.features_tx.send(self.input.value().into())?;
+        }
         Ok(())
     }
 
