@@ -1,13 +1,14 @@
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
+use crate::ui::commands::UICommand;
 use crate::ui::events::UiEvent;
 use crate::ui::events::UiEvent::{FileSelected, SpinnerUpdate};
 use crate::ui::explorer_widget::Explorer;
-use crate::ui::subtitles_fetcher::subtitles_fetch_task;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::handle_spinner;
 use crate::ui::subs_widget::SubsWidget;
+use crate::ui::subtitles_fetcher::subtitles_fetch_task;
 use anyhow::Result;
 use gio::glib::random_int_range;
 use log::info;
@@ -16,9 +17,11 @@ use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::widgets::TableState;
 use ratatui::{DefaultTerminal, Frame};
 use std::sync::mpsc;
+use std::sync::mpsc::Sender;
 use std::thread::current;
 use tokio::io::split;
 use tokio::sync::broadcast;
+use tokio::sync::mpsc::Receiver;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -28,6 +31,7 @@ pub struct App {
     search_widget: SearchWidget,
     subs_widget: SubsWidget,
     language_widget: LanguageWidget,
+    features_tx: Sender<String>,
     exit: bool,
 }
 
@@ -44,20 +48,20 @@ impl App {
 
         let mut app = App {
             current_screen: CurrentScreen::default(),
-            search_widget: SearchWidget::from(features_tx, file_name),
+            search_widget: SearchWidget::from(file_name),
             subs_widget: SubsWidget::default(),
             language_widget: LanguageWidget::from(),
+            features_tx,
             exit: false,
         };
 
         app.activate(CurrentScreen::default());
 
-        app.search_widget.init();
-
         while !app.exit {
             terminal.draw(|frame| app.draw(frame))?;
             let ui_event = ui_rx.recv()?;
-            app.handle_ui_events(ui_event)?;
+            let cmd = app.handle_ui_events(ui_event);
+            app.handle_command(cmd)?
         }
         shutdown_tx.send(())?;
         Ok(())
@@ -67,20 +71,21 @@ impl App {
         self.exit = true;
     }
 
-    fn handle_ui_events(&mut self, ui_event: UiEvent) -> Result<()> {
+    fn handle_ui_events(&mut self, ui_event: UiEvent) -> Option<UICommand> {
         match ui_event {
             Input(event) => {
-                self.handle_key_event(event);
+                return self.handle_key_event(event);
             }
             ResultsUpdate(subtitles) => {
                 // info!("ResultsUpdate: {:?}", subtitles);
                 self.search_widget.spinning = false;
                 self.subs_widget.update_subtitles(subtitles)
             }
-            FileSelected(name) => self.search_widget.set_input(name.as_str()),
+            // FileSelected(name) => self.search_widget.set_input(name.as_str()),
+            FileSelected(name) => {}
             SpinnerUpdate(chr) => self.search_widget.spin(chr),
         }
-        Ok(())
+        None
     }
 
     fn draw(&mut self, frame: &mut Frame) {
@@ -149,7 +154,17 @@ impl App {
         self.activate(CurrentScreen::Main)
     }
 
-    fn handle_key_event(&mut self, event: Event) -> Result<()> {
+    fn handle_command(&mut self, command: Option<UICommand>) -> Result<()> {
+        match command {
+            Some(UICommand::QuerySubtitles(q)) => {
+                self.features_tx.send(q)?;
+            }
+            None => {}
+        }
+        Ok(())
+    }
+
+    fn handle_key_event(&mut self, event: Event) -> Option<UICommand> {
         // info!("key {key_event:?}");
         // let scr = &self.current_screen;
         // info!("scr before {scr:?}");
@@ -181,7 +196,7 @@ impl App {
                         self.activate(CurrentScreen::Table);
                     }
                     _ => {
-                        self.search_widget.handle_key_event(event);
+                        return self.search_widget.handle_key_event(event);
                     }
                 },
                 CurrentScreen::Table => match key_event.code {
@@ -216,9 +231,9 @@ impl App {
             }
             // let scr = &self.current_screen;
             // info!("scr after {scr:?}");
-            Ok(())
+            None // todo remove it and return explicitly from patterns
         } else {
-            Ok(())
+            None
         }
     }
 }

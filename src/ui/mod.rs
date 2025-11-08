@@ -7,3 +7,4 @@ mod search_widget;
 mod explorer_widget;
 mod spinner;
 mod language_widget;
+mod commands;

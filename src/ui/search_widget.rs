@@ -12,10 +12,10 @@ use std::thread::sleep;
 use gio::glib::random_int_range;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use crate::ui::commands::UICommand;
 
 #[derive(Debug)]
 pub struct SearchWidget {
-    features_tx: Sender<String>,
     pub active: bool,
     input: Input,
     pub spinner: char,
@@ -23,21 +23,12 @@ pub struct SearchWidget {
 }
 
 impl SearchWidget {
-    pub fn from(features_tx: Sender<String>, search_text: String) -> Self {
+    pub fn from(search_text: String) -> Self {
         SearchWidget {
-            features_tx,
             active: false,
             input: Input::from(search_text),
             spinner: ' ',
             spinning: false,
-        }
-    }
-
-    pub fn set_input(&mut self, value: &str) {
-        let previous_input = self.input.value();
-        if (previous_input != value) {
-            self.input = Input::new(value.into());
-            self.features_tx.send(self.input.value().into()).unwrap(); // todo unwrap
         }
     }
 
@@ -72,21 +63,20 @@ impl SearchWidget {
         frame.render_widget(view, area);
     }
 
-    pub fn init(&self) -> Result<()> {
-        if !self.input.value().is_empty() {
-            self.features_tx.send(self.input.value().into())?;
-        }
-        Ok(())
-    }
+    // pub fn init(&self) -> Result<()> {
+    //     if !self.input.value().is_empty() {
+    //         self.features_tx.send(self.input.value().into())?;
+    //     }
+    //     Ok(())
+    // }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Result<()> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<UICommand> {
         if let Some(state_changed) = self.input.handle_event(&event) {
             if state_changed.value {
                 self.spinning = true;
-                // todo should componend send messages directly or just return them?
-                self.features_tx.send(self.input.value().into())?;
+                return Some(UICommand::QuerySubtitles(self.input.value().into()))
             }
         }
-        Ok(())
+        None
     }
 }
