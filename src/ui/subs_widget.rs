@@ -18,8 +18,10 @@ pub struct SubsWidget {
 #[derive(Debug, Default)]
 pub struct Sub {
     pub title: String,
+    pub year: String,
     pub language: String,
     pub upload_date: String,
+    pub downloads: String
 }
 
 impl SubsWidget {
@@ -33,7 +35,9 @@ impl SubsWidget {
             Row::from_iter(vec![
                 Cell::from(Text::from(item.title.as_str())),
                 Cell::from(Text::from(item.language.as_str())),
+                Cell::from(Text::from(item.year.as_str())),
                 Cell::from(Text::from(item.upload_date.as_str())),
+                Cell::from(Text::from(item.downloads.as_str())),
             ])
         });
         let mut title = format!(" Results: {} ", self.subs.len()).bold();
@@ -47,8 +51,8 @@ impl SubsWidget {
             // .title_bottom(instructions.centered())
             .border_set(border::THICK);
 
-        let table = Table::new(rows, [70, 10, 10])
-            .header(Row::from_iter(vec!["Title", "Language", "Uploaded"]))
+        let table = Table::new(rows, [70, 10, 10, 10, 10])
+            .header(Row::from_iter(vec!["Title", "Language", "Year", "Uploaded", "Downloads"]))
             .block(block_bot)
             .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
 
@@ -70,8 +74,10 @@ impl SubsWidget {
             .take(20)
             .map(|resp| Sub {
                 title: resp.attributes.release.clone(),
+                year: resp.attributes.feature_details.year.to_string(),
                 language: resp.attributes.language.clone(),
                 upload_date: resp.attributes.upload_date.clone(),
+                downloads: resp.attributes.download_count.to_string()
             })
             .collect::<Vec<Sub>>();
 

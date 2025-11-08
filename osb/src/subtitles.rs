@@ -72,6 +72,7 @@ pub struct Data {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct FeatureDetails {
     pub movie_name: String,
+    pub year: i32
 }
 
 #[derive(Deserialize, Serialize, Debug)]
