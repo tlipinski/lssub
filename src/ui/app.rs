@@ -2,7 +2,7 @@ use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::events::UiEvent;
 use crate::ui::events::UiEvent::{FileSelected, SpinnerUpdate};
 use crate::ui::explorer_widget::Explorer;
-use crate::ui::features_fetcher::fetch_features_task;
+use crate::ui::subtitles_fetcher::subtitles_fetch_task;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
@@ -39,7 +39,7 @@ impl App {
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
 
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
-        tokio::spawn(fetch_features_task(features_rx, ui_tx.clone()));
+        tokio::spawn(subtitles_fetch_task(features_rx, ui_tx.clone()));
         tokio::spawn(handle_spinner(ui_tx.clone()));
 
         let mut app = App {
