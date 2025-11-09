@@ -1,7 +1,7 @@
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::commands::UICommand;
 use crate::ui::events::UiEvent;
-use crate::ui::events::UiEvent::{FetchSubs, LanguagesUpdated, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner};
+use crate::ui::events::UiEvent::{FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
@@ -48,7 +48,7 @@ impl App {
 
         let mut app = App {
             current_screen: CurrentScreen::default(),
-            search_widget: SearchWidget::from(file_name),
+            search_widget: SearchWidget::from(file_name.clone()),
             subs_widget: SubsWidget::default(),
             language_widget: LanguageWidget::from(),
             features_tx,
@@ -57,17 +57,18 @@ impl App {
 
         app.activate(CurrentScreen::default());
 
+        let mut event_opt = Some(Init);
+
         while !app.exit {
-            terminal.draw(|frame| app.draw(frame))?;
-
-            let event = ui_rx.recv()?;
-
-            let mut event_opt = Some(event);
-
             while let Some(event) = event_opt {
                 event_opt = app.handle_ui_events(event)?
             }
+
+            terminal.draw(|frame| app.draw(frame))?;
+
+            event_opt = Some(ui_rx.recv()?);
         }
+
         shutdown_tx.send(())?;
         Ok(())
     }
@@ -106,9 +107,18 @@ impl App {
                 self.search_widget.spinning = true;
                 Ok(None)
             }
-            UiEvent::StopSpinner => {
+            StopSpinner => {
                 self.search_widget.spinning = false;
                 Ok(None)
+            }
+            Init => {
+                let query: String = self.search_widget.input.value().into();
+                if (!query.is_empty()) {
+                    let langs = self.language_widget.languages();
+                    Ok(Some(FetchSubs(query, langs)))
+                } else {
+                    Ok(None)
+                }
             }
         }
     }

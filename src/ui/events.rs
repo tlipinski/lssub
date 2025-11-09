@@ -10,6 +10,7 @@ pub enum UiEvent {
     QueryUpdated(String),
     FetchSubs(String, Vec<String>),
     StartSpinner,
-    StopSpinner
+    StopSpinner,
+    Init
 }
 

@@ -64,17 +64,9 @@ impl SearchWidget {
         frame.render_widget(view, area);
     }
 
-    // pub fn init(&self) -> Result<()> {
-    //     if !self.input.value().is_empty() {
-    //         self.features_tx.send(self.input.value().into())?;
-    //     }
-    //     Ok(())
-    // }
-
     pub fn handle_key_event(&mut self, event: Event) -> Option<UiEvent> {
         if let Some(state_changed) = self.input.handle_event(&event) {
             if state_changed.value {
-                self.spinning = true;
                 return Some(UiEvent::QueryUpdated(self.input.value().into()))
             }
         }
