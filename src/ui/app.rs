@@ -1,8 +1,7 @@
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::commands::UICommand;
 use crate::ui::events::UiEvent;
-use crate::ui::events::UiEvent::{FetchSubs, FileSelected, LanguagesUpdated, QueryUpdated, SpinnerUpdate};
-use crate::ui::explorer_widget::Explorer;
+use crate::ui::events::UiEvent::{FetchSubs, LanguagesUpdated, QueryUpdated, SpinnerUpdate};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
@@ -86,10 +85,6 @@ impl App {
                 // info!("ResultsUpdate: {:?}", subtitles);
                 self.search_widget.spinning = false;
                 self.subs_widget.update_subtitles(subtitles);
-                Ok(None)
-            }
-            // FileSelected(name) => self.search_widget.set_input(name.as_str()),
-            FileSelected(name) => {
                 Ok(None)
             }
             SpinnerUpdate(chr) => {
