@@ -62,11 +62,8 @@ impl App {
         }
 
         shutdown_tx.send(())?;
-        Ok(())
-    }
 
-    fn exit(&mut self) {
-        self.exit = true;
+        Ok(())
     }
 
     fn handle_ui_events(&mut self, ui_event: UiEvent) -> Result<Option<UiEvent>> {
@@ -156,7 +153,9 @@ impl App {
         if let Event::Key(key_event) = event {
             match self.current_screen {
                 CurrentScreen::Main => match key_event.code {
-                    KeyCode::F(10) => self.exit(),
+                    KeyCode::F(10) => {
+                        self.exit = true;
+                    },
                     KeyCode::F(2) => {
                         self.current_screen = CurrentScreen::Language;
                     }
