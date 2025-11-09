@@ -1,7 +1,7 @@
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::commands::UICommand;
 use crate::ui::events::UiEvent;
-use crate::ui::events::UiEvent::{FileSelected, SpinnerUpdate};
+use crate::ui::events::UiEvent::{FetchSubs, FileSelected, LanguagesUpdated, QueryUpdated, SpinnerUpdate};
 use crate::ui::explorer_widget::Explorer;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
@@ -60,9 +60,14 @@ impl App {
 
         while !app.exit {
             terminal.draw(|frame| app.draw(frame))?;
-            let ui_event = ui_rx.recv()?;
-            let cmd = app.handle_ui_events(ui_event);
-            app.handle_command(cmd)?
+
+            let event = ui_rx.recv()?;
+
+            let mut event_opt = Some(event);
+
+            while let Some(event) = event_opt {
+                event_opt = app.handle_ui_events(event)?
+            }
         }
         shutdown_tx.send(())?;
         Ok(())
@@ -72,21 +77,38 @@ impl App {
         self.exit = true;
     }
 
-    fn handle_ui_events(&mut self, ui_event: UiEvent) -> Option<UICommand> {
+    fn handle_ui_events(&mut self, ui_event: UiEvent) -> Result<Option<UiEvent>> {
         match ui_event {
             Input(event) => {
-                return self.handle_key_event(event);
+                Ok(self.handle_key_event(event))
             }
             ResultsUpdate(subtitles) => {
                 // info!("ResultsUpdate: {:?}", subtitles);
                 self.search_widget.spinning = false;
-                self.subs_widget.update_subtitles(subtitles)
+                self.subs_widget.update_subtitles(subtitles);
+                Ok(None)
             }
             // FileSelected(name) => self.search_widget.set_input(name.as_str()),
-            FileSelected(name) => {}
-            SpinnerUpdate(chr) => self.search_widget.spin(chr),
+            FileSelected(name) => {
+                Ok(None)
+            }
+            SpinnerUpdate(chr) => {
+                self.search_widget.spin(chr);
+                Ok(None)
+            },
+            LanguagesUpdated(langs) => {
+                let query: String = self.search_widget.input.value().into();
+                Ok(Some(FetchSubs(query, langs)))
+            }
+            QueryUpdated(query) => {
+                let langs = self.language_widget.languages();
+                Ok(Some(FetchSubs(query, langs)))
+            }
+            FetchSubs(q, l) => {
+                self.features_tx.send(SubtitlesQuery{query: q, languages: l})?;
+                Ok(None)
+            }
         }
-        None
     }
 
     fn draw(&mut self, frame: &mut Frame) {
@@ -155,23 +177,7 @@ impl App {
         self.activate(CurrentScreen::Main)
     }
 
-    fn handle_command(&mut self, command: Option<UICommand>) -> Result<()> {
-        match command {
-            Some(UICommand::QuerySubtitles(q)) => {
-                let langs: String = self.language_widget.input.value().into();
-                let v = langs.split(",").collect::<Vec<&str>>();
-                let p = v.iter().map(|&x| String::from(x)).collect::<Vec<String>>();
-                self.features_tx.send(SubtitlesQuery {
-                    query: q,
-                    languages: p,
-                })?;
-            }
-            None => {}
-        }
-        Ok(())
-    }
-
-    fn handle_key_event(&mut self, event: Event) -> Option<UICommand> {
+    fn handle_key_event(&mut self, event: Event) -> Option<UiEvent> {
         // info!("key {key_event:?}");
         // let scr = &self.current_screen;
         // info!("scr before {scr:?}");
@@ -230,13 +236,14 @@ impl App {
                         self.current_screen = CurrentScreen::Main;
                         self.activate_main();
                     }
-                    KeyCode::Enter => {
-                        self.current_screen = CurrentScreen::Searching;
-                        self.activate(CurrentScreen::Searching);
-                        let q = self.search_widget.input.value();
-                        return Some(UICommand::QuerySubtitles(q.into()));
-                    }
-                    _ => (self.language_widget).handle_key_event(event),
+                    _ => {
+                        let event = self.language_widget.handle_key_event(event);
+                        if (event.is_some()) {
+                            self.current_screen = CurrentScreen::Searching;
+                            self.activate(CurrentScreen::Searching);
+                        }
+                        return event
+                    },
                 },
             }
             // let scr = &self.current_screen;

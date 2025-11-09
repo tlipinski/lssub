@@ -6,6 +6,9 @@ pub enum UiEvent {
     Input(Event),
     ResultsUpdate(SubtitlesResponse),
     FileSelected(String),
-    SpinnerUpdate(char)
+    SpinnerUpdate(char),
+    LanguagesUpdated(Vec<String>),
+    QueryUpdated(String),
+    FetchSubs(String, Vec<String>)
 }
 

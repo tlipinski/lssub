@@ -13,6 +13,7 @@ use gio::glib::random_int_range;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 use crate::ui::commands::UICommand;
+use crate::ui::events::UiEvent;
 
 #[derive(Debug)]
 pub struct SearchWidget {
@@ -70,11 +71,11 @@ impl SearchWidget {
     //     Ok(())
     // }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<UICommand> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<UiEvent> {
         if let Some(state_changed) = self.input.handle_event(&event) {
             if state_changed.value {
                 self.spinning = true;
-                return Some(UICommand::QuerySubtitles(self.input.value().into()))
+                return Some(UiEvent::QueryUpdated(self.input.value().into()))
             }
         }
         None
