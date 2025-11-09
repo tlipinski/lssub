@@ -12,14 +12,12 @@ use tui_input::backend::crossterm::EventHandler;
 #[derive(Debug)]
 pub struct LanguageWidget {
     pub input: Input,
-    pub active: bool,
 }
 
 impl LanguageWidget {
     pub fn from() -> Self {
         LanguageWidget {
             input: Input::new("pl".into()),
-            active: false,
         }
     }
 

@@ -12,7 +12,6 @@ use ratatui::widgets::{Block, Cell, Row, StatefulWidget, Table, TableState};
 pub struct SubsWidget {
     pub subs: Vec<Sub>,
     pub state: TableState,
-    pub active: bool
 }
 
 #[derive(Debug, Default)]
@@ -42,10 +41,6 @@ impl SubsWidget {
         });
         let mut title = format!(" Results: {} ", self.subs.len()).bold();
         
-        if (!self.active) {
-            title = title.red().gray();
-        }
-
         let block_bot = Block::bordered()
             .title(title)
             // .title_bottom(instructions.centered())

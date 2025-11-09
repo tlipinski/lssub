@@ -17,7 +17,6 @@ use crate::ui::events::UiEvent;
 
 #[derive(Debug)]
 pub struct SearchWidget {
-    pub active: bool,
     pub input: Input,
     pub spinner: char,
     pub spinning: bool,
@@ -26,7 +25,6 @@ pub struct SearchWidget {
 impl SearchWidget {
     pub fn from(search_text: String) -> Self {
         SearchWidget {
-            active: false,
             input: Input::from(search_text),
             spinner: ' ',
             spinning: false,
@@ -44,10 +42,6 @@ impl SearchWidget {
             } else {
                 (" Search ".to_string()).bold()
             };
-
-        if !self.active {
-            title = title.gray()
-        }
 
         let block = Block::bordered()
             .title(title)
