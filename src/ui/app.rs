@@ -155,33 +155,38 @@ impl App {
                 CurrentScreen::Main => match key_event.code {
                     KeyCode::F(10) => {
                         self.exit = true;
+                        None
                     },
                     KeyCode::F(2) => {
                         self.current_screen = CurrentScreen::Language;
+                        None
                     }
                     KeyCode::Up | KeyCode::Down => {
                         self.subs_widget.handle_key_event(key_event);
+                        None
                     }
-                    _ => return self.search_widget.handle_key_event(event),
-                    _ => {}
+                    _ => {
+                        self.search_widget.handle_key_event(event)
+                    }
                 },
                 CurrentScreen::Language => match key_event.code {
                     QUIT_KEY => {
                         self.current_screen = CurrentScreen::Main;
+                        None
                     }
                     KeyCode::F(2) => {
                         self.current_screen = CurrentScreen::Main;
+                        None
                     }
                     _ => {
                         let event = self.language_widget.handle_key_event(event);
                         if (event.is_some()) {
                             self.current_screen = CurrentScreen::Main;
                         }
-                        return event;
+                        event
                     }
                 },
             }
-            None // todo remove it and return explicitly from patterns
         } else {
             None
         }
