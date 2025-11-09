@@ -1,7 +1,7 @@
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::commands::UICommand;
 use crate::ui::events::UiEvent;
-use crate::ui::events::UiEvent::{FetchSubs, LanguagesUpdated, QueryUpdated, SpinnerUpdate};
+use crate::ui::events::UiEvent::{FetchSubs, LanguagesUpdated, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
@@ -83,9 +83,8 @@ impl App {
             }
             ResultsUpdate(subtitles) => {
                 // info!("ResultsUpdate: {:?}", subtitles);
-                self.search_widget.spinning = false;
                 self.subs_widget.update_subtitles(subtitles);
-                Ok(None)
+                Ok(Some(StopSpinner))
             }
             SpinnerUpdate(chr) => {
                 self.search_widget.spin(chr);
@@ -101,6 +100,14 @@ impl App {
             }
             FetchSubs(q, l) => {
                 self.features_tx.send(SubtitlesQuery{query: q, languages: l})?;
+                Ok(Some(StartSpinner))
+            }
+            StartSpinner => {
+                self.search_widget.spinning = true;
+                Ok(None)
+            }
+            UiEvent::StopSpinner => {
+                self.search_widget.spinning = false;
                 Ok(None)
             }
         }

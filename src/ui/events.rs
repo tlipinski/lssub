@@ -8,6 +8,8 @@ pub enum UiEvent {
     SpinnerUpdate(char),
     LanguagesUpdated(Vec<String>),
     QueryUpdated(String),
-    FetchSubs(String, Vec<String>)
+    FetchSubs(String, Vec<String>),
+    StartSpinner,
+    StopSpinner
 }
 
