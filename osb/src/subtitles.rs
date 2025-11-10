@@ -33,7 +33,7 @@ pub async fn subtitles(filename: &str, languages: Vec<String>) -> Result<Subtitl
             let json: Result<SubtitlesResponse, _> = serde_json::from_str(&text_body);
             match json {
                 Ok(subtitles_response) => {
-                    debug!("{}", serde_json::to_string_pretty(&subtitles_response)?);
+                    // debug!("{}", serde_json::to_string_pretty(&subtitles_response)?);
                     Ok(subtitles_response)
                 }
                 Err(e) => {
