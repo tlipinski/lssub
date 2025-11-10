@@ -1,6 +1,11 @@
+use std::ops::Deref;
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
+use crate::ui::downloader_task::downloader_task;
 use crate::ui::events::UiEvent;
-use crate::ui::events::UiEvent::{DownloadConfirmed, FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner};
+use crate::ui::events::UiEvent::{
+    DownloadConfirmed, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate,
+    StartSpinner, StopSpinner, SwitchScreen, Tuple,
+};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
@@ -8,15 +13,14 @@ use crate::ui::spinner::handle_spinner;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use anyhow::Result;
+use log::info;
+use osb::download::download;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
 use std::sync::mpsc;
 use std::sync::mpsc::Sender;
-use log::info;
 use tokio::sync::broadcast;
-use osb::download::download;
-use crate::ui::downloader_task::downloader_task;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -115,9 +119,20 @@ impl App {
                 } else {
                     Ok(None)
                 }
-            },
+            }
             DownloadConfirmed(file_id) => {
                 self.downloader_tx.send(file_id);
+                Ok(None)
+            }
+            SwitchScreen(screen) => {
+                self.current_screen = screen;
+                Ok(None)
+            }
+            Tuple(first, second) => {
+                self.handle_ui_events(*first)
+            }
+            Exit => {
+                self.exit = true;
                 Ok(None)
             }
         }
@@ -163,34 +178,26 @@ impl App {
         if let Event::Key(key_event) = event {
             match self.current_screen {
                 CurrentScreen::Main => match key_event.code {
-                    KeyCode::F(10) => {
-                        self.exit = true;
-                        None
-                    }
-                    KeyCode::F(2) => {
-                        self.current_screen = CurrentScreen::Language;
-                        None
-                    }
+                    KeyCode::F(10) => Some(Exit),
+                    KeyCode::F(2) => Some(SwitchScreen(CurrentScreen::Language)),
                     KeyCode::Up | KeyCode::Down | KeyCode::Enter => {
                         self.subs_widget.handle_key_event(key_event)
                     }
                     _ => self.search_widget.handle_key_event(event),
                 },
                 CurrentScreen::Language => match key_event.code {
-                    QUIT_KEY => {
-                        self.current_screen = CurrentScreen::Main;
-                        None
-                    }
-                    KeyCode::F(2) => {
-                        self.current_screen = CurrentScreen::Main;
-                        None
-                    }
+                    QUIT_KEY => Some(SwitchScreen(CurrentScreen::Main)),
+                    KeyCode::F(2) => Some(SwitchScreen(CurrentScreen::Main)),
                     _ => {
                         let event = self.language_widget.handle_key_event(event);
-                        if (event.is_some()) {
-                            self.current_screen = CurrentScreen::Main;
+                        if let Some(evt) = event {
+                            Some(Tuple(
+                                Box::new(evt),
+                                Box::new(SwitchScreen(CurrentScreen::Main)),
+                            ))
+                        } else {
+                            event
                         }
-                        event
                     }
                 },
             }
@@ -201,7 +208,7 @@ impl App {
 }
 
 #[derive(Debug, Default)]
-enum CurrentScreen {
+pub enum CurrentScreen {
     #[default]
     Main,
     Language,

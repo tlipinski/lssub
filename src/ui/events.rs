@@ -1,5 +1,6 @@
 use osb::subtitles::SubtitlesResponse;
 use ratatui::crossterm::event::Event;
+use crate::ui::app::CurrentScreen;
 
 #[derive(Debug)]
 pub enum UiEvent {
@@ -12,6 +13,9 @@ pub enum UiEvent {
     StartSpinner,
     StopSpinner,
     Init,
-    DownloadConfirmed(i64)
+    DownloadConfirmed(i64),
+    SwitchScreen(CurrentScreen),
+    Tuple(Box<UiEvent>, Box<UiEvent>),
+    Exit
 }
 
