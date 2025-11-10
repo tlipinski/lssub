@@ -1,16 +1,16 @@
-use crate::ui::app::UiEvent::{Input, ResultsUpdate};
+use crate::ui::app::UiMessage::{Input, SubsFetched};
 use crate::ui::downloader_task::downloader_task;
-use crate::ui::events::UiEvent;
-use crate::ui::events::UiEvent::{
-    DownloadConfirmed, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate,
-    StartSpinner, StopSpinner, SwitchScreen, Tuple,
-};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
-use crate::ui::spinner::handle_spinner;
+use crate::ui::spinner::handle_spinner_task;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
+use crate::ui::ui_messages::UiMessage;
+use crate::ui::ui_messages::UiMessage::{
+    DownloadSubs, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate,
+    StartSpinner, StopSpinner, SwitchScreen, Tuple,
+};
 use anyhow::Result;
 use log::info;
 use osb::download::download;
@@ -37,7 +37,7 @@ pub struct App {
 
 impl App {
     pub fn run(terminal: &mut DefaultTerminal, file_name: String) -> Result<()> {
-        let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>();
+        let (ui_tx, ui_rx) = mpsc::channel::<UiMessage>();
         let (features_tx, features_rx) = mpsc::channel::<SubtitlesQuery>();
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
@@ -46,7 +46,7 @@ impl App {
 
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
         tokio::spawn(subtitles_fetch_task(features_rx, ui_tx.clone()));
-        tokio::spawn(handle_spinner(ui_tx.clone()));
+        tokio::spawn(handle_spinner_task(ui_tx.clone()));
         tokio::spawn(downloader_task(downloader_rx));
 
         let mut app = App {
@@ -59,16 +59,16 @@ impl App {
             exit: false,
         };
 
-        let mut event_opt = Some(Init);
+        let mut message_opt = Some(Init);
 
         while !app.exit {
-            while let Some(event) = event_opt {
-                event_opt = app.handle_ui_events(event)?
+            while let Some(msg) = message_opt {
+                message_opt = app.handle_ui_message(msg)?
             }
 
             terminal.draw(|frame| app.draw(frame))?;
 
-            event_opt = Some(ui_rx.recv()?);
+            message_opt = Some(ui_rx.recv()?);
         }
 
         shutdown_tx.send(())?;
@@ -76,11 +76,10 @@ impl App {
         Ok(())
     }
 
-    fn handle_ui_events(&mut self, ui_event: UiEvent) -> Result<Option<UiEvent>> {
-        match ui_event {
+    fn handle_ui_message(&mut self, ui_message: UiMessage) -> Result<Option<UiMessage>> {
+        match ui_message {
             Input(event) => Ok(self.handle_key_event(event)),
-            ResultsUpdate(subtitles) => {
-                // info!("ResultsUpdate: {:?}", subtitles);
+            SubsFetched(subtitles) => {
                 self.subs_widget.update_subtitles(subtitles);
                 Ok(Some(StopSpinner))
             }
@@ -96,11 +95,8 @@ impl App {
                 let langs = self.language_widget.languages();
                 Ok(Some(FetchSubs(query, langs)))
             }
-            FetchSubs(q, l) => {
-                self.features_tx.send(SubtitlesQuery {
-                    query: q,
-                    languages: l,
-                })?;
+            FetchSubs(query, languages) => {
+                self.features_tx.send(SubtitlesQuery { query, languages })?;
                 Ok(Some(StartSpinner))
             }
             StartSpinner => {
@@ -120,7 +116,7 @@ impl App {
                     Ok(None)
                 }
             }
-            DownloadConfirmed(file_id) => {
+            DownloadSubs(file_id) => {
                 self.downloader_tx.send(file_id);
                 Ok(None)
             }
@@ -129,8 +125,8 @@ impl App {
                 Ok(None)
             }
             Tuple(first, second) => {
-                let handled1 = self.handle_ui_events(*first)?;
-                let handled2 = self.handle_ui_events(*second)?;
+                let handled1 = self.handle_ui_message(*first)?;
+                let handled2 = self.handle_ui_message(*second)?;
                 match (handled1, handled2) {
                     (Some(e1), Some(e2)) => Ok(Some(Tuple(Box::new(e1), Box::new(e2)))),
                     (None, Some(e)) => Ok(Some(e)),
@@ -181,7 +177,7 @@ impl App {
         }
     }
 
-    fn handle_key_event(&mut self, event: Event) -> Option<UiEvent> {
+    fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
         if let Event::Key(key_event) = event {
             match self.current_screen {
                 CurrentScreen::Main => match key_event.code {

@@ -1,4 +1,4 @@
-use crate::ui::events::UiEvent;
+use crate::ui::ui_messages::UiMessage;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::Rect;
@@ -16,7 +16,7 @@ pub struct LanguageWidget {
 impl LanguageWidget {
     pub fn from() -> Self {
         LanguageWidget {
-            input: Input::new("pl".into()),
+            input: Input::new("pl".into()), // todo init from config
         }
     }
 
@@ -41,11 +41,11 @@ impl LanguageWidget {
         v.iter().map(|&x| String::from(x)).collect::<Vec<String>>()
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<UiEvent> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
         if let Event::Key(key_event) = event {
             match key_event.code {
                 KeyCode::Enter => {
-                    Some(UiEvent::LanguagesUpdated(self.languages()))
+                    Some(UiMessage::LanguagesUpdated(self.languages()))
                 }
                 _ => {
                     self.input.handle_event(&event);

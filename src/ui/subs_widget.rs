@@ -1,4 +1,4 @@
-use crate::ui::events::UiEvent;
+use crate::ui::ui_messages::UiMessage;
 use log::info;
 use osb::subtitles::SubtitlesResponse;
 use ratatui::Frame;
@@ -55,7 +55,7 @@ impl SubsWidget {
         f.render_stateful_widget(table, area, &mut self.state)
     }
 
-    pub fn handle_key_event(&mut self, key_event: KeyEvent) -> Option<UiEvent> {
+    pub fn handle_key_event(&mut self, key_event: KeyEvent) -> Option<UiMessage> {
         match key_event.code {
             KeyCode::Up => {
                 self.state.select_previous();
@@ -70,7 +70,7 @@ impl SubsWidget {
                     .selected()
                     .map(|selection| self.subs.get(selection))
                     .flatten()
-                    .map(|s| UiEvent::DownloadConfirmed(s.file_id))
+                    .map(|s| UiMessage::DownloadSubs(s.file_id))
             }
             _ => None,
         }

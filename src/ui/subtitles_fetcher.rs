@@ -1,5 +1,5 @@
-use crate::ui::events::UiEvent;
-use crate::ui::events::UiEvent::ResultsUpdate;
+use crate::ui::ui_messages::UiMessage;
+use crate::ui::ui_messages::UiMessage::SubsFetched;
 use anyhow::{Context, Result, bail};
 use log::{debug, error, info};
 use osb::features::{FeaturesResponse, features};
@@ -15,7 +15,7 @@ pub struct SubtitlesQuery {
     pub languages: Vec<String>
 }
 
-pub async fn subtitles_fetch_task(rx: Receiver<SubtitlesQuery>, tx: Sender<UiEvent>) -> Result<()> {
+pub async fn subtitles_fetch_task(rx: Receiver<SubtitlesQuery>, tx: Sender<UiMessage>) -> Result<()> {
     'outer: loop {
         sleep(Duration::from_millis(1000)).await;
 
@@ -40,12 +40,12 @@ pub async fn subtitles_fetch_task(rx: Receiver<SubtitlesQuery>, tx: Sender<UiEve
 
         if let Some(text) = last {
             if text.query.len() < 3 {
-                tx.send(ResultsUpdate(SubtitlesResponse { data: vec![] }))?
+                tx.send(SubsFetched(SubtitlesResponse { data: vec![] }))?
             } else {
                 // let result = subtitles(&text, vec![String::from("pl")]).await;
                 let result = subtitles(&text.query, text.languages).await;
                 match result {
-                    Ok(subtitles) => tx.send(ResultsUpdate(subtitles))?,
+                    Ok(subtitles) => tx.send(SubsFetched(subtitles))?,
                     Err(_) => break 'outer Ok(()),
                 }
             }

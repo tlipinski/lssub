@@ -1,6 +1,6 @@
 use crate::ui::app::{App, QUIT_KEY};
-use crate::ui::events::UiEvent;
-use crate::ui::events::UiEvent::Input;
+use crate::ui::ui_messages::UiMessage;
+use crate::ui::ui_messages::UiMessage::Input;
 use anyhow::Result;
 use log::info;
 use ratatui::crossterm::event;
@@ -13,7 +13,7 @@ use tokio::sync::broadcast::Receiver;
 // event::read() will still block even if the application exits, so an explicit
 // shutdown message has to be sent to break the loop
 // Is there another way to stop event::read()?
-pub async fn handle_input_task(tx: Sender<UiEvent>, mut shutdown_rx: Receiver<()>) -> Result<()> {
+pub async fn handle_input_task(tx: Sender<UiMessage>, mut shutdown_rx: Receiver<()>) -> Result<()> {
     loop {
         if poll(Duration::from_millis(100))? {
             match event::read()? {

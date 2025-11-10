@@ -12,7 +12,7 @@ use std::thread::sleep;
 use gio::glib::random_int_range;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::events::UiEvent;
+use crate::ui::ui_messages::UiMessage;
 
 #[derive(Debug)]
 pub struct SearchWidget {
@@ -57,10 +57,10 @@ impl SearchWidget {
         frame.render_widget(view, area);
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<UiEvent> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
         if let Some(state_changed) = self.input.handle_event(&event) {
             if state_changed.value {
-                return Some(UiEvent::QueryUpdated(self.input.value().into()))
+                return Some(UiMessage::QueryUpdated(self.input.value().into()))
             }
         }
         None
