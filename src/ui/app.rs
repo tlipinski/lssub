@@ -1,5 +1,5 @@
 use crate::ui::app::UiMessage::{Input, SubsFetched};
-use crate::ui::downloader_task::downloader_task;
+use crate::ui::downloader_task::{SubsDownload, downloader_task};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
@@ -13,7 +13,7 @@ use crate::ui::ui_messages::UiMessage::{
 };
 use anyhow::Result;
 use log::info;
-use osb::download::get_download_link;
+use osb::get_download_link::get_download_link;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
@@ -31,7 +31,7 @@ pub struct App {
     subs_widget: SubsWidget,
     language_widget: LanguageWidget,
     features_tx: Sender<SubtitlesQuery>,
-    downloader_tx: Sender<i64>,
+    downloader_tx: Sender<SubsDownload>,
     exit: bool,
 }
 
@@ -39,10 +39,9 @@ impl App {
     pub fn run(terminal: &mut DefaultTerminal, file_name: String) -> Result<()> {
         let (ui_tx, ui_rx) = mpsc::channel::<UiMessage>();
         let (features_tx, features_rx) = mpsc::channel::<SubtitlesQuery>();
+        let (downloader_tx, downloader_rx) = mpsc::channel::<SubsDownload>();
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
-
-        let (downloader_tx, downloader_rx) = mpsc::channel::<i64>();
 
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
         tokio::spawn(subtitles_fetch_task(features_rx, ui_tx.clone()));
@@ -117,7 +116,10 @@ impl App {
                 }
             }
             DownloadSubs(file_id) => {
-                self.downloader_tx.send(file_id);
+                self.downloader_tx.send(SubsDownload {
+                    file_id,
+                    save_path: file_id.to_string(),
+                });
                 Ok(None)
             }
             SwitchScreen(screen) => {

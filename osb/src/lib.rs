@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
+pub mod get_download_link;
 pub mod download;
-pub mod download_link;
 pub mod features;
 pub mod guess;
 pub mod guess_search;
