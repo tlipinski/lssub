@@ -1,8 +1,6 @@
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::events::UiEvent;
-use crate::ui::events::UiEvent::{
-    FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner,
-};
+use crate::ui::events::UiEvent::{DownloadConfirmed, FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
@@ -10,11 +8,12 @@ use crate::ui::spinner::handle_spinner;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use anyhow::Result;
-use ratatui::crossterm::event::{Event, KeyCode};
+use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
 use std::sync::mpsc;
 use std::sync::mpsc::Sender;
+use log::info;
 use tokio::sync::broadcast;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
@@ -109,6 +108,10 @@ impl App {
                 } else {
                     Ok(None)
                 }
+            },
+            DownloadConfirmed(sub_id) => {
+                info!("Downloading {sub_id}");
+                Ok(None)
             }
         }
     }
@@ -156,18 +159,15 @@ impl App {
                     KeyCode::F(10) => {
                         self.exit = true;
                         None
-                    },
+                    }
                     KeyCode::F(2) => {
                         self.current_screen = CurrentScreen::Language;
                         None
                     }
-                    KeyCode::Up | KeyCode::Down => {
-                        self.subs_widget.handle_key_event(key_event);
-                        None
+                    KeyCode::Up | KeyCode::Down | KeyCode::Enter => {
+                        self.subs_widget.handle_key_event(key_event)
                     }
-                    _ => {
-                        self.search_widget.handle_key_event(event)
-                    }
+                    _ => self.search_widget.handle_key_event(event),
                 },
                 CurrentScreen::Language => match key_event.code {
                     QUIT_KEY => {

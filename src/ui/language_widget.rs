@@ -1,4 +1,3 @@
-use crate::ui::commands::UICommand;
 use crate::ui::events::UiEvent;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
@@ -35,7 +34,7 @@ impl LanguageWidget {
 
         frame.render_widget(view, area);
     }
-    
+
     pub fn languages(&self) -> Vec<String> {
         let langs: String = self.input.value().into();
         let v = langs.split(",").collect::<Vec<&str>>();

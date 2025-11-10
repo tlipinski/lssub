@@ -11,6 +11,7 @@ pub enum UiEvent {
     FetchSubs(String, Vec<String>),
     StartSpinner,
     StopSpinner,
-    Init
+    Init,
+    DownloadConfirmed(String)
 }
 

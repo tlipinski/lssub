@@ -65,6 +65,7 @@ pub struct SubtitlesResponse {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Data {
+    pub id: String,
     pub r#type: String,
     pub attributes: Attributes,
 }

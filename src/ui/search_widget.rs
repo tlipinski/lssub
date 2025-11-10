@@ -12,7 +12,6 @@ use std::thread::sleep;
 use gio::glib::random_int_range;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::commands::UICommand;
 use crate::ui::events::UiEvent;
 
 #[derive(Debug)]

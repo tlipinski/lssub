@@ -1,3 +1,5 @@
+use crate::ui::events::UiEvent;
+use log::info;
 use osb::subtitles::SubtitlesResponse;
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
@@ -16,19 +18,15 @@ pub struct SubsWidget {
 
 #[derive(Debug, Default)]
 pub struct Sub {
-    pub title: String,
-    pub year: String,
-    pub language: String,
-    pub upload_date: String,
-    pub downloads: String
+    id: String,
+    title: String,
+    year: String,
+    language: String,
+    upload_date: String,
+    downloads: String,
 }
 
 impl SubsWidget {
-    // fn r(&mut self, f: &mut Frame, area: Rect) {
-    //     let table = self.view();
-    //     f.render_stateful_widget(table, area, &mut self.state)
-    // }
-
     pub fn render(&mut self, f: &mut Frame, area: Rect) {
         let rows = self.subs.iter().map(|item| {
             Row::from_iter(vec![
@@ -40,25 +38,41 @@ impl SubsWidget {
             ])
         });
         let mut title = format!(" Results: {} ", self.subs.len()).bold();
-        
-        let block_bot = Block::bordered()
-            .title(title)
-            // .title_bottom(instructions.centered())
-            .border_set(border::THICK);
+
+        let block_bot = Block::bordered().title(title).border_set(border::THICK);
 
         let table = Table::new(rows, [70, 10, 10, 10, 10])
-            .header(Row::from_iter(vec!["Title", "Language", "Year", "Uploaded", "Downloads"]))
+            .header(Row::from_iter(vec![
+                "Title",
+                "Language",
+                "Year",
+                "Uploaded",
+                "Downloads",
+            ]))
             .block(block_bot)
             .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
 
         f.render_stateful_widget(table, area, &mut self.state)
     }
 
-    pub fn handle_key_event(&mut self, key_event: KeyEvent) {
+    pub fn handle_key_event(&mut self, key_event: KeyEvent) -> Option<UiEvent> {
         match key_event.code {
-            KeyCode::Up => self.state.select_previous(),
-            KeyCode::Down => self.state.select_next(),
-            _ => {}
+            KeyCode::Up => {
+                self.state.select_previous();
+                None
+            }
+            KeyCode::Down => {
+                self.state.select_next();
+                None
+            }
+            KeyCode::Enter => {
+                self.state
+                    .selected()
+                    .map(|selection| self.subs.get(selection))
+                    .flatten()
+                    .map(|s| UiEvent::DownloadConfirmed(s.id.clone()))
+            }
+            _ => None,
         }
     }
 
@@ -66,17 +80,16 @@ impl SubsWidget {
         let subs = subtitles_response
             .data
             .iter()
-            .take(20)
             .map(|resp| Sub {
+                id: resp.id.clone(),
                 title: resp.attributes.release.clone(),
                 year: resp.attributes.feature_details.year.to_string(),
                 language: resp.attributes.language.clone(),
                 upload_date: resp.attributes.upload_date.clone(),
-                downloads: resp.attributes.download_count.to_string()
+                downloads: resp.attributes.download_count.to_string(),
             })
             .collect::<Vec<Sub>>();
 
         self.subs = subs;
     }
-
 }
