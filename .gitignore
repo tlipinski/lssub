@@ -4,3 +4,4 @@ target
 !.run
 src/bin/*
 logs.txt
+http-client.private.env.json
