@@ -4,12 +4,13 @@ use osb::download::download;
 
 pub async fn downloader_task(rx: Receiver<i64>) -> anyhow::Result<()>{
     loop {
-        match rx.try_recv() {
+        match rx.recv() {
             Ok(file_id) => {
                 info!("Downloading: {file_id}");
                 download(file_id).await;
             }
-            Err(_) => {
+            Err(err) => {
+                info!("Error: {err}");
                 break Ok(())
             }
         }
