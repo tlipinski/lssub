@@ -44,9 +44,7 @@ impl LanguageWidget {
     pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                KeyCode::Enter => {
-                    Some(UiMessage::LanguagesUpdated(self.languages()))
-                }
+                KeyCode::Enter => Some(UiMessage::LanguagesUpdated(self.languages())),
                 _ => {
                     self.input.handle_event(&event);
                     None

@@ -12,10 +12,13 @@ use tokio::time::sleep;
 
 pub struct SubtitlesQuery {
     pub query: String,
-    pub languages: Vec<String>
+    pub languages: Vec<String>,
 }
 
-pub async fn subtitles_fetch_task(rx: Receiver<SubtitlesQuery>, tx: Sender<UiMessage>) -> Result<()> {
+pub async fn subtitles_fetch_task(
+    rx: Receiver<SubtitlesQuery>,
+    tx: Sender<UiMessage>,
+) -> Result<()> {
     'outer: loop {
         sleep(Duration::from_millis(1000)).await;
 

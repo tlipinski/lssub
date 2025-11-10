@@ -1,8 +1,8 @@
-use osb::login::{login, Credentials};
 use crate::secret::store;
 use anyhow::Result;
-use std::io::{stdin, stdout, Write};
 use log::info;
+use osb::login::{Credentials, login};
+use std::io::{Write, stdin, stdout};
 
 pub async fn handle_login_cmd() -> Result<()> {
     let mut username = String::new();

@@ -10,9 +10,9 @@ pub enum Command {
         languages: Vec<String>,
     },
     Features {
-        query: String
+        query: String,
     },
     Gui {
-        file_path: Option<String>
-    }
+        file_path: Option<String>,
+    },
 }

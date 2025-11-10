@@ -1,8 +1,8 @@
-use std::sync::mpsc::Receiver;
 use log::info;
 use osb::download::download;
+use std::sync::mpsc::Receiver;
 
-pub async fn downloader_task(rx: Receiver<i64>) -> anyhow::Result<()>{
+pub async fn downloader_task(rx: Receiver<i64>) -> anyhow::Result<()> {
     loop {
         match rx.recv() {
             Ok(file_id) => {
@@ -11,7 +11,7 @@ pub async fn downloader_task(rx: Receiver<i64>) -> anyhow::Result<()>{
             }
             Err(err) => {
                 info!("Error: {err}");
-                break Ok(())
+                break Ok(());
             }
         }
     }

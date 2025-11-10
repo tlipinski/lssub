@@ -1,7 +1,7 @@
+use crate::ui::ui_messages::UiMessage;
 use std::sync::mpsc::Sender;
 use tokio::sync::broadcast::Receiver;
-use tokio::time::{sleep, Duration};
-use crate::ui::ui_messages::UiMessage;
+use tokio::time::{Duration, sleep};
 
 pub async fn handle_spinner_task(tx: Sender<UiMessage>) -> anyhow::Result<()> {
     let spinner = ['|', '/', '-', '\\'];

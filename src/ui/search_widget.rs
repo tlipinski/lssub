@@ -1,5 +1,7 @@
 use crate::ui::app::QUIT_KEY;
+use crate::ui::ui_messages::UiMessage;
 use anyhow::Result;
+use gio::glib::random_int_range;
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
@@ -9,10 +11,8 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
 use std::sync::mpsc::Sender;
 use std::thread::sleep;
-use gio::glib::random_int_range;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::ui_messages::UiMessage;
 
 #[derive(Debug)]
 pub struct SearchWidget {
@@ -35,12 +35,11 @@ impl SearchWidget {
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let mut title =
-            if (self.spinning) {
-                (" Search ".to_string() + &self.spinner.to_string() + " ").bold()
-            } else {
-                (" Search ".to_string()).bold()
-            };
+        let mut title = if (self.spinning) {
+            (" Search ".to_string() + &self.spinner.to_string() + " ").bold()
+        } else {
+            (" Search ".to_string()).bold()
+        };
 
         let block = Block::bordered()
             .title(title)
@@ -60,7 +59,7 @@ impl SearchWidget {
     pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
         if let Some(state_changed) = self.input.handle_event(&event) {
             if state_changed.value {
-                return Some(UiMessage::QueryUpdated(self.input.value().into()))
+                return Some(UiMessage::QueryUpdated(self.input.value().into()));
             }
         }
         None

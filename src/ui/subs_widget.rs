@@ -65,13 +65,12 @@ impl SubsWidget {
                 self.state.select_next();
                 None
             }
-            KeyCode::Enter => {
-                self.state
-                    .selected()
-                    .map(|selection| self.subs.get(selection))
-                    .flatten()
-                    .map(|s| UiMessage::DownloadSubs(s.file_id))
-            }
+            KeyCode::Enter => self
+                .state
+                .selected()
+                .map(|selection| self.subs.get(selection))
+                .flatten()
+                .map(|s| UiMessage::DownloadSubs(s.file_id)),
             _ => None,
         }
     }

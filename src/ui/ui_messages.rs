@@ -16,5 +16,5 @@ pub enum UiMessage {
     DownloadSubs(i64),
     SwitchScreen(CurrentScreen),
     Exit,
-    Tuple(Box<UiMessage>, Box<UiMessage>)
+    Tuple(Box<UiMessage>, Box<UiMessage>),
 }

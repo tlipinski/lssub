@@ -7,6 +7,7 @@ mod ui;
 
 use crate::cli::command::Command;
 use crate::cli::features_cmd::handle_features_cmd;
+use crate::cli::gui_cmd::handle_gui_cmd;
 use crate::cli::login_cmd::handle_login_cmd;
 use crate::cli::logout_cmd::handle_logout_cmd;
 use crate::cli::search_cmd::handle_search_cmd;
@@ -19,7 +20,6 @@ use log::{LevelFilter, error, info};
 use osb::user_info::get_user_info;
 use std::fs::OpenOptions;
 use ui::app::App;
-use crate::cli::gui_cmd::handle_gui_cmd;
 
 #[tokio::main]
 async fn main() {
@@ -81,16 +81,10 @@ async fn run(args: Args) -> Result<()> {
         Command::Search {
             file_path,
             languages,
-        } => {
-            handle_search_cmd(&file_path, languages).await
-        }
+        } => handle_search_cmd(&file_path, languages).await,
 
-        Command::Features { query } => {
-            handle_features_cmd(&query).await
-        }
+        Command::Features { query } => handle_features_cmd(&query).await,
 
-        Command::Gui { file_path} => {
-            handle_gui_cmd(file_path.as_deref()).await
-        }
+        Command::Gui { file_path } => handle_gui_cmd(file_path.as_deref()).await,
     }
 }

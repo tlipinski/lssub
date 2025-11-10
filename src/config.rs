@@ -1,7 +1,7 @@
-use std::fs;
 use anyhow::Result;
 use log::{debug, info};
 use serde::Deserialize;
+use std::fs;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {}
