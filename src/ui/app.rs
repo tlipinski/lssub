@@ -13,7 +13,7 @@ use crate::ui::ui_messages::UiMessage::{
 };
 use anyhow::Result;
 use log::info;
-use osb::download::download;
+use osb::download::get_download_link;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};

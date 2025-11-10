@@ -3,7 +3,7 @@ use anyhow::{Error, Result};
 use log::{debug, error, info, trace};
 use serde::{Deserialize, Serialize};
 
-pub async fn download(file_id: i64) -> Result<DownloadResponse> {
+pub async fn get_download_link(file_id: i64) -> Result<DownloadResponse> {
     let url = format!("{}/download", API_URL);
 
     let req = DownloadRequest { file_id };
