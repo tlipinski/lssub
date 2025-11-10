@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use crate::ui::app::UiEvent::{Input, ResultsUpdate};
 use crate::ui::downloader_task::downloader_task;
 use crate::ui::events::UiEvent;
@@ -18,6 +17,7 @@ use osb::download::download;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
+use std::ops::Deref;
 use std::sync::mpsc;
 use std::sync::mpsc::Sender;
 use tokio::sync::broadcast;
@@ -129,7 +129,14 @@ impl App {
                 Ok(None)
             }
             Tuple(first, second) => {
-                self.handle_ui_events(*first)
+                let handled1 = self.handle_ui_events(*first)?;
+                let handled2 = self.handle_ui_events(*second)?;
+                match (handled1, handled2) {
+                    (Some(e1), Some(e2)) => Ok(Some(Tuple(Box::new(e1), Box::new(e2)))),
+                    (None, Some(e)) => Ok(Some(e)),
+                    (Some(e), None) => Ok(Some(e)),
+                    _ => Ok(None),
+                }
             }
             Exit => {
                 self.exit = true;
