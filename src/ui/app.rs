@@ -15,6 +15,8 @@ use std::sync::mpsc;
 use std::sync::mpsc::Sender;
 use log::info;
 use tokio::sync::broadcast;
+use osb::download::download;
+use crate::ui::downloader_task::downloader_task;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -25,6 +27,7 @@ pub struct App {
     subs_widget: SubsWidget,
     language_widget: LanguageWidget,
     features_tx: Sender<SubtitlesQuery>,
+    downloader_tx: Sender<i64>,
     exit: bool,
 }
 
@@ -35,9 +38,12 @@ impl App {
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
 
+        let (downloader_tx, downloader_rx) = mpsc::channel::<i64>();
+
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
         tokio::spawn(subtitles_fetch_task(features_rx, ui_tx.clone()));
         tokio::spawn(handle_spinner(ui_tx.clone()));
+        tokio::spawn(downloader_task(downloader_rx));
 
         let mut app = App {
             current_screen: CurrentScreen::default(),
@@ -45,6 +51,7 @@ impl App {
             subs_widget: SubsWidget::default(),
             language_widget: LanguageWidget::from(),
             features_tx,
+            downloader_tx,
             exit: false,
         };
 
@@ -109,8 +116,8 @@ impl App {
                     Ok(None)
                 }
             },
-            DownloadConfirmed(sub_id) => {
-                info!("Downloading {sub_id}");
+            DownloadConfirmed(file_id) => {
+                self.downloader_tx.send(file_id);
                 Ok(None)
             }
         }

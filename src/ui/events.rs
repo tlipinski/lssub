@@ -12,6 +12,6 @@ pub enum UiEvent {
     StartSpinner,
     StopSpinner,
     Init,
-    DownloadConfirmed(String)
+    DownloadConfirmed(i64)
 }
 

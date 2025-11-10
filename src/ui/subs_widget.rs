@@ -18,7 +18,7 @@ pub struct SubsWidget {
 
 #[derive(Debug, Default)]
 pub struct Sub {
-    id: String,
+    file_id: i64,
     title: String,
     year: String,
     language: String,
@@ -70,7 +70,7 @@ impl SubsWidget {
                     .selected()
                     .map(|selection| self.subs.get(selection))
                     .flatten()
-                    .map(|s| UiEvent::DownloadConfirmed(s.id.clone()))
+                    .map(|s| UiEvent::DownloadConfirmed(s.file_id))
             }
             _ => None,
         }
@@ -81,7 +81,7 @@ impl SubsWidget {
             .data
             .iter()
             .map(|resp| Sub {
-                id: resp.id.clone(),
+                file_id: resp.attributes.files.get(0).unwrap().file_id,
                 title: resp.attributes.release.clone(),
                 year: resp.attributes.feature_details.year.to_string(),
                 language: resp.attributes.language.clone(),

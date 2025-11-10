@@ -7,3 +7,4 @@ pub mod user_info;
 pub mod subtitles;
 pub mod guess_search;
 pub mod features;
+pub mod download;

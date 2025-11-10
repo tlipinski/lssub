@@ -77,10 +77,16 @@ pub struct FeatureDetails {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+pub struct File {
+    pub file_id: i64
+}
+
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Attributes {
     pub feature_details: FeatureDetails,
     pub language: String,
     pub download_count: i32,
     pub upload_date: String,
     pub release: String,
+    pub files: Vec<File>
 }

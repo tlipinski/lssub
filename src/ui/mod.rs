@@ -6,4 +6,4 @@ mod input_handler;
 mod search_widget;
 mod spinner;
 mod language_widget;
-mod download;
+mod downloader_task;
