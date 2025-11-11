@@ -53,17 +53,18 @@ async fn main() {
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
+    name: Option<String>,
     #[command(subcommand)]
-    command: Command,
+    command: Option<Command>,
 }
 
 async fn run(args: Args) -> Result<()> {
     let _ = get_config()?;
 
     match args.command {
-        Command::Login => handle_login_cmd().await,
+        Some(Command::Login) => handle_login_cmd().await,
 
-        Command::Logout => {
+        Some(Command::Logout) => {
             if retrieve().await?.is_some() {
                 handle_logout_cmd().await
             } else {
@@ -71,7 +72,7 @@ async fn run(args: Args) -> Result<()> {
             }
         }
 
-        Command::UserInfo => {
+        Some(Command::UserInfo) => {
             if let Some(token) = retrieve().await? {
                 get_user_info(&token).await
             } else {
@@ -79,13 +80,13 @@ async fn run(args: Args) -> Result<()> {
             }
         }
 
-        Command::Search {
+        Some(Command::Search {
             file_path,
             languages,
-        } => handle_search_cmd(&file_path, languages).await,
+        }) => handle_search_cmd(&file_path, languages).await,
 
-        Command::Features { query } => handle_features_cmd(&query).await,
+        Some(Command::Features { query }) => handle_features_cmd(&query).await,
 
-        Command::Gui { file_path } => handle_gui_cmd(file_path.as_deref()).await,
+        None => handle_gui_cmd(args.name.as_deref()).await,
     }
 }
