@@ -41,6 +41,8 @@ async fn main() {
 
     let args = Args::parse();
 
+    info!("{args:?}");
+
     match run(args).await {
         Ok(_) => {}
         Err(e) => {
