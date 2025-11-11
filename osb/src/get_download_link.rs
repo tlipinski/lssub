@@ -1,6 +1,6 @@
 use crate::values::{API_URL, KEY, USER_AGENT};
 use anyhow::{Error, Result};
-use log::{debug, error, info, trace};
+use log::{error, info, trace};
 use serde::{Deserialize, Serialize};
 
 pub async fn get_download_link(file_id: i64) -> Result<DownloadResponse> {
@@ -14,11 +14,11 @@ pub async fn get_download_link(file_id: i64) -> Result<DownloadResponse> {
         .header("User-Agent", USER_AGENT)
         .json(&req);
 
-    debug!("{:?}", req);
+    // debug!("{:?}", req);
 
     let response = req.send().await?;
 
-    debug!("{:?}", response);
+    // debug!("{:?}", response);
 
     let status = response.status();
 
@@ -58,5 +58,5 @@ struct DownloadRequest {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct DownloadResponse {
     pub link: String,
-    pub file_name: String
+    pub file_name: String,
 }

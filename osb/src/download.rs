@@ -1,14 +1,14 @@
 use anyhow::{Error, Result};
-use log::{debug, error, info};
+use log::{error, info};
 
 pub async fn download(url: String) -> Result<String> {
     let req = reqwest::Client::new().get(url);
 
-    debug!("{:?}", req);
+    // debug!("{:?}", req);
 
     let response = req.send().await?;
 
-    debug!("{:?}", response);
+    // debug!("{:?}", response);
 
     let status = response.status();
 

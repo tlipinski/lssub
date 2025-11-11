@@ -1,4 +1,4 @@
-use log::info;
+use log::{debug, info};
 use osb::download::download;
 use osb::get_download_link::get_download_link;
 use std::ffi::{OsStr, OsString};
@@ -18,13 +18,20 @@ pub async fn downloader_task(
 
                 let download_link_response = get_download_link(subs_download.file_id).await?;
 
+                debug!("{:?}", download_link_response);
+                debug!("{:?}", base_path);
+                debug!("{:?}", file_name_opt);
+
                 let content = download(download_link_response.link).await?;
+
 
                 let output_file = output_file(
                     &base_path,
                     &file_name_opt,
                     download_link_response.file_name.as_str(),
                 );
+
+                debug!("out: {:?}", output_file);
 
                 fs::write(output_file, content)?;
             }
@@ -41,17 +48,23 @@ fn output_file(
     file_name_opt: &Option<String>,
     default_file_name: &str,
 ) -> PathBuf {
-    let ext_opt = Path::new(default_file_name).extension();
+    let default_ext_opt = Path::new(default_file_name).extension();
 
-    let file_base = file_name_opt.as_deref().unwrap_or(default_file_name);
-
-    let file_name = if let Some(ext) = ext_opt {
-        PathBuf::from(file_base).with_extension(ext)
+    let mut output_file;
+    if let Some(ext) = default_ext_opt {
+        if let Some(file_name) = file_name_opt {
+            output_file = OsString::from(file_name);
+            output_file.push(".");
+            output_file.push(ext)
+        } else {
+            output_file = OsString::from(default_file_name)
+        }
     } else {
-        PathBuf::from(file_base)
+        output_file = OsString::from(file_name_opt.as_deref().unwrap_or(default_file_name));
+        output_file.push(".srt")
     };
 
-    base_path.join(file_name)
+    base_path.join(output_file)
 }
 
 #[derive(Debug)]
@@ -80,6 +93,30 @@ mod tests {
                 "default.ext"
             ),
             PathBuf::from("/home/user/file.ext")
+        );
+    }
+
+    #[test]
+    fn input_file_with_multiple_ext() {
+        assert_eq!(
+            output_file(
+                &PathBuf::from("/home/user"),
+                &Some(String::from("file.multiple")),
+                "default.ext"
+            ),
+            PathBuf::from("/home/user/file.multiple.ext")
+        );
+    }
+
+    #[test]
+    fn fallback_to_srt_if_default_has_no_extension() {
+        assert_eq!(
+            output_file(
+                &PathBuf::from("/home/user"),
+                &Some(String::from("file")),
+                "default"
+            ),
+            PathBuf::from("/home/user/file.srt")
         );
     }
 }
