@@ -58,4 +58,5 @@ struct DownloadRequest {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct DownloadResponse {
     pub link: String,
+    pub file_name: String
 }

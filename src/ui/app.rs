@@ -37,7 +37,11 @@ pub struct App {
 }
 
 impl App {
-    pub fn run(terminal: &mut DefaultTerminal, base_path: &Path, file_name: Option<&str>) -> Result<()> {
+    pub fn run(
+        terminal: &mut DefaultTerminal,
+        base_path: &Path,
+        file_name: Option<&str>,
+    ) -> Result<()> {
         let (ui_tx, ui_rx) = mpsc::channel::<UiMessage>();
         let (features_tx, features_rx) = mpsc::channel::<SubtitlesQuery>();
         let (downloader_tx, downloader_rx) = mpsc::channel::<SubsDownload>();
@@ -47,7 +51,7 @@ impl App {
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
         tokio::spawn(subtitles_fetch_task(features_rx, ui_tx.clone()));
         tokio::spawn(handle_spinner_task(ui_tx.clone()));
-        tokio::spawn(downloader_task(downloader_rx));
+        tokio::spawn(downloader_task(downloader_rx, base_path.to_owned(), file_name.map(|s| s.to_string())));
 
         let mut app = App {
             current_screen: CurrentScreen::default(),
@@ -117,10 +121,7 @@ impl App {
                 }
             }
             DownloadSubs(file_id) => {
-                self.downloader_tx.send(SubsDownload {
-                    file_id,
-                    save_path: file_id.to_string(),
-                });
+                self.downloader_tx.send(SubsDownload { file_id });
                 Ok(None)
             }
             SwitchScreen(screen) => {
