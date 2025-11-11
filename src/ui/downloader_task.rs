@@ -41,13 +41,17 @@ fn output_file(
     file_name_opt: &Option<String>,
     default_file_name: &str,
 ) -> PathBuf {
-    let ext = PathBuf::from(default_file_name).extension();
+    let ext_opt = Path::new(default_file_name).extension();
 
-    let file_base = file_name_opt.as_deref().unwrap_or(&default_file_name);
+    let file_base = file_name_opt.as_deref().unwrap_or(default_file_name);
 
-    let file = Path::new(file_base).with_extension("srt");
+    let file_name = if let Some(ext) = ext_opt {
+        PathBuf::from(file_base).with_extension(ext)
+    } else {
+        PathBuf::from(file_base)
+    };
 
-    base_path.join(file)
+    base_path.join(file_name)
 }
 
 #[derive(Debug)]
