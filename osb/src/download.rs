@@ -1,6 +1,5 @@
-use crate::values::{KEY, USER_AGENT};
 use anyhow::{Error, Result};
-use log::{debug, error, info, trace};
+use log::{debug, error, info};
 
 pub async fn download(url: String) -> Result<String> {
     let req = reqwest::Client::new().get(url);

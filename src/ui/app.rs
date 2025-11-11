@@ -18,6 +18,7 @@ use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
 use std::ops::Deref;
+use std::path::Path;
 use std::sync::mpsc;
 use std::sync::mpsc::Sender;
 use tokio::sync::broadcast;
@@ -36,7 +37,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn run(terminal: &mut DefaultTerminal, file_name: String) -> Result<()> {
+    pub fn run(terminal: &mut DefaultTerminal, base_path: &Path, file_name: Option<&str>) -> Result<()> {
         let (ui_tx, ui_rx) = mpsc::channel::<UiMessage>();
         let (features_tx, features_rx) = mpsc::channel::<SubtitlesQuery>();
         let (downloader_tx, downloader_rx) = mpsc::channel::<SubsDownload>();
@@ -50,7 +51,7 @@ impl App {
 
         let mut app = App {
             current_screen: CurrentScreen::default(),
-            search_widget: SearchWidget::from(file_name.clone()),
+            search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
             subs_widget: SubsWidget::default(),
             language_widget: LanguageWidget::from(),
             features_tx,

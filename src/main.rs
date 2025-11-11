@@ -86,46 +86,6 @@ async fn run(args: Args) -> Result<()> {
 
         Command::Features { query } => handle_features_cmd(&query).await,
 
-        Command::Gui { file_path } => {
-            let p = if let Some(file) = file_path {
-                let p = PathBuf::from(&file).canonicalize();
-
-                match p {
-                    Ok(can) => {
-                        if (can.is_absolute()) {
-                            can
-                        }  else {
-                            let current_dir = std::env::current_dir()?;
-                            info!("cwd: {}", current_dir.display());
-
-                            PathBuf::from(current_dir).join(&file)
-                        }
-                    }
-                    Err(err) => {
-                        warn!("{err}");
-                        let current_dir = std::env::current_dir()?;
-                        info!("cwd: {}", current_dir.display());
-                        PathBuf::from(current_dir)
-                    }
-                }
-
-
-            } else {
-                let current_dir = std::env::current_dir()?;
-                info!("cwd: {}", current_dir.display());
-                PathBuf::from(current_dir)
-            };
-
-            info!("Canonical: {:?}", p.canonicalize());
-
-            if (p.is_dir()) {
-            } else {
-                info!("Stem: {:?}", p.file_stem());
-                info!("Ext: {:?}", p.extension());
-                info!("Parent: {:?}", p.parent());
-            }
-
-            handle_gui_cmd(None).await
-        }
+        Command::Gui { file_path } => handle_gui_cmd(file_path.as_deref()).await,
     }
 }
