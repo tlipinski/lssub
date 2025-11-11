@@ -28,7 +28,7 @@ async fn main() {
         .create(true)
         .write(true)
         .truncate(true)
-        .open("logs.txt")
+        .open("/tmp/subster.log")
         .expect("Failed to open log file");
 
     // Configure env_logger to write logs to the file
@@ -116,7 +116,14 @@ async fn run(args: Args) -> Result<()> {
                 PathBuf::from(current_dir)
             };
 
-            info!("{:?}", p.canonicalize());
+            info!("Canonical: {:?}", p.canonicalize());
+
+            if (p.is_dir()) {
+            } else {
+                info!("Stem: {:?}", p.file_stem());
+                info!("Ext: {:?}", p.extension());
+                info!("Parent: {:?}", p.parent());
+            }
 
             handle_gui_cmd(None).await
         }
