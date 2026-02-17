@@ -9,7 +9,7 @@ use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
 use crate::ui::ui_messages::UiMessage::{
     DownloadSubs, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate,
-    StartSpinner, StopSpinner, SwitchScreen, Tuple,
+    StartSpinner, StopSpinner, SwitchScreen,
 };
 use anyhow::Result;
 use log::info;
@@ -129,16 +129,16 @@ impl App {
                 self.current_screen = screen;
                 Ok(None)
             }
-            Tuple(first, second) => {
-                let handled1 = self.handle_ui_message(*first)?;
-                let handled2 = self.handle_ui_message(*second)?;
-                match (handled1, handled2) {
-                    (Some(e1), Some(e2)) => Ok(Some(Tuple(Box::new(e1), Box::new(e2)))),
-                    (None, Some(e)) => Ok(Some(e)),
-                    (Some(e), None) => Ok(Some(e)),
-                    _ => Ok(None),
-                }
-            }
+            // Tuple(first, second) => {
+            //     let handled1 = self.handle_ui_message(*first)?;
+            //     let handled2 = self.handle_ui_message(*second)?;
+            //     match (handled1, handled2) {
+            //         (Some(e1), Some(e2)) => Ok(Some(Tuple(Box::new(e1), Box::new(e2)))),
+            //         (None, Some(e)) => Ok(Some(e)),
+            //         (Some(e), None) => Ok(Some(e)),
+            //         _ => Ok(None),
+            //     }
+            // }
             Exit => {
                 self.exit = true;
                 Ok(None)
