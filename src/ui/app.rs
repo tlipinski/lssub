@@ -92,6 +92,7 @@ impl App {
                 Ok(None)
             }
             LanguagesUpdated(langs) => {
+                self.current_screen = CurrentScreen::Main;
                 let query: String = self.search_widget.input.value().into();
                 Ok(Some(FetchSubs(query, langs)))
             }
@@ -195,17 +196,7 @@ impl App {
                 CurrentScreen::Language => match key_event.code {
                     QUIT_KEY => Some(SwitchScreen(CurrentScreen::Main)),
                     KeyCode::F(2) => Some(SwitchScreen(CurrentScreen::Main)),
-                    _ => {
-                        let event = self.language_widget.handle_key_event(event);
-                        if let Some(evt) = event {
-                            Some(Tuple(
-                                Box::new(evt),
-                                Box::new(SwitchScreen(CurrentScreen::Main)),
-                            ))
-                        } else {
-                            event
-                        }
-                    }
+                    _ => self.language_widget.handle_key_event(event),
                 },
             }
         } else {
