@@ -21,10 +21,8 @@ pub async fn handle_input_task(tx: Sender<UiMessage>, mut shutdown_rx: Receiver<
 
                 _ => Ok(()),
             };
-        } else {
-            if let Ok(_) = shutdown_rx.try_recv() {
-                break Ok(());
-            }
+        } else if shutdown_rx.try_recv().is_ok() {
+            break Ok(());
         }
     }
 }
