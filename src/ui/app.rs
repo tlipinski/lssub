@@ -122,7 +122,7 @@ impl App {
                 }
             }
             DownloadSubs(file_id) => {
-                self.downloader_tx.send(SubsDownload { file_id });
+                self.downloader_tx.send(SubsDownload { file_id }); // todo missing ?
                 Ok(None)
             }
             SwitchScreen(screen) => {
