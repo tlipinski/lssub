@@ -67,7 +67,7 @@ impl App {
 
         while !app.exit {
             while let Some(msg) = message_opt {
-                message_opt = app.handle_ui_message(msg)?
+                message_opt = app.update(msg)?
             }
 
             terminal.draw(|frame| app.draw(frame))?;
@@ -80,7 +80,7 @@ impl App {
         Ok(())
     }
 
-    fn handle_ui_message(&mut self, ui_message: UiMessage) -> Result<Option<UiMessage>> {
+    fn update(&mut self, ui_message: UiMessage) -> Result<Option<UiMessage>> {
         match ui_message {
             Input(event) => Ok(self.handle_key_event(event)),
             SubsFetched(subtitles) => {
@@ -129,16 +129,6 @@ impl App {
                 self.current_screen = screen;
                 Ok(None)
             }
-            // Tuple(first, second) => {
-            //     let handled1 = self.handle_ui_message(*first)?;
-            //     let handled2 = self.handle_ui_message(*second)?;
-            //     match (handled1, handled2) {
-            //         (Some(e1), Some(e2)) => Ok(Some(Tuple(Box::new(e1), Box::new(e2)))),
-            //         (None, Some(e)) => Ok(Some(e)),
-            //         (Some(e), None) => Ok(Some(e)),
-            //         _ => Ok(None),
-            //     }
-            // }
             Exit => {
                 self.exit = true;
                 Ok(None)
