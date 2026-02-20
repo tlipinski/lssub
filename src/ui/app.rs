@@ -3,7 +3,7 @@ use crate::ui::downloader_task::{SubsDownload, downloader_task};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
-use crate::ui::spinner::handle_spinner_task;
+use crate::ui::spinner::spinner_task;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
@@ -50,7 +50,7 @@ impl App {
 
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
         tokio::spawn(subtitles_fetch_task(features_rx, ui_tx.clone()));
-        tokio::spawn(handle_spinner_task(ui_tx.clone()));
+        tokio::spawn(spinner_task(ui_tx.clone()));
         tokio::spawn(downloader_task(downloader_rx, base_path.to_owned(), file_name.map(|s| s.to_string())));
 
         let mut app = App {
