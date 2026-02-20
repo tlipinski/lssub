@@ -57,10 +57,10 @@ impl SearchWidget {
     }
 
     pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
-        if let Some(state_changed) = self.input.handle_event(&event) {
-            if state_changed.value {
-                return Some(UiMessage::QueryUpdated(self.input.value().into()));
-            }
+        if let Some(state_changed) = self.input.handle_event(&event)
+            && state_changed.value
+        {
+            return Some(UiMessage::QueryUpdated(self.input.value().into()));
         }
         None
     }

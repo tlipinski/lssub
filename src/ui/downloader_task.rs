@@ -44,7 +44,7 @@ pub async fn downloader_task(
 }
 
 fn output_file(
-    base_path: &PathBuf,
+    base_path: &Path,
     file_name_opt: &Option<String>,
     default_file_name: &str,
 ) -> PathBuf {

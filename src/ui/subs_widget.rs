@@ -68,8 +68,7 @@ impl SubsWidget {
             KeyCode::Enter => self
                 .state
                 .selected()
-                .map(|selection| self.subs.get(selection))
-                .flatten()
+                .and_then(|selection| self.subs.get(selection))
                 .map(|s| UiMessage::DownloadSubs(s.file_id)),
             _ => None,
         }
@@ -80,7 +79,7 @@ impl SubsWidget {
             .data
             .iter()
             .map(|resp| Sub {
-                file_id: resp.attributes.files.get(0).unwrap().file_id,
+                file_id: resp.attributes.files.first().unwrap().file_id,
                 title: resp.attributes.release.clone(),
                 year: resp.attributes.feature_details.year.to_string(),
                 language: resp.attributes.language.clone(),

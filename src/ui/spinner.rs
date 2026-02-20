@@ -9,7 +9,7 @@ pub async fn handle_spinner_task(tx: Sender<UiMessage>) -> anyhow::Result<()> {
     loop {
         sleep(Duration::from_millis(200)).await;
         pos += 1;
-        pos = pos % spinner.len();
+        pos %= spinner.len();
         let ch = spinner[pos];
         tx.send(UiMessage::SpinnerUpdate(ch))?
     }

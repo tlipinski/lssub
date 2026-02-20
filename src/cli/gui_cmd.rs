@@ -17,14 +17,14 @@ pub async fn handle_gui_cmd(path_opt: Option<&str>) -> Result<()> {
                     let current_dir = std::env::current_dir()?;
                     info!("cwd: {}", current_dir.display());
 
-                    PathBuf::from(current_dir).join(&path)
+                    current_dir.join(&path)
                 }
             }
             Err(err) => {
                 warn!("{err}");
                 let current_dir = std::env::current_dir()?;
                 info!("cwd: {}", current_dir.display());
-                PathBuf::from(current_dir)
+                current_dir
             }
         }
     } else {
