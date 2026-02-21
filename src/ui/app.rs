@@ -51,7 +51,11 @@ impl App {
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
         tokio::spawn(subtitles_fetch_task(features_rx, ui_tx.clone()));
         tokio::spawn(spinner_task(ui_tx.clone()));
-        tokio::spawn(downloader_task(downloader_rx, base_path.to_owned(), file_name.map(|s| s.to_string())));
+        tokio::spawn(downloader_task(
+            downloader_rx,
+            base_path.to_owned(),
+            file_name.map(|s| s.to_string()),
+        ));
 
         let mut app = App {
             current_screen: CurrentScreen::default(),
@@ -178,9 +182,11 @@ impl App {
                 CurrentScreen::Main => match key_event.code {
                     KeyCode::F(10) => Some(Exit),
                     KeyCode::F(2) => Some(SwitchScreen(CurrentScreen::Language)),
-                    KeyCode::Up | KeyCode::Down | KeyCode::Enter => {
-                        self.subs_widget.handle_key_event(key_event)
-                    }
+                    KeyCode::PageUp
+                    | KeyCode::PageDown
+                    | KeyCode::Up
+                    | KeyCode::Down
+                    | KeyCode::Enter => self.subs_widget.handle_key_event(key_event),
                     _ => self.search_widget.handle_key_event(event),
                 },
                 CurrentScreen::Language => match key_event.code {

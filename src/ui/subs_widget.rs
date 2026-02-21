@@ -65,6 +65,16 @@ impl SubsWidget {
                 self.state.select_next();
                 None
             }
+            KeyCode::PageUp => {
+                let next = self.state.selected().map_or(0, |i| i.saturating_sub(10));
+                self.state.select(Some(next));
+                None
+            }
+            KeyCode::PageDown => {
+                let next = self.state.selected().map_or(0, |i| i.saturating_add(10));
+                self.state.select(Some(next));
+                None
+            }
             KeyCode::Enter => self
                 .state
                 .selected()
