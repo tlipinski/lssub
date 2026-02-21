@@ -9,8 +9,8 @@ use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
 use crate::ui::ui_messages::UiMessage::{
-    DownloadSubs, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate,
-    StartSpinner, StopSpinner, SwitchScreen,
+    DownloadSubs, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated,
+    SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen,
 };
 use anyhow::Result;
 use log::info;
@@ -55,6 +55,7 @@ impl App {
         tokio::spawn(spinner_task(ui_tx.clone()));
         tokio::spawn(downloader_task(
             downloader_rx,
+            ui_tx.clone(),
             base_path.to_owned(),
             file_name.map(|s| s.to_string()),
         ));
@@ -130,7 +131,12 @@ impl App {
                 }
             }
             DownloadSubs(file_id) => {
-                self.downloader_tx.send(SubsDownload { file_id }); // todo missing ?
+                self.downloader_tx.send(SubsDownload { file_id })?;
+                self.status_widget.info = "Downloading...".into();
+                Ok(None)
+            }
+            DownloadedSubs(path) => {
+                self.status_widget.info = format!("Downloaded: {:?}", path);
                 Ok(None)
             }
             SwitchScreen(screen) => {

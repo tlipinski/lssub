@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use crate::ui::app::CurrentScreen;
 use osb::subtitles::SubtitlesResponse;
 use ratatui::crossterm::event::Event;
@@ -14,7 +15,7 @@ pub enum UiMessage {
     StopSpinner,
     Init,
     DownloadSubs(i64),
+    DownloadedSubs(PathBuf),
     SwitchScreen(CurrentScreen),
     Exit,
-    // Tuple(Box<UiMessage>, Box<UiMessage>),
 }

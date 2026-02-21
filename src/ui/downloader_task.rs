@@ -1,13 +1,15 @@
+use crate::ui::ui_messages::UiMessage;
 use log::{debug, info};
 use osb::download::download;
 use osb::get_download_link::get_download_link;
 use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc::{Receiver, Sender};
 
 pub async fn downloader_task(
     rx: Receiver<SubsDownload>,
+    ui_tx: Sender<UiMessage>,
     base_path: PathBuf,
     file_name_opt: Option<String>,
 ) -> anyhow::Result<()> {
@@ -24,7 +26,6 @@ pub async fn downloader_task(
 
                 let content = download(download_link_response.link).await?;
 
-
                 let output_file = output_file(
                     &base_path,
                     &file_name_opt,
@@ -33,7 +34,9 @@ pub async fn downloader_task(
 
                 debug!("out: {:?}", output_file);
 
-                fs::write(output_file, content)?;
+                fs::write(output_file.clone(), content)?;
+
+                ui_tx.send(UiMessage::DownloadedSubs(output_file))?;
             }
             Err(err) => {
                 info!("Error: {err}");
