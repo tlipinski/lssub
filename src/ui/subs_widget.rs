@@ -84,7 +84,7 @@ impl SubsWidget {
         }
     }
 
-    pub fn update_subtitles(&mut self, subtitles_response: SubtitlesResponse) {
+    pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
         let subs = subtitles_response
             .data
             .iter()

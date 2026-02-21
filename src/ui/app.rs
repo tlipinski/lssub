@@ -4,6 +4,7 @@ use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::spinner_task;
+use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
@@ -31,6 +32,7 @@ pub struct App {
     search_widget: SearchWidget,
     subs_widget: SubsWidget,
     language_widget: LanguageWidget,
+    status_widget: StatusWidget,
     features_tx: Sender<SubtitlesQuery>,
     downloader_tx: Sender<SubsDownload>,
     exit: bool,
@@ -62,6 +64,7 @@ impl App {
             search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
             subs_widget: SubsWidget::default(),
             language_widget: LanguageWidget::from(),
+            status_widget: StatusWidget::from("...".into()),
             features_tx,
             downloader_tx,
             exit: false,
@@ -88,7 +91,8 @@ impl App {
         match ui_message {
             Input(event) => Ok(self.handle_key_event(event)),
             SubsFetched(subtitles) => {
-                self.subs_widget.update_subtitles(subtitles);
+                self.subs_widget.update_subtitles(&subtitles);
+                self.status_widget.info = format!("{} results", subtitles.data.len());
                 Ok(Some(StopSpinner))
             }
             SpinnerUpdate(chr) => {
@@ -146,30 +150,25 @@ impl App {
                 let area = frame.area();
 
                 let layout = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(0), Constraint::Percentage(100)])
+                    .direction(Direction::Vertical)
+                    .constraints([
+                        Constraint::Length(3),
+                        Constraint::Min(10),
+                        Constraint::Length(3),
+                    ])
                     .split(area);
 
-                let right = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Length(3), Constraint::Min(10)])
-                    .split(layout[1]);
-
-                self.search_widget.render(frame, right[0]);
-                self.subs_widget.render(frame, right[1]);
+                self.search_widget.render(frame, layout[0]);
+                self.subs_widget.render(frame, layout[1]);
+                self.status_widget.render(frame, layout[2]);
             }
             CurrentScreen::Language => {
                 let area = frame.area();
 
-                let layout = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(0), Constraint::Percentage(100)])
-                    .split(area);
-
                 let right = Layout::default()
                     .direction(Direction::Vertical)
-                    .constraints([Constraint::Length(3), Constraint::Min(10)])
-                    .split(layout[1]);
+                    .constraints([Constraint::Length(3)])
+                    .split(area);
 
                 self.language_widget.render(frame, area);
             }

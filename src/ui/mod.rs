@@ -7,3 +7,4 @@ mod spinner;
 mod subs_widget;
 mod subtitles_fetcher;
 mod ui_messages;
+mod status_widget;
