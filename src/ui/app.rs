@@ -10,7 +10,7 @@ use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
 use crate::ui::ui_messages::UiMessage::{
     DownloadSubs, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated,
-    SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen,
+    SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, LoggedIn
 };
 use anyhow::Result;
 use log::info;
@@ -23,6 +23,7 @@ use std::path::Path;
 use std::sync::mpsc;
 use std::sync::mpsc::Sender;
 use tokio::sync::broadcast;
+use crate::ui::login_widget::LoginWidget;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -33,6 +34,7 @@ pub struct App {
     subs_widget: SubsWidget,
     language_widget: LanguageWidget,
     status_widget: StatusWidget,
+    login_widget: LoginWidget,
     features_tx: Sender<SubtitlesQuery>,
     downloader_tx: Sender<SubsDownload>,
     exit: bool,
@@ -66,6 +68,7 @@ impl App {
             subs_widget: SubsWidget::default(),
             language_widget: LanguageWidget::from(),
             status_widget: StatusWidget::from("...".into()),
+            login_widget: LoginWidget::from(),
             features_tx,
             downloader_tx,
             exit: false,
@@ -143,6 +146,9 @@ impl App {
                 self.current_screen = screen;
                 Ok(None)
             }
+            LoggedIn => {
+                Ok(None)
+            }
             Exit => {
                 self.exit = true;
                 Ok(None)
@@ -178,6 +184,16 @@ impl App {
 
                 self.language_widget.render(frame, area);
             }
+            CurrentScreen::Login => {
+                let area = frame.area();
+
+                let right = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Length(3), Constraint::Length(3)])
+                    .split(area);
+
+                self.login_widget.render(frame, area);
+            }
         }
     }
 
@@ -187,6 +203,7 @@ impl App {
                 CurrentScreen::Main => match key_event.code {
                     KeyCode::F(10) => Some(Exit),
                     KeyCode::F(2) => Some(SwitchScreen(CurrentScreen::Language)),
+                    KeyCode::F(12) => Some(SwitchScreen(CurrentScreen::Login)),
                     KeyCode::PageUp
                     | KeyCode::PageDown
                     | KeyCode::Up
@@ -198,6 +215,10 @@ impl App {
                     QUIT_KEY => Some(SwitchScreen(CurrentScreen::Main)),
                     KeyCode::F(2) => Some(SwitchScreen(CurrentScreen::Main)),
                     _ => self.language_widget.handle_key_event(event),
+                },
+                CurrentScreen::Login => match key_event.code {
+                    QUIT_KEY => Some(SwitchScreen(CurrentScreen::Main)),
+                    _ => self.login_widget.handle_key_event(event),
                 },
             }
         } else {
@@ -211,4 +232,5 @@ pub enum CurrentScreen {
     #[default]
     Main,
     Language,
+    Login
 }

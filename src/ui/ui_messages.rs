@@ -9,6 +9,7 @@ pub enum UiMessage {
     SubsFetched(SubtitlesResponse),
     SpinnerUpdate(char),
     LanguagesUpdated(Vec<String>),
+    LoggedIn,
     QueryUpdated(String),
     FetchSubs(String, Vec<String>),
     StartSpinner,
