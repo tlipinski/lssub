@@ -97,7 +97,7 @@ impl App {
                 Ok(Some(StopSpinner))
             }
             SpinnerUpdate(chr) => {
-                self.search_widget.spin(chr);
+                self.status_widget.spin(chr);
                 Ok(None)
             }
             LanguagesUpdated(langs) => {
@@ -114,11 +114,11 @@ impl App {
                 Ok(Some(StartSpinner))
             }
             StartSpinner => {
-                self.search_widget.spinning = true;
+                self.status_widget.spinning = true;
                 Ok(None)
             }
             StopSpinner => {
-                self.search_widget.spinning = false;
+                self.status_widget.spinning = false;
                 Ok(None)
             }
             Init => {

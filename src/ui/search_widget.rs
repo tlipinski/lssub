@@ -17,32 +17,18 @@ use tui_input::backend::crossterm::EventHandler;
 #[derive(Debug)]
 pub struct SearchWidget {
     pub input: Input,
-    pub spinner: char,
-    pub spinning: bool,
 }
 
 impl SearchWidget {
     pub fn from(search_text: String) -> Self {
         SearchWidget {
             input: Input::from(search_text),
-            spinner: ' ',
-            spinning: false,
         }
     }
 
-    pub fn spin(&mut self, chr: char) {
-        self.spinner = chr;
-    }
-
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let mut title = if (self.spinning) {
-            (" Search ".to_string() + &self.spinner.to_string() + " ").bold()
-        } else {
-            (" Search ".to_string()).bold()
-        };
-
         let block = Block::bordered()
-            .title(title)
+            .title(" Search ")
             // .title_bottom(instructions.centered())
             .border_set(border::THICK);
 
