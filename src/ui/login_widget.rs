@@ -4,6 +4,7 @@ use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
+use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
@@ -35,9 +36,14 @@ impl LoginWidget {
             .title(" Password ")
             .border_set(border::ROUNDED);
 
-        let buttons_block = Block::default().title(
-            Line::from("OK [Enter] Cancel [Esc]").right_aligned()
-        );
+        let buttons = Line::from(vec![
+            Span::from("OK").bold(),
+            Span::from(" [Enter]  "),
+            Span::from("Cancel").bold(),
+            Span::from(" [Esc]"),
+        ]);
+
+        let buttons_block = Block::default().title(Line::from(buttons).right_aligned());
 
         let user_par = Paragraph::new(Line::from(self.username.value())).block(user_block);
         let pass_par = Paragraph::new(Line::from(self.password.value())).block(pass_block);
