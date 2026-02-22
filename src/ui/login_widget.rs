@@ -36,31 +36,6 @@ impl LoginWidget {
             .title(" Login ".to_string().bold())
             .border_set(border::THICK);
 
-        let mut user_block = Block::bordered().title(" Username ");
-
-        let mut pass_block = Block::bordered().title(" Password ");
-
-        match self.editing {
-            Editing::Username => {
-                user_block = user_block.border_set(border::THICK);
-            }
-            Editing::Password => {
-                pass_block = pass_block.border_set(border::THICK);
-            }
-        }
-
-        let buttons = Line::from(vec![
-            Span::from("OK").bold(),
-            Span::from(" [Enter]  "),
-            Span::from("Cancel").bold(),
-            Span::from(" [Esc]"),
-        ]);
-
-        let buttons_block = Block::default().title(Line::from(buttons).right_aligned());
-
-        let user_par = Paragraph::new(Line::from(self.username.value())).block(user_block);
-        let pass_par = Paragraph::new(Line::from(self.password.value())).block(pass_block);
-
         let outer_layout = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(vec![
@@ -78,6 +53,36 @@ impl LoginWidget {
                 Constraint::Length(3),
             ])
             .split(block.inner(outer_layout[1]));
+        
+        let mut user_block = Block::bordered().title(" Username ");
+
+        let mut pass_block = Block::bordered().title(" Password ");
+
+        match self.editing {
+            Editing::Username => {
+                user_block = user_block.border_set(border::THICK);
+            }
+            Editing::Password => {
+                pass_block = pass_block.border_set(border::THICK);
+            }
+        }
+
+
+        let buttons_block = Block::default().title(
+            Line::from(vec![
+                Span::from("OK").bold(),
+                Span::from(" [Enter]  "),
+                Span::from("Cancel").bold(),
+                Span::from(" [Esc]"),
+            ])
+            .right_aligned(),
+        );
+
+        let user_par = Paragraph::new(self.username.value()).block(user_block);
+
+        let masked_password = "*".repeat(self.password.value().len());
+
+        let pass_par = Paragraph::new(masked_password).block(pass_block);
 
         frame.render_widget(block, area);
 
