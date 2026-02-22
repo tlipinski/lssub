@@ -18,25 +18,41 @@ pub async fn downloader_task(
             Ok(subs_download) => {
                 info!("Downloading: {subs_download:?}");
 
-                let download_link_response = get_download_link(subs_download.file_id).await?;
+                let download_link_result = get_download_link(subs_download.file_id).await;
 
-                debug!("{:?}", download_link_response);
-                debug!("{:?}", base_path);
-                debug!("{:?}", file_name_opt);
+                match download_link_result {
+                    Ok(download_link_response) => {
+                        debug!("{:?}", download_link_response);
+                        debug!("{:?}", base_path);
+                        debug!("{:?}", file_name_opt);
 
-                let content = download(download_link_response.link).await?;
+                        let content_result = download(download_link_response.link).await;
 
-                let output_file = output_file(
-                    &base_path,
-                    &file_name_opt,
-                    download_link_response.file_name.as_str(),
-                );
+                        match content_result {
+                            Ok(content) => {
+                                let output_file = output_file(
+                                    &base_path,
+                                    &file_name_opt,
+                                    download_link_response.file_name.as_str(),
+                                );
 
-                debug!("out: {:?}", output_file);
+                                debug!("out: {:?}", output_file);
 
-                fs::write(output_file.clone(), content)?;
+                                fs::write(output_file.clone(), content)?;
 
-                ui_tx.send(UiMessage::DownloadedSubs(output_file))?;
+                                ui_tx.send(UiMessage::DownloadedSubs(output_file))?
+                            }
+                            Err(e) => {
+                                ui_tx.send(UiMessage::StatusError(e.to_string()))?
+                            }
+                        }
+
+                    }
+                    Err(e) => {
+                        ui_tx.send(UiMessage::StatusError(e.to_string()))?
+                    }
+                }
+
             }
             Err(err) => {
                 info!("Error: {err}");

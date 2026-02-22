@@ -41,7 +41,7 @@ pub async fn get_download_link(file_id: i64) -> Result<DownloadResponse> {
         s if s.is_client_error() => {
             let error_response: crate::login::ErrorResponse = serde_json::from_str(&text_body)?;
             info!("Client error {:?}", error_response);
-            Err(Error::msg("Error calling OSB"))
+            Err(Error::msg(error_response.message))
         }
         s => {
             error!("Server error [{}]: {}", s.as_u16(), text_body);
