@@ -30,9 +30,14 @@ impl LoginWidget {
         let user_block = Block::bordered()
             .title(" Username ")
             .border_set(border::ROUNDED);
+
         let pass_block = Block::bordered()
             .title(" Password ")
             .border_set(border::ROUNDED);
+
+        let buttons_block = Block::default().title(
+            Line::from("OK [Enter] Cancel [Esc]").right_aligned()
+        );
 
         let user_par = Paragraph::new(Line::from(self.username.value())).block(user_block);
         let pass_par = Paragraph::new(Line::from(self.password.value())).block(pass_block);
@@ -40,21 +45,26 @@ impl LoginWidget {
         let outer_layout = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(vec![
-                Constraint::Percentage(30),
-                Constraint::Percentage(30),
-                Constraint::Percentage(30),
+                Constraint::Fill(1),
+                Constraint::Fill(1),
+                Constraint::Fill(1),
             ])
             .split(area);
 
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(vec![Constraint::Length(3), Constraint::Length(3)])
+            .constraints(vec![
+                Constraint::Length(3),
+                Constraint::Length(3),
+                Constraint::Length(3),
+            ])
             .split(block.inner(outer_layout[1]));
 
         frame.render_widget(block, area);
 
         frame.render_widget(user_par, layout[0]);
         frame.render_widget(pass_par, layout[1]);
+        frame.render_widget(buttons_block, layout[2]);
 
         frame.set_cursor_position((
             layout[0].x + (self.username.visual_cursor() + 1) as u16,
