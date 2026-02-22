@@ -5,7 +5,7 @@ use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::Rect;
-use ratatui::prelude::{Style, Stylize, Text};
+use ratatui::prelude::{Style, Stylize, Text, Widget};
 use ratatui::style::Color;
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Cell, Row, StatefulWidget, Table, TableState};
@@ -27,34 +27,6 @@ pub struct Sub {
 }
 
 impl SubsWidget {
-    pub fn render(&mut self, f: &mut Frame, area: Rect) {
-        let rows = self.subs.iter().map(|item| {
-            Row::from_iter(vec![
-                Cell::from(Text::from(item.title.as_str())),
-                Cell::from(Text::from(item.language.as_str())),
-                Cell::from(Text::from(item.year.as_str())),
-                Cell::from(Text::from(item.upload_date.as_str())),
-                Cell::from(Text::from(item.downloads.as_str())),
-            ])
-        });
-        let mut title = format!(" Results: {} ", self.subs.len()).bold();
-
-        let block_bot = Block::bordered().title(title).border_set(border::THICK);
-
-        let table = Table::new(rows, [70, 10, 10, 10, 10])
-            .header(Row::from_iter(vec![
-                "Title",
-                "Language",
-                "Year",
-                "Uploaded",
-                "Downloads",
-            ]))
-            .block(block_bot)
-            .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
-
-        f.render_stateful_widget(table, area, &mut self.state)
-    }
-
     pub fn handle_key_event(&mut self, key_event: KeyEvent) -> Option<UiMessage> {
         match key_event.code {
             KeyCode::Up => {
@@ -99,5 +71,33 @@ impl SubsWidget {
             .collect::<Vec<Sub>>();
 
         self.subs = subs;
+    }
+
+    pub fn render(&mut self, frame: &mut Frame, area: Rect) {
+        let rows = self.subs.iter().map(|item| {
+            Row::from_iter(vec![
+                Cell::from(Text::from(item.title.as_str())),
+                Cell::from(Text::from(item.language.as_str())),
+                Cell::from(Text::from(item.year.as_str())),
+                Cell::from(Text::from(item.upload_date.as_str())),
+                Cell::from(Text::from(item.downloads.as_str())),
+            ])
+        });
+        let title = format!(" Results: {} ", self.subs.len()).bold();
+
+        let block_bot = Block::bordered().title(title).border_set(border::THICK);
+
+        let table = Table::new(rows, [70, 10, 10, 10, 10])
+            .header(Row::from_iter(vec![
+                "Title",
+                "Language",
+                "Year",
+                "Uploaded",
+                "Downloads",
+            ]))
+            .block(block_bot)
+            .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
+
+        frame.render_stateful_widget(table, area, &mut self.state);
     }
 }

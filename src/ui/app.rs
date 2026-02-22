@@ -2,6 +2,7 @@ use crate::ui::app::UiMessage::{Input, SubsFetched};
 use crate::ui::downloader_task::{SubsDownload, downloader_task};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
+use crate::ui::login_widget::LoginWidget;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::spinner_task;
 use crate::ui::status_widget::StatusWidget;
@@ -9,21 +10,21 @@ use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
 use crate::ui::ui_messages::UiMessage::{
-    DownloadSubs, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated,
-    SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, LoggedIn
+    DownloadSubs, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, LoggedIn, QueryUpdated,
+    SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen,
 };
 use anyhow::Result;
 use log::info;
 use osb::get_download_link::get_download_link;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::prelude::StatefulWidget;
 use ratatui::{DefaultTerminal, Frame};
 use std::ops::Deref;
 use std::path::Path;
 use std::sync::mpsc;
 use std::sync::mpsc::Sender;
 use tokio::sync::broadcast;
-use crate::ui::login_widget::LoginWidget;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -146,9 +147,7 @@ impl App {
                 self.current_screen = screen;
                 Ok(None)
             }
-            LoggedIn => {
-                Ok(None)
-            }
+            LoggedIn => Ok(None),
             Exit => {
                 self.exit = true;
                 Ok(None)
@@ -232,5 +231,5 @@ pub enum CurrentScreen {
     #[default]
     Main,
     Language,
-    Login
+    Login,
 }
