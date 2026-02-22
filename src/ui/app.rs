@@ -137,11 +137,11 @@ impl App {
             DownloadSubs(file_id) => {
                 self.downloader_tx.send(SubsDownload { file_id })?;
                 self.status_widget.info = "Downloading...".into();
-                Ok(None)
+                Ok(Some(StartSpinner))
             }
             DownloadedSubs(path) => {
                 self.status_widget.info = format!("Downloaded: {:?}", path);
-                Ok(None)
+                Ok(Some(StopSpinner))
             }
             SwitchScreen(screen) => {
                 self.current_screen = screen;
@@ -154,7 +154,7 @@ impl App {
             },
             DownloadSubsFailed(error) => {
                 self.status_widget.info = format!("Error: {:?}", error);
-                Ok(None)
+                Ok(Some(StopSpinner))
             }
             Exit => {
                 self.exit = true;
