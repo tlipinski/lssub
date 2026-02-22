@@ -9,7 +9,7 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate, StartSpinner, StatusError, StopSpinner, SwitchScreen};
+use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate, StartSpinner, DownloadSubsFailed, StopSpinner, SwitchScreen};
 use anyhow::Result;
 use log::info;
 use osb::get_download_link::get_download_link;
@@ -152,7 +152,7 @@ impl App {
                 store(&api_token, &credentials.username).await?;
                 Ok(None)
             },
-            StatusError(error) => {
+            DownloadSubsFailed(error) => {
                 self.status_widget.info = format!("Error: {:?}", error);
                 Ok(None)
             }

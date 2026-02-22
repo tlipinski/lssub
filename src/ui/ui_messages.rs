@@ -19,6 +19,6 @@ pub enum UiMessage {
     DownloadSubs(i64),
     DownloadedSubs(PathBuf),
     SwitchScreen(CurrentScreen),
-    StatusError(String),
+    DownloadSubsFailed(String),
     Exit,
 }

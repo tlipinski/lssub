@@ -43,13 +43,13 @@ pub async fn downloader_task(
                                 ui_tx.send(UiMessage::DownloadedSubs(output_file))?
                             }
                             Err(e) => {
-                                ui_tx.send(UiMessage::StatusError(e.to_string()))?
+                                ui_tx.send(UiMessage::DownloadSubsFailed(e.to_string()))?
                             }
                         }
 
                     }
                     Err(e) => {
-                        ui_tx.send(UiMessage::StatusError(e.to_string()))?
+                        ui_tx.send(UiMessage::DownloadSubsFailed(e.to_string()))?
                     }
                 }
 
