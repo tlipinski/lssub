@@ -42,7 +42,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn run(
+    pub async fn run(
         terminal: &mut DefaultTerminal,
         base_path: &Path,
         file_name: Option<&str>,
@@ -79,7 +79,7 @@ impl App {
 
         while !app.exit {
             while let Some(msg) = message_opt {
-                message_opt = app.update(msg)?
+                message_opt = app.update(msg).await?
             }
 
             terminal.draw(|frame| app.draw(frame))?;
@@ -92,7 +92,7 @@ impl App {
         Ok(())
     }
 
-    fn update(&mut self, ui_message: UiMessage) -> Result<Option<UiMessage>> {
+    async fn update(&mut self, ui_message: UiMessage) -> Result<Option<UiMessage>> {
         match ui_message {
             Input(event) => Ok(self.handle_key_event(event)),
             SubsFetched(subtitles) => {

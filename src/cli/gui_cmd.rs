@@ -45,7 +45,7 @@ pub async fn handle_gui_cmd(path_opt: Option<&str>) -> Result<()> {
         let mut terminal = ratatui::init();
         info!("Base path: {:?}", bp);
         info!("File name: {:?}", file_name);
-        App::run(&mut terminal, bp, file_name);
+        App::run(&mut terminal, bp, file_name).await;
         ratatui::restore();
 
         Ok(())
