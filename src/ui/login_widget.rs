@@ -27,34 +27,39 @@ impl LoginWidget {
             .title(" Login ".to_string().bold())
             .border_set(border::THICK);
 
-        let user_block = Block::bordered().title(" Username ").border_set(border::THICK);
-        let pass_block = Block::bordered().title(" Password ").border_set(border::THICK);
+        let user_block = Block::bordered()
+            .title(" Username ")
+            .border_set(border::ROUNDED);
+        let pass_block = Block::bordered()
+            .title(" Password ")
+            .border_set(border::ROUNDED);
 
         let user_par = Paragraph::new(Line::from(self.username.value())).block(user_block);
         let pass_par = Paragraph::new(Line::from(self.password.value())).block(pass_block);
 
         let outer_layout = Layout::default()
-            .direction(Direction::Vertical)
+            .direction(Direction::Horizontal)
             .constraints(vec![
-                Constraint::Percentage(100),
+                Constraint::Percentage(30),
+                Constraint::Percentage(30),
+                Constraint::Percentage(30),
             ])
             .split(area);
 
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(vec![
-                Constraint::Length(3),
-                Constraint::Length(3),
-            ])
-            .split(block.inner(outer_layout[0]));
+            .constraints(vec![Constraint::Length(3), Constraint::Length(3)])
+            .split(block.inner(outer_layout[1]));
 
-        frame.render_widget(block, outer_layout[0]);
+        frame.render_widget(block, area);
 
         frame.render_widget(user_par, layout[0]);
         frame.render_widget(pass_par, layout[1]);
 
-        let x = self.username.visual_cursor();
-        frame.set_cursor_position((area.x + (x + 2) as u16, area.y + 2));
+        frame.set_cursor_position((
+            layout[0].x + (self.username.visual_cursor() + 1) as u16,
+            area.y + 2,
+        ));
     }
 
     pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
