@@ -1,7 +1,7 @@
 use crate::ui::ui_messages::UiMessage;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
-use ratatui::layout::Rect;
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
@@ -17,24 +17,44 @@ pub struct LoginWidget {
 impl LoginWidget {
     pub fn from() -> Self {
         LoginWidget {
-            username: Input::new("".into()),
-            password: Input::new("".into()),
+            username: Input::new("user".into()),
+            password: Input::new("pass".into()),
         }
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let mut title = " Login ".to_string().bold();
+        let block = Block::bordered()
+            .title(" Login ".to_string().bold())
+            .border_set(border::THICK);
 
-        let block = Block::bordered().title(title).border_set(border::THICK);
+        let user_block = Block::bordered().title(" Username ").border_set(border::THICK);
+        let pass_block = Block::bordered().title(" Password ").border_set(border::THICK);
 
-        let par = Line::from(self.username.value().bold());
+        let user_par = Paragraph::new(Line::from(self.username.value())).block(user_block);
+        let pass_par = Paragraph::new(Line::from(self.password.value())).block(pass_block);
 
-        let view = Paragraph::new(par).block(block);
+        let outer_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vec![
+                Constraint::Percentage(100),
+            ])
+            .split(area);
+
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vec![
+                Constraint::Length(3),
+                Constraint::Length(3),
+            ])
+            .split(block.inner(outer_layout[0]));
+
+        frame.render_widget(block, outer_layout[0]);
+
+        frame.render_widget(user_par, layout[0]);
+        frame.render_widget(pass_par, layout[1]);
 
         let x = self.username.visual_cursor();
-        frame.set_cursor_position((area.x + (x + 1) as u16, area.y + 1));
-
-        frame.render_widget(view, area);
+        frame.set_cursor_position((area.x + (x + 2) as u16, area.y + 2));
     }
 
     pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
