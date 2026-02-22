@@ -211,11 +211,13 @@ impl App {
                     _ => self.search_widget.handle_key_event(event),
                 },
                 CurrentScreen::Language => match key_event.code {
+                    KeyCode::F(10) => Some(Exit),
                     QUIT_KEY => Some(SwitchScreen(CurrentScreen::Main)),
                     KeyCode::F(2) => Some(SwitchScreen(CurrentScreen::Main)),
                     _ => self.language_widget.handle_key_event(event),
                 },
                 CurrentScreen::Login => match key_event.code {
+                    KeyCode::F(10) => Some(Exit),
                     QUIT_KEY => Some(SwitchScreen(CurrentScreen::Main)),
                     _ => self.login_widget.handle_key_event(event),
                 },
