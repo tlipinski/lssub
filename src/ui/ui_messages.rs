@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use crate::ui::app::CurrentScreen;
 use osb::subtitles::SubtitlesResponse;
 use ratatui::crossterm::event::Event;
+use osb::login::Credentials;
 
 #[derive(Debug)]
 pub enum UiMessage {
@@ -9,7 +10,7 @@ pub enum UiMessage {
     SubsFetched(SubtitlesResponse),
     SpinnerUpdate(char),
     LanguagesUpdated(Vec<String>),
-    LoggedIn,
+    Login(Credentials),
     QueryUpdated(String),
     FetchSubs(String, Vec<String>),
     StartSpinner,

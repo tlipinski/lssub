@@ -60,6 +60,8 @@ pub async fn login(credentials: &Credentials) -> Result<ApiToken> {
         }
     }
 }
+
+#[derive(Debug)]
 pub struct Credentials {
     pub username: String,
     pub password: String,

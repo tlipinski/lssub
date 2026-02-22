@@ -10,7 +10,7 @@ use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
 use crate::ui::ui_messages::UiMessage::{
-    DownloadSubs, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, LoggedIn, QueryUpdated,
+    DownloadSubs, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated,
     SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen,
 };
 use anyhow::Result;
@@ -25,6 +25,9 @@ use std::path::Path;
 use std::sync::mpsc;
 use std::sync::mpsc::Sender;
 use tokio::sync::broadcast;
+use osb::login::login;
+use crate::secret::store;
+use crate::ui::app::CurrentScreen::Login;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -147,7 +150,11 @@ impl App {
                 self.current_screen = screen;
                 Ok(None)
             }
-            LoggedIn => Ok(None),
+            UiMessage::Login(credentials) => {
+                let api_token = login(&credentials).await?;
+                store(&api_token, &credentials.username).await?;
+                Ok(None)
+            },
             Exit => {
                 self.exit = true;
                 Ok(None)

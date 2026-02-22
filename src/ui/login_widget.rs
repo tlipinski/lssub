@@ -1,4 +1,5 @@
 use crate::ui::ui_messages::UiMessage;
+use osb::login::Credentials;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -53,7 +54,7 @@ impl LoginWidget {
                 Constraint::Length(3),
             ])
             .split(block.inner(outer_layout[1]));
-        
+
         let mut user_block = Block::bordered().title(" Username ");
 
         let mut pass_block = Block::bordered().title(" Password ");
@@ -66,7 +67,6 @@ impl LoginWidget {
                 pass_block = pass_block.border_set(border::THICK);
             }
         }
-
 
         let buttons_block = Block::default().title(
             Line::from(vec![
@@ -105,7 +105,10 @@ impl LoginWidget {
     pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                KeyCode::Enter => Some(UiMessage::LoggedIn),
+                KeyCode::Enter => Some(UiMessage::Login(Credentials {
+                    username: self.username.value().to_owned(),
+                    password: self.password.value().to_owned(),
+                })),
                 KeyCode::Up => {
                     self.editing = Editing::Username;
                     None
