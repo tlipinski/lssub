@@ -1,3 +1,5 @@
+use crate::secret::store;
+use crate::ui::app::CurrentScreen::Login;
 use crate::ui::app::UiMessage::{Input, SubsFetched};
 use crate::ui::downloader_task::{SubsDownload, downloader_task};
 use crate::ui::input_handler::handle_input_task;
@@ -9,10 +11,14 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, QueryUpdated, SpinnerUpdate, StartSpinner, DownloadSubsFailed, StopSpinner, SwitchScreen};
+use crate::ui::ui_messages::UiMessage::{
+    DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated,
+    QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen,
+};
 use anyhow::Result;
 use log::info;
 use osb::get_download_link::get_download_link;
+use osb::login::login;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::prelude::StatefulWidget;
@@ -20,11 +26,8 @@ use ratatui::{DefaultTerminal, Frame};
 use std::ops::Deref;
 use std::path::Path;
 use std::sync::mpsc;
-use std::sync::mpsc::Sender;
 use tokio::sync::broadcast;
-use osb::login::login;
-use crate::secret::store;
-use crate::ui::app::CurrentScreen::Login;
+use tokio::sync::mpsc::Sender;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -47,9 +50,9 @@ impl App {
         base_path: &Path,
         file_name: Option<&str>,
     ) -> Result<()> {
-        let (ui_tx, ui_rx) = mpsc::channel::<UiMessage>();
-        let (features_tx, features_rx) = mpsc::channel::<SubtitlesQuery>();
-        let (downloader_tx, downloader_rx) = mpsc::channel::<SubsDownload>();
+        let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<UiMessage>(100);
+        let (features_tx, features_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
+        let (downloader_tx, downloader_rx) = tokio::sync::mpsc::channel::<SubsDownload>(100);
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
 
@@ -84,7 +87,7 @@ impl App {
 
             terminal.draw(|frame| app.draw(frame))?;
 
-            message_opt = Some(ui_rx.recv()?);
+            message_opt = ui_rx.recv().await;
         }
 
         shutdown_tx.send(())?;
@@ -114,7 +117,7 @@ impl App {
                 Ok(Some(FetchSubs(query, langs)))
             }
             FetchSubs(query, languages) => {
-                self.features_tx.send(SubtitlesQuery { query, languages })?;
+                self.features_tx.send(SubtitlesQuery { query, languages }).await?;
                 Ok(Some(StartSpinner))
             }
             StartSpinner => {
@@ -135,7 +138,7 @@ impl App {
                 }
             }
             DownloadSubs(file_id) => {
-                self.downloader_tx.send(SubsDownload { file_id })?;
+                self.downloader_tx.send(SubsDownload { file_id }).await?;
                 self.status_widget.info = "Downloading...".into();
                 Ok(Some(StartSpinner))
             }
@@ -151,7 +154,7 @@ impl App {
                 let api_token = login(&credentials).await?;
                 store(&api_token, &credentials.username).await?;
                 Ok(None)
-            },
+            }
             DownloadSubsFailed(error) => {
                 self.status_widget.info = format!("Error: {:?}", error);
                 Ok(Some(StopSpinner))

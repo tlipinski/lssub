@@ -5,17 +5,17 @@ use osb::get_download_link::get_download_link;
 use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::{Receiver, Sender};
+use tokio::sync::mpsc::{Receiver, Sender};
 
 pub async fn downloader_task(
-    rx: Receiver<SubsDownload>,
+    mut rx: Receiver<SubsDownload>,
     ui_tx: Sender<UiMessage>,
     base_path: PathBuf,
     file_name_opt: Option<String>,
 ) -> anyhow::Result<()> {
     loop {
-        match rx.recv() {
-            Ok(subs_download) => {
+        match rx.recv().await {
+            Some(subs_download) => {
                 info!("Downloading: {subs_download:?}");
 
                 let download_link_result = get_download_link(subs_download.file_id).await;
@@ -40,22 +40,21 @@ pub async fn downloader_task(
 
                                 fs::write(output_file.clone(), content)?;
 
-                                ui_tx.send(UiMessage::DownloadedSubs(output_file))?
+                                ui_tx.send(UiMessage::DownloadedSubs(output_file)).await?
                             }
                             Err(e) => {
-                                ui_tx.send(UiMessage::DownloadSubsFailed(e.to_string()))?
+                                ui_tx.send(UiMessage::DownloadSubsFailed(e.to_string())).await?
                             }
                         }
 
                     }
                     Err(e) => {
-                        ui_tx.send(UiMessage::DownloadSubsFailed(e.to_string()))?
+                        ui_tx.send(UiMessage::DownloadSubsFailed(e.to_string())).await?
                     }
                 }
 
             }
-            Err(err) => {
-                info!("Error: {err}");
+            None => {
                 break Ok(());
             }
         }

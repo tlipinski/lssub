@@ -4,10 +4,11 @@ use anyhow::{Context, Result, bail};
 use log::{debug, error, info};
 use osb::features::{FeaturesResponse, features};
 use osb::subtitles::{SubtitlesResponse, subtitles};
-use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
 use tokio::join;
+use tokio::sync::mpsc::error::TryRecvError;
+use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
 pub struct SubtitlesQuery {
@@ -16,7 +17,7 @@ pub struct SubtitlesQuery {
 }
 
 pub async fn subtitles_fetch_task(
-    rx: Receiver<SubtitlesQuery>,
+    mut rx: Receiver<SubtitlesQuery>,
     tx: Sender<UiMessage>,
 ) -> Result<()> {
     'outer: loop {
@@ -43,12 +44,12 @@ pub async fn subtitles_fetch_task(
 
         if let Some(text) = last {
             if text.query.len() < 3 {
-                tx.send(SubsFetched(SubtitlesResponse { data: vec![] }))?
+                tx.send(SubsFetched(SubtitlesResponse { data: vec![] })).await?
             } else {
                 // let result = subtitles(&text, vec![String::from("pl")]).await;
                 let result = subtitles(&text.query, text.languages).await;
                 match result {
-                    Ok(subtitles) => tx.send(SubsFetched(subtitles))?,
+                    Ok(subtitles) => tx.send(SubsFetched(subtitles)).await?,
                     Err(_) => break 'outer Ok(()),
                 }
             }

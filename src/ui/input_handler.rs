@@ -6,9 +6,9 @@ use log::info;
 use ratatui::crossterm::event;
 use ratatui::crossterm::event::Event::Key;
 use ratatui::crossterm::event::{KeyEventKind, poll};
-use std::sync::mpsc::Sender;
 use std::time::Duration;
 use tokio::sync::broadcast::Receiver;
+use tokio::sync::mpsc::Sender;
 
 // event::read() will still block even if the application exits, so an explicit
 // shutdown message has to be sent to break the loop
@@ -17,7 +17,7 @@ pub async fn handle_input_task(tx: Sender<UiMessage>, mut shutdown_rx: Receiver<
     loop {
         if poll(Duration::from_millis(100))? {
             match event::read()? {
-                key_event @ Key(_) => tx.send(Input(key_event)),
+                key_event @ Key(_) => tx.send(Input(key_event)).await,
 
                 _ => Ok(()),
             };
