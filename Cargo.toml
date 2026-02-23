@@ -11,13 +11,12 @@ toml = "1.0.3"
 anyhow = "1.0.102"
 tokio = { version = "1.49.0", features = ["rt", "rt-multi-thread", "macros", "fs"] }
 log = "0.4.29"
-serde = { version = "1.0.218", features = ["derive"] }
+serde = { version = "1.0.228", features = ["derive"] }
 secrecy = { version = "0.10.3", features = ["serde"] }
-env_logger = "0.11.6"
+env_logger = "0.11.9"
 libsecret = "0.7.0"
 gio = "0.20.7"
-rpassword = "7.3.1"
-ratatui = "0.29.0"
+ratatui = "0.30.0"
 xdg = "2.5.2"
-tui-input = "0.11.0"
+tui-input = "0.15.0"
 crossterm = "0.29.0"
