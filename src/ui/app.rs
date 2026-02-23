@@ -1,5 +1,5 @@
 use crate::secret::store;
-use crate::ui::app::CurrentScreen::{Main, Language, Auth};
+use crate::ui::app::CurrentScreen::{Auth, Language, Main};
 use crate::ui::app::UiMessage::{Input, SubsFetched};
 use crate::ui::downloader_task::{SubsDownload, downloader_task};
 use crate::ui::input_handler::handle_input_task;
@@ -11,7 +11,10 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, Login, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
+use crate::ui::ui_messages::UiMessage::{
+    DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated,
+    Login, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen,
+};
 use anyhow::Result;
 use log::info;
 use osb::get_download_link::get_download_link;
@@ -95,36 +98,46 @@ impl App {
     async fn update(&mut self, ui_message: UiMessage) -> Result<Option<UiMessage>> {
         match ui_message {
             Input(event) => Ok(self.handle_key_event(event)),
+
             SubsFetched(subtitles) => {
                 self.subs_widget.update_subtitles(&subtitles);
                 self.status_widget.info = format!("{} results", subtitles.data.len());
                 Ok(Some(StopSpinner))
             }
+
             SpinnerUpdate(chr) => {
                 self.status_widget.spin(chr);
                 Ok(None)
             }
+
             LanguagesUpdated(langs) => {
                 self.current_screen = Main;
                 let query: String = self.search_widget.input.value().into();
                 Ok(Some(FetchSubs(query, langs)))
             }
+
             QueryUpdated(query) => {
                 let langs = self.language_widget.languages();
                 Ok(Some(FetchSubs(query, langs)))
             }
+
             FetchSubs(query, languages) => {
-                self.features_tx.send(SubtitlesQuery { query, languages }).await?;
+                self.features_tx
+                    .send(SubtitlesQuery { query, languages })
+                    .await?;
                 Ok(Some(StartSpinner))
             }
+
             StartSpinner => {
                 self.status_widget.spinning = true;
                 Ok(None)
             }
+
             StopSpinner => {
                 self.status_widget.spinning = false;
                 Ok(None)
             }
+
             Init => {
                 let query: String = self.search_widget.input.value().into();
                 if (!query.is_empty()) {
@@ -134,28 +147,34 @@ impl App {
                     Ok(None)
                 }
             }
+
             DownloadSubs(file_id) => {
                 self.downloader_tx.send(SubsDownload { file_id }).await?;
                 self.status_widget.info = "Downloading...".into();
                 Ok(Some(StartSpinner))
             }
+
             DownloadedSubs(path) => {
                 self.status_widget.info = format!("Downloaded: {:?}", path);
                 Ok(Some(StopSpinner))
             }
+
             SwitchScreen(screen) => {
                 self.current_screen = screen;
                 Ok(None)
             }
+
             Login(credentials) => {
                 let api_token = login(&credentials).await?;
                 store(&api_token, &credentials.username).await?;
                 Ok(None)
             }
+
             DownloadSubsFailed(error) => {
                 self.status_widget.info = format!("Error: {:?}", error);
                 Ok(Some(StopSpinner))
             }
+
             Exit => {
                 self.exit = true;
                 Ok(None)
@@ -218,12 +237,14 @@ impl App {
                     | KeyCode::Enter => self.subs_widget.handle_key_event(key_event),
                     _ => self.search_widget.handle_key_event(event),
                 },
+
                 Language => match key_event.code {
                     KeyCode::F(10) => Some(Exit),
                     QUIT_KEY => Some(SwitchScreen(Main)),
                     KeyCode::F(2) => Some(SwitchScreen(Main)),
                     _ => self.language_widget.handle_key_event(event),
                 },
+
                 Auth => match key_event.code {
                     KeyCode::F(10) => Some(Exit),
                     QUIT_KEY => Some(SwitchScreen(Main)),
