@@ -1,5 +1,5 @@
 use crate::secret::store;
-use crate::ui::app::CurrentScreen::Login;
+use crate::ui::app::CurrentScreen::{Main, Language, Auth};
 use crate::ui::app::UiMessage::{Input, SubsFetched};
 use crate::ui::downloader_task::{SubsDownload, downloader_task};
 use crate::ui::input_handler::handle_input_task;
@@ -11,10 +11,7 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{
-    DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated,
-    QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen,
-};
+use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, Login, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
 use anyhow::Result;
 use log::info;
 use osb::get_download_link::get_download_link;
@@ -108,7 +105,7 @@ impl App {
                 Ok(None)
             }
             LanguagesUpdated(langs) => {
-                self.current_screen = CurrentScreen::Main;
+                self.current_screen = Main;
                 let query: String = self.search_widget.input.value().into();
                 Ok(Some(FetchSubs(query, langs)))
             }
@@ -150,7 +147,7 @@ impl App {
                 self.current_screen = screen;
                 Ok(None)
             }
-            UiMessage::Login(credentials) => {
+            Login(credentials) => {
                 let api_token = login(&credentials).await?;
                 store(&api_token, &credentials.username).await?;
                 Ok(None)
@@ -168,7 +165,7 @@ impl App {
 
     fn draw(&mut self, frame: &mut Frame) {
         match self.current_screen {
-            CurrentScreen::Main => {
+            Main => {
                 let area = frame.area();
 
                 let layout = Layout::default()
@@ -184,7 +181,7 @@ impl App {
                 self.subs_widget.render(frame, layout[1]);
                 self.status_widget.render(frame, layout[2]);
             }
-            CurrentScreen::Language => {
+            Language => {
                 let area = frame.area();
 
                 let right = Layout::default()
@@ -194,7 +191,7 @@ impl App {
 
                 self.language_widget.render(frame, area);
             }
-            CurrentScreen::Login => {
+            Auth => {
                 let area = frame.area();
 
                 let right = Layout::default()
@@ -210,10 +207,10 @@ impl App {
     fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
         if let Event::Key(key_event) = event {
             match self.current_screen {
-                CurrentScreen::Main => match key_event.code {
+                Main => match key_event.code {
                     KeyCode::F(10) => Some(Exit),
-                    KeyCode::F(2) => Some(SwitchScreen(CurrentScreen::Language)),
-                    KeyCode::F(12) => Some(SwitchScreen(CurrentScreen::Login)),
+                    KeyCode::F(2) => Some(SwitchScreen(Language)),
+                    KeyCode::F(12) => Some(SwitchScreen(Auth)),
                     KeyCode::PageUp
                     | KeyCode::PageDown
                     | KeyCode::Up
@@ -221,15 +218,15 @@ impl App {
                     | KeyCode::Enter => self.subs_widget.handle_key_event(key_event),
                     _ => self.search_widget.handle_key_event(event),
                 },
-                CurrentScreen::Language => match key_event.code {
+                Language => match key_event.code {
                     KeyCode::F(10) => Some(Exit),
-                    QUIT_KEY => Some(SwitchScreen(CurrentScreen::Main)),
-                    KeyCode::F(2) => Some(SwitchScreen(CurrentScreen::Main)),
+                    QUIT_KEY => Some(SwitchScreen(Main)),
+                    KeyCode::F(2) => Some(SwitchScreen(Main)),
                     _ => self.language_widget.handle_key_event(event),
                 },
-                CurrentScreen::Login => match key_event.code {
+                Auth => match key_event.code {
                     KeyCode::F(10) => Some(Exit),
-                    QUIT_KEY => Some(SwitchScreen(CurrentScreen::Main)),
+                    QUIT_KEY => Some(SwitchScreen(Main)),
                     _ => self.login_widget.handle_key_event(event),
                 },
             }
@@ -244,5 +241,5 @@ pub enum CurrentScreen {
     #[default]
     Main,
     Language,
-    Login,
+    Auth,
 }
