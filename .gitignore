@@ -1,5 +1,6 @@
 target
 .*
+*.srt
 !.gitignore
 !.run
 src/bin/*
