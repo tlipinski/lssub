@@ -11,12 +11,9 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{
-    DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated,
-    Login, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen,
-};
+use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, Login, LoginFailed, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
 use anyhow::Result;
-use log::info;
+use log::{error, info};
 use osb::get_download_link::get_download_link;
 use osb::login::login;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
@@ -28,6 +25,7 @@ use std::path::Path;
 use std::sync::mpsc;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
+use tokio::task::JoinHandle;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -165,8 +163,30 @@ impl App {
             }
 
             Login(credentials) => {
-                let api_token = login(&credentials).await?;
-                store(&api_token, &credentials.username).await?;
+                let a = tokio::spawn(async move {
+                    match login(&credentials).await {
+                        Ok(api_token) => {
+                            store(&api_token, &credentials.username).await;
+                            SwitchScreen(Main)
+                        }
+                        Err(e) => {
+                            LoginFailed(e.to_string())
+                        }
+                    }
+                })
+                .await;
+
+                match a {
+                    Ok(msg) => Ok(Some(msg)),
+                    Err(e) => {
+                        error!("Error logging in: {}", e);
+                        Err(e.into())
+                    },
+                }
+            }
+
+            LoginFailed(reason) => {
+                self.login_widget.failed = reason;
                 Ok(None)
             }
 

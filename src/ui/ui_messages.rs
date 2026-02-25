@@ -11,6 +11,7 @@ pub enum UiMessage {
     SpinnerUpdate(char),
     LanguagesUpdated(Vec<String>),
     Login(Credentials),
+    LoginFailed(String),
     QueryUpdated(String),
     FetchSubs(String, Vec<String>),
     StartSpinner,

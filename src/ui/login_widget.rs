@@ -14,6 +14,7 @@ use tui_input::backend::crossterm::EventHandler;
 pub struct LoginWidget {
     pub username: Input,
     pub password: Input,
+    pub failed: String,
     editing: Editing,
 }
 
@@ -28,6 +29,7 @@ impl LoginWidget {
         LoginWidget {
             username: Input::new("user".into()),
             password: Input::new("pass".into()),
+            failed: String::new(),
             editing: Editing::Username,
         }
     }
@@ -49,6 +51,7 @@ impl LoginWidget {
         let layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(vec![
+                Constraint::Length(3),
                 Constraint::Length(3),
                 Constraint::Length(3),
                 Constraint::Length(3),
@@ -89,6 +92,12 @@ impl LoginWidget {
         frame.render_widget(user_par, layout[0]);
         frame.render_widget(pass_par, layout[1]);
         frame.render_widget(buttons_block, layout[2]);
+
+        if (!self.failed.is_empty()) {
+            let failure_par =
+                Paragraph::new(self.failed.clone()).block(Block::bordered().title(" Failed "));
+            frame.render_widget(failure_par, layout[3]);
+        }
 
         match self.editing {
             Editing::Username => frame.set_cursor_position((
