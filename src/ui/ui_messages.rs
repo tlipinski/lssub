@@ -13,6 +13,8 @@ pub enum UiMessage {
     Login(Credentials),
     LoginFailed(String),
     LoginSuccessful,
+    Logout,
+    GoToLogin,
     QueryUpdated(String),
     FetchSubs(String, Vec<String>),
     StartSpinner,

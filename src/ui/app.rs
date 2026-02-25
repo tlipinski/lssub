@@ -1,9 +1,10 @@
-use crate::secret::store;
+use crate::secret::{clear, retrieve, store};
 use crate::ui::app::CurrentScreen::{Auth, Language, Main};
 use crate::ui::app::UiMessage::{Input, SubsFetched};
 use crate::ui::downloader_task::{SubsDownload, downloader_task};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
+use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::spinner_task;
@@ -11,7 +12,7 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, Login, LoginFailed, LoginSuccessful, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
+use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init, LanguagesUpdated, Login, LoginFailed, LoginSuccessful, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
 use anyhow::Result;
 use log::{error, info};
 use osb::get_download_link::get_download_link;
@@ -37,6 +38,7 @@ pub struct App {
     language_widget: LanguageWidget,
     status_widget: StatusWidget,
     login_widget: LoginWidget,
+    logged_in_widget: LoggedInWidget,
     features_tx: Sender<SubtitlesQuery>,
     downloader_tx: Sender<SubsDownload>,
     exit: bool,
@@ -71,6 +73,7 @@ impl App {
             language_widget: LanguageWidget::from(),
             status_widget: StatusWidget::from("...".into()),
             login_widget: LoginWidget::from(),
+            logged_in_widget: LoggedInWidget::from(),
             features_tx,
             downloader_tx,
             exit: false,
@@ -162,29 +165,33 @@ impl App {
                 Ok(None)
             }
 
+            UiMessage::GoToLogin => {
+                let result = retrieve().await;
+                match result {
+                    Ok(Some(token)) => Ok(Some(SwitchScreen(CurrentScreen::Logout))),
+                    Ok(None) => Ok(Some(SwitchScreen(Auth))),
+                    Err(e) => Err(e),
+                }
+            }
+
             Login(credentials) => {
-                let a = tokio::spawn(async move {
+                let result = tokio::spawn(async move {
                     match login(&credentials).await {
                         Ok(api_token) => {
                             store(&api_token, &credentials.username).await;
                             LoginSuccessful
                         }
-                        Err(e) => {
-                            LoginFailed(e.to_string())
-                        }
+                        Err(e) => LoginFailed(e.to_string()),
                     }
                 })
                 .await;
 
-                match a {
-                    Ok(msg) => {
-                        self.status_widget.info = "Login successful".into();
-                        Ok(Some(msg))
-                    },
+                match result {
+                    Ok(msg) => Ok(Some(msg)),
                     Err(e) => {
                         error!("Error logging in: {}", e);
                         Err(e.into())
-                    },
+                    }
                 }
             }
 
@@ -202,10 +209,15 @@ impl App {
                 self.exit = true;
                 Ok(None)
             }
-            
+
             LoginSuccessful => {
                 self.status_widget.info = "Login successful".into();
                 Ok(Some(SwitchScreen(Main)))
+            }
+
+            UiMessage::Logout => {
+                clear().await?;
+                Ok(Some(SwitchScreen(Auth)))
             }
         }
     }
@@ -248,6 +260,17 @@ impl App {
 
                 self.login_widget.render(frame, area);
             }
+
+            CurrentScreen::Logout => {
+                let area = frame.area();
+
+                let right = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Length(3), Constraint::Length(3)])
+                    .split(area);
+
+                self.logged_in_widget.render(frame, area);
+            }
         }
     }
 
@@ -257,7 +280,7 @@ impl App {
                 Main => match key_event.code {
                     KeyCode::F(10) => Some(Exit),
                     KeyCode::F(2) => Some(SwitchScreen(Language)),
-                    KeyCode::F(12) => Some(SwitchScreen(Auth)),
+                    KeyCode::F(12) => Some(GoToLogin),
                     KeyCode::PageUp
                     | KeyCode::PageDown
                     | KeyCode::Up
@@ -278,6 +301,12 @@ impl App {
                     QUIT_KEY => Some(SwitchScreen(Main)),
                     _ => self.login_widget.handle_key_event(event),
                 },
+
+                CurrentScreen::Logout => match key_event.code {
+                    KeyCode::F(10) => Some(Exit),
+                    QUIT_KEY => Some(SwitchScreen(Main)),
+                    _ => self.logged_in_widget.handle_key_event(event),
+                },
             }
         } else {
             None
@@ -291,4 +320,5 @@ pub enum CurrentScreen {
     Main,
     Language,
     Auth,
+    Logout,
 }
