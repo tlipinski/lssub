@@ -11,7 +11,7 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, Login, LoginFailed, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
+use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, Login, LoginFailed, LoginSuccessful, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
 use anyhow::Result;
 use log::{error, info};
 use osb::get_download_link::get_download_link;
@@ -167,7 +167,7 @@ impl App {
                     match login(&credentials).await {
                         Ok(api_token) => {
                             store(&api_token, &credentials.username).await;
-                            SwitchScreen(Main)
+                            LoginSuccessful
                         }
                         Err(e) => {
                             LoginFailed(e.to_string())
@@ -177,7 +177,10 @@ impl App {
                 .await;
 
                 match a {
-                    Ok(msg) => Ok(Some(msg)),
+                    Ok(msg) => {
+                        self.status_widget.info = "Login successful".into();
+                        Ok(Some(msg))
+                    },
                     Err(e) => {
                         error!("Error logging in: {}", e);
                         Err(e.into())
@@ -198,6 +201,11 @@ impl App {
             Exit => {
                 self.exit = true;
                 Ok(None)
+            }
+            
+            LoginSuccessful => {
+                self.status_widget.info = "Login successful".into();
+                Ok(Some(SwitchScreen(Main)))
             }
         }
     }

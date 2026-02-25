@@ -12,6 +12,7 @@ pub enum UiMessage {
     LanguagesUpdated(Vec<String>),
     Login(Credentials),
     LoginFailed(String),
+    LoginSuccessful,
     QueryUpdated(String),
     FetchSubs(String, Vec<String>),
     StartSpinner,
