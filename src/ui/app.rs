@@ -31,7 +31,7 @@ use std::sync::mpsc;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use crate::config::{get_config, save_config, Config};
+use crate::config::ConfigProvider;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -51,7 +51,7 @@ pub struct App {
 
 impl App {
     pub async fn run(
-        config: Config,
+        cfg: ConfigProvider,
         terminal: &mut DefaultTerminal,
         base_path: &Path,
         file_name: Option<&str>,
@@ -76,7 +76,7 @@ impl App {
             current_screen: CurrentScreen::default(),
             search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
             subs_widget: SubsWidget::default(),
-            language_widget: LanguageWidget::from(config.languages),
+            language_widget: LanguageWidget::from(cfg.get_config()?.languages),
             status_widget: StatusWidget::from("...".into()),
             login_widget: LoginWidget::from(),
             logged_in_widget: LoggedInWidget::from(),

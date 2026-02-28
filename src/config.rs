@@ -4,6 +4,52 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+pub struct ConfigProvider {
+    prefix: String,
+    path: PathBuf,
+}
+
+impl ConfigProvider {
+    fn config_path(&self) -> Result<PathBuf> {
+        let xdg_dirs = xdg::BaseDirectories::with_prefix(self.prefix.clone())?;
+        Ok(xdg_dirs.get_config_file(self.path.clone()))
+    }
+
+    pub fn get_config(&self) -> Result<Config> {
+        info!("Loading config from: {:?}", self.config_path());
+        if self.config_path()?.exists() {
+            let contents = match fs::read_to_string(self.config_path()?) {
+                Ok(raw) => raw,
+                Err(e) => {
+                    error!("Failed to read config file: {}", e);
+                    std::process::exit(1);
+                }
+            };
+            let config: Config = toml::from_str(&contents)?;
+            info!("Config loaded: {config:?}");
+            Ok(config)
+        } else {
+            let default = Config::default();
+            self.save_config(&default)?;
+            Ok(default)
+        }
+    }
+
+    pub fn save_config(&self, config: &Config) -> Result<()> {
+        fs::write(self.config_path()?, toml::to_string(&config)?);
+        Ok(())
+    }
+}
+
+impl Default for ConfigProvider {
+    fn default() -> Self {
+        ConfigProvider {
+            prefix: "subster".to_string(),
+            path: "config.toml".into(),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub languages: Vec<String>,
@@ -15,34 +61,4 @@ impl Default for Config {
             languages: vec!["en".into()],
         }
     }
-}
-
-pub fn get_config() -> Result<Config> {
-    info!("Loading config from: {:?}", config_path());
-    if config_path()?.exists() {
-        let contents = match fs::read_to_string(config_path()?) {
-            Ok(raw) => raw,
-            Err(e) => {
-                error!("Failed to read config file: {}", e);
-                std::process::exit(1);
-            }
-        };
-        let config: Config = toml::from_str(&contents)?;
-        info!("Config loaded: {config:?}");
-        Ok(config)
-    } else {
-        let default = Config::default();
-        save_config(&default)?;
-        Ok(default)
-    }
-}
-
-pub fn save_config(config: &Config) -> Result<()> {
-    fs::write(config_path()?, toml::to_string(&config)?);
-    Ok(())
-}
-
-fn config_path() -> Result<PathBuf> {
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("subster")?;
-    Ok(xdg_dirs.get_config_file("config.toml"))
 }

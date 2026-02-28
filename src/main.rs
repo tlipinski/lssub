@@ -4,7 +4,7 @@ mod config;
 mod secret;
 mod ui;
 
-use crate::config::{Config, get_config};
+use crate::config::{Config, ConfigProvider};
 use crate::secret::retrieve;
 use anyhow::{Error, Result};
 use clap::Parser;
@@ -53,12 +53,12 @@ struct Args {
 }
 
 async fn run(args: Args) -> Result<()> {
-    let config = get_config()?;
+    let config_provider = ConfigProvider::default();
 
-    handle_gui_cmd(config, args.name.as_deref()).await
+    handle_gui_cmd(config_provider, args.name.as_deref()).await
 }
 
-async fn handle_gui_cmd(config: Config, path_opt: Option<&str>) -> Result<()> {
+async fn handle_gui_cmd(cfg: ConfigProvider, path_opt: Option<&str>) -> Result<()> {
     let p = if let Some(path) = path_opt {
         let canon_res = PathBuf::from(&path).canonicalize();
 
@@ -98,7 +98,7 @@ async fn handle_gui_cmd(config: Config, path_opt: Option<&str>) -> Result<()> {
         let mut terminal = ratatui::init();
         info!("Base path: {:?}", bp);
         info!("File name: {:?}", file_name);
-        App::run(config, &mut terminal, bp, file_name).await;
+        App::run(cfg, &mut terminal, bp, file_name).await;
         ratatui::restore();
 
         Ok(())
