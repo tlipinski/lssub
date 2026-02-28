@@ -14,9 +14,9 @@ pub struct LanguageWidget {
 }
 
 impl LanguageWidget {
-    pub fn from() -> Self {
+    pub fn from(languages: Vec<String>) -> Self {
         LanguageWidget {
-            input: Input::new("pl".into()), // todo init from config
+            input: Input::new(languages.join(",")),
         }
     }
 

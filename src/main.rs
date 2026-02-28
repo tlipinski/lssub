@@ -4,7 +4,7 @@ mod config;
 mod secret;
 mod ui;
 
-use crate::config::get_config;
+use crate::config::{Config, get_config};
 use crate::secret::retrieve;
 use anyhow::{Error, Result};
 use clap::Parser;
@@ -53,12 +53,12 @@ struct Args {
 }
 
 async fn run(args: Args) -> Result<()> {
-    let _ = get_config()?;
+    let config = get_config()?;
 
-    handle_gui_cmd(args.name.as_deref()).await
+    handle_gui_cmd(config, args.name.as_deref()).await
 }
 
-async fn handle_gui_cmd(path_opt: Option<&str>) -> Result<()> {
+async fn handle_gui_cmd(config: Config, path_opt: Option<&str>) -> Result<()> {
     let p = if let Some(path) = path_opt {
         let canon_res = PathBuf::from(&path).canonicalize();
 
@@ -94,11 +94,11 @@ async fn handle_gui_cmd(path_opt: Option<&str>) -> Result<()> {
         (p.parent(), p.file_stem().and_then(|os_str| os_str.to_str()))
     };
 
-    if let Some(bp) = base_path{
+    if let Some(bp) = base_path {
         let mut terminal = ratatui::init();
         info!("Base path: {:?}", bp);
         info!("File name: {:?}", file_name);
-        App::run(&mut terminal, bp, file_name).await;
+        App::run(config, &mut terminal, bp, file_name).await;
         ratatui::restore();
 
         Ok(())
@@ -106,5 +106,4 @@ async fn handle_gui_cmd(path_opt: Option<&str>) -> Result<()> {
         error!("Invalid path: {:?}", base_path);
         exit(1)
     }
-
 }
