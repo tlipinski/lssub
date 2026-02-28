@@ -16,10 +16,10 @@ impl ConfigProvider {
         Ok(xdg_dirs.get_config_file(self.path.clone()))
     }
 
-    pub fn modify(&self, mut f: impl FnMut(&mut Config) -> ()) -> Result<()> {
-        let mut c = self.get_config()?;
-        f(&mut c);
-        self.save_config(&c)
+    pub fn modify(&self, f: impl Fn(&Config) -> (Config)) -> Result<()> {
+        let c = self.get_config()?;
+        let updated = f(&c);
+        self.save_config(&updated)
     }
 
     pub fn get_config(&self) -> Result<Config> {
@@ -57,7 +57,7 @@ impl Default for ConfigProvider {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     pub languages: Vec<String>,
 }

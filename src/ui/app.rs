@@ -131,10 +131,11 @@ impl App {
             LanguagesUpdated(languages) => {
                 self.current_screen = Main;
                 let query: String = self.search_widget.input.value().into();
-                self.config_provider.modify(|c: &mut Config| c.languages = vec![]);
-                let mut config = self.config_provider.get_config()?;
-                config.languages = languages.clone();
-                self.config_provider.save_config(&config);
+                self.config_provider.modify(|c: &Config| {
+                    let mut updated = c.clone();
+                    updated.languages = languages.clone();
+                    updated
+                });
                 Ok(Some(FetchSubs(query, languages)))
             }
 
