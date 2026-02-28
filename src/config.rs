@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+#[derive(Debug)]
 pub struct ConfigProvider {
     prefix: String,
     path: PathBuf,

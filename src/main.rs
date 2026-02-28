@@ -53,12 +53,10 @@ struct Args {
 }
 
 async fn run(args: Args) -> Result<()> {
-    let config_provider = ConfigProvider::default();
-
-    handle_gui_cmd(config_provider, args.name.as_deref()).await
+    handle_gui_cmd(args.name.as_deref()).await
 }
 
-async fn handle_gui_cmd(cfg: ConfigProvider, path_opt: Option<&str>) -> Result<()> {
+async fn handle_gui_cmd(path_opt: Option<&str>) -> Result<()> {
     let p = if let Some(path) = path_opt {
         let canon_res = PathBuf::from(&path).canonicalize();
 
@@ -98,7 +96,7 @@ async fn handle_gui_cmd(cfg: ConfigProvider, path_opt: Option<&str>) -> Result<(
         let mut terminal = ratatui::init();
         info!("Base path: {:?}", bp);
         info!("File name: {:?}", file_name);
-        App::run(cfg, &mut terminal, bp, file_name).await;
+        App::run(&mut terminal, bp, file_name).await;
         ratatui::restore();
 
         Ok(())

@@ -1,3 +1,4 @@
+use crate::config::ConfigProvider;
 use crate::secret::{clear, retrieve, store};
 use crate::ui::app::CurrentScreen::{Auth, Language, Main};
 use crate::ui::app::UiMessage::{Input, SubsFetched};
@@ -17,7 +18,7 @@ use crate::ui::ui_messages::UiMessage::{
     LanguagesUpdated, Login, LoginFailed, LoginSuccessful, QueryUpdated, SpinnerUpdate,
     StartSpinner, StopSpinner, SwitchScreen,
 };
-use anyhow::{bail, Error, Result};
+use anyhow::{Error, Result, bail};
 use log::{error, info};
 use osb::get_download_link::get_download_link;
 use osb::login::login;
@@ -31,12 +32,12 @@ use std::sync::mpsc;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use crate::config::ConfigProvider;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
 #[derive(Debug)]
-pub struct App {
+pub struct App<'a> {
+    config_provider: &'a ConfigProvider,
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
     subs_widget: SubsWidget,
@@ -49,9 +50,8 @@ pub struct App {
     exit: bool,
 }
 
-impl App {
+impl App<'_> {
     pub async fn run(
-        cfg: ConfigProvider,
         terminal: &mut DefaultTerminal,
         base_path: &Path,
         file_name: Option<&str>,
@@ -72,11 +72,13 @@ impl App {
             file_name.map(|s| s.to_string()),
         ));
 
+        let provider = ConfigProvider::default();
         let mut app = App {
+            config_provider: &provider,
             current_screen: CurrentScreen::default(),
             search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
             subs_widget: SubsWidget::default(),
-            language_widget: LanguageWidget::from(cfg.get_config()?.languages),
+            language_widget: LanguageWidget::from(&provider.get_config()?.languages),
             status_widget: StatusWidget::from("...".into()),
             login_widget: LoginWidget::from(),
             logged_in_widget: LoggedInWidget::from(),
@@ -129,6 +131,9 @@ impl App {
             LanguagesUpdated(languages) => {
                 self.current_screen = Main;
                 let query: String = self.search_widget.input.value().into();
+                let mut config = self.config_provider.get_config()?;
+                config.languages = languages.clone();
+                self.config_provider.save_config(&config);
                 Ok(Some(FetchSubs(query, languages)))
             }
 

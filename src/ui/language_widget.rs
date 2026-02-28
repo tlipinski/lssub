@@ -14,7 +14,7 @@ pub struct LanguageWidget {
 }
 
 impl LanguageWidget {
-    pub fn from(languages: Vec<String>) -> Self {
+    pub fn from(languages: &Vec<String>) -> Self {
         LanguageWidget {
             input: Input::new(languages.join(",")),
         }
