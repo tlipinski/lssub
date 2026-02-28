@@ -12,7 +12,11 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init, LanguagesUpdated, Login, LoginFailed, LoginSuccessful, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
+use crate::ui::ui_messages::UiMessage::{
+    DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init,
+    LanguagesUpdated, Login, LoginFailed, LoginSuccessful, QueryUpdated, SpinnerUpdate,
+    StartSpinner, StopSpinner, SwitchScreen,
+};
 use anyhow::Result;
 use log::{error, info};
 use osb::get_download_link::get_download_link;
@@ -111,15 +115,15 @@ impl App {
                 Ok(None)
             }
 
-            LanguagesUpdated(langs) => {
+            LanguagesUpdated(languages) => {
                 self.current_screen = Main;
                 let query: String = self.search_widget.input.value().into();
-                Ok(Some(FetchSubs(query, langs)))
+                Ok(Some(FetchSubs(query, languages)))
             }
 
             QueryUpdated(query) => {
-                let langs = self.language_widget.languages();
-                Ok(Some(FetchSubs(query, langs)))
+                let languages = self.language_widget.languages();
+                Ok(Some(FetchSubs(query, languages)))
             }
 
             FetchSubs(query, languages) => {
@@ -142,8 +146,8 @@ impl App {
             Init => {
                 let query: String = self.search_widget.input.value().into();
                 if (!query.is_empty()) {
-                    let langs = self.language_widget.languages();
-                    Ok(Some(FetchSubs(query, langs)))
+                    let languages = self.language_widget.languages();
+                    Ok(Some(FetchSubs(query, languages)))
                 } else {
                     Ok(None)
                 }
@@ -165,7 +169,7 @@ impl App {
                 Ok(None)
             }
 
-            UiMessage::GoToLogin => {
+            GoToLogin => {
                 let result = retrieve().await;
                 match result {
                     Ok(Some(token)) => Ok(Some(SwitchScreen(CurrentScreen::Logout))),
