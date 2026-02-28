@@ -17,7 +17,7 @@ use crate::ui::ui_messages::UiMessage::{
     LanguagesUpdated, Login, LoginFailed, LoginSuccessful, QueryUpdated, SpinnerUpdate,
     StartSpinner, StopSpinner, SwitchScreen,
 };
-use anyhow::Result;
+use anyhow::{bail, Error, Result};
 use log::{error, info};
 use osb::get_download_link::get_download_link;
 use osb::login::login;
@@ -87,7 +87,16 @@ impl App {
 
         while !app.exit {
             while let Some(msg) = message_opt {
-                message_opt = app.update(msg).await?
+                let result = app.update(msg).await;
+                match result {
+                    Ok(r) => {
+                        message_opt = r
+                    }
+                    Err(e) => {
+                        error!("Error while updating UI: {e}");
+                        message_opt = None
+                    }
+                }
             }
 
             terminal.draw(|frame| app.draw(frame))?;
