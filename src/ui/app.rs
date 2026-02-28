@@ -2,7 +2,7 @@ use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::app::CurrentScreen::{Auth, Language, Main};
 use crate::ui::app::UiMessage::{Input, SubsFetched};
-use crate::ui::downloader_task::{Downloader, SubsDownload};
+use crate::ui::downloader::{Downloader, SubsDownload};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::logged_in_widget::LoggedInWidget;

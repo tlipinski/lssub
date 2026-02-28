@@ -1,5 +1,5 @@
 pub mod app;
-mod downloader_task;
+mod downloader;
 mod input_handler;
 mod language_widget;
 mod search_widget;
