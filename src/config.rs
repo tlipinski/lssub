@@ -1,9 +1,9 @@
 use anyhow::Result;
 use log::{debug, error, info};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub languages: Vec<String>,
 }
@@ -33,6 +33,8 @@ pub fn get_config() -> Result<Config> {
         info!("Config loaded {:?}", config);
         Ok(config)
     } else {
-        Ok(Config::default())
+        let default = Config::default();
+        fs::write(config_path, toml::to_string(&default)?);
+        Ok(default)
     }
 }
