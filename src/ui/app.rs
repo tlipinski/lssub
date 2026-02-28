@@ -36,8 +36,8 @@ use tokio::task::JoinHandle;
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
 #[derive(Debug)]
-pub struct App<'a> {
-    config_provider: &'a ConfigProvider,
+pub struct App {
+    config_provider: ConfigProvider,
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
     subs_widget: SubsWidget,
@@ -50,7 +50,7 @@ pub struct App<'a> {
     exit: bool,
 }
 
-impl App<'_> {
+impl App {
     pub async fn run(
         terminal: &mut DefaultTerminal,
         base_path: &Path,
@@ -73,12 +73,13 @@ impl App<'_> {
         ));
 
         let provider = ConfigProvider::default();
+        let languages = provider.get_config()?.languages;
         let mut app = App {
-            config_provider: &provider,
+            config_provider: provider,
             current_screen: CurrentScreen::default(),
             search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
             subs_widget: SubsWidget::default(),
-            language_widget: LanguageWidget::from(&provider.get_config()?.languages),
+            language_widget: LanguageWidget::from(languages),
             status_widget: StatusWidget::from("...".into()),
             login_widget: LoginWidget::from(),
             logged_in_widget: LoggedInWidget::from(),
@@ -93,9 +94,7 @@ impl App<'_> {
             while let Some(msg) = message_opt {
                 let result = app.update(msg).await;
                 match result {
-                    Ok(r) => {
-                        message_opt = r
-                    }
+                    Ok(r) => message_opt = r,
                     Err(e) => {
                         error!("Error while updating UI: {e}");
                         message_opt = None
