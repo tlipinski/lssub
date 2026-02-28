@@ -16,6 +16,12 @@ impl ConfigProvider {
         Ok(xdg_dirs.get_config_file(self.path.clone()))
     }
 
+    pub fn modify(&self, mut f: impl FnMut(&mut Config) -> ()) -> Result<()> {
+        let mut c = self.get_config()?;
+        f(&mut c);
+        self.save_config(&c)
+    }
+
     pub fn get_config(&self) -> Result<Config> {
         info!("Loading config from: {:?}", self.config_path());
         if self.config_path()?.exists() {

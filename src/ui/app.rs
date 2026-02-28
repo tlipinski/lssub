@@ -1,4 +1,4 @@
-use crate::config::ConfigProvider;
+use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::app::CurrentScreen::{Auth, Language, Main};
 use crate::ui::app::UiMessage::{Input, SubsFetched};
@@ -19,6 +19,7 @@ use crate::ui::ui_messages::UiMessage::{
     StartSpinner, StopSpinner, SwitchScreen,
 };
 use anyhow::{Error, Result, bail};
+use clap::builder::TypedValueParser;
 use log::{error, info};
 use osb::get_download_link::get_download_link;
 use osb::login::login;
@@ -130,6 +131,7 @@ impl App {
             LanguagesUpdated(languages) => {
                 self.current_screen = Main;
                 let query: String = self.search_widget.input.value().into();
+                self.config_provider.modify(|c: &mut Config| c.languages = vec![]);
                 let mut config = self.config_provider.get_config()?;
                 config.languages = languages.clone();
                 self.config_provider.save_config(&config);
