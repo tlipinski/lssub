@@ -6,6 +6,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tokio::sync::mpsc::{Receiver, Sender};
 use anyhow::Result;
+use secrecy::ExposeSecret;
+use osb::login::ApiToken;
 
 #[derive(Clone)]
 pub struct Downloader {
@@ -19,13 +21,13 @@ impl Downloader {
         Downloader { base_path, file_name_opt }
     }
 
-    pub async fn download(&self, file_id: i64) -> Result<PathBuf> {
+    pub async fn download(&self, token_opt: Option<ApiToken>, file_id: i64) -> Result<PathBuf> {
         // todo
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
         info!("Downloading: {file_id:?}");
 
-        let download_link_result = get_download_link(file_id).await;
+        let download_link_result = get_download_link(token_opt, file_id).await;
 
         match download_link_result {
             Ok(download_link_response) => {

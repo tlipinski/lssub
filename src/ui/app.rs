@@ -171,11 +171,20 @@ impl App {
                 let downloader = self.downloader.clone();
                 let ui_tx = self.ui_tx.clone();
                 tokio::spawn(async move {
-                    let msg = match downloader.download(file_id).await {
-                        Ok(path) => DownloadedSubs(path),
-                        Err(e) => DownloadSubsFailed(e.to_string()),
-                    };
-                    ui_tx.send(msg).await;
+                    let token_result = retrieve().await;
+                    match token_result {
+                        Ok(token_opt) => {
+                            let msg = match downloader.download(token_opt, file_id).await {
+                                Ok(path) => DownloadedSubs(path),
+                                Err(e) => DownloadSubsFailed(e.to_string()),
+                            };
+                            ui_tx.send(msg).await;
+                        }
+                        Err(e) => {
+                            let msg = DownloadSubsFailed(e.to_string());
+                            ui_tx.send(msg).await;
+                        }
+                    }
                 });
 
                 Ok(Some(StartSpinner))
