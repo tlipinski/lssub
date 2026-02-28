@@ -31,7 +31,7 @@ use std::sync::mpsc;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use crate::config::Config;
+use crate::config::{get_config, save_config, Config};
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
