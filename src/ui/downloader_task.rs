@@ -1,61 +1,64 @@
-use crate::ui::ui_messages::UiMessage;
-use log::{debug, info};
+use log::{debug, error, info};
 use osb::download::download;
 use osb::get_download_link::get_download_link;
 use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::{Path, PathBuf};
 use tokio::sync::mpsc::{Receiver, Sender};
+use anyhow::Result;
 
-pub async fn downloader_task(
-    mut rx: Receiver<SubsDownload>,
-    ui_tx: Sender<UiMessage>,
+#[derive(Clone)]
+pub struct Downloader {
     base_path: PathBuf,
     file_name_opt: Option<String>,
-) -> anyhow::Result<()> {
-    loop {
-        match rx.recv().await {
-            Some(subs_download) => {
-                info!("Downloading: {subs_download:?}");
+}
 
-                let download_link_result = get_download_link(subs_download.file_id).await;
+impl Downloader {
 
-                match download_link_result {
-                    Ok(download_link_response) => {
-                        debug!("{:?}", download_link_response);
-                        debug!("{:?}", base_path);
-                        debug!("{:?}", file_name_opt);
+    pub fn new(base_path: PathBuf, file_name_opt: Option<String>) -> Self {
+        Downloader { base_path, file_name_opt }
+    }
 
-                        let content_result = download(download_link_response.link).await;
+    pub async fn download(&self, file_id: i64) -> Result<PathBuf> {
+        // todo
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
-                        match content_result {
-                            Ok(content) => {
-                                let output_file = output_file(
-                                    &base_path,
-                                    &file_name_opt,
-                                    download_link_response.file_name.as_str(),
-                                );
+        info!("Downloading: {file_id:?}");
 
-                                debug!("out: {:?}", output_file);
+        let download_link_result = get_download_link(file_id).await;
 
-                                fs::write(output_file.clone(), content)?;
+        match download_link_result {
+            Ok(download_link_response) => {
+                debug!("{:?}", download_link_response);
+                debug!("{:?}", self.base_path);
+                debug!("{:?}", self.file_name_opt);
 
-                                ui_tx.send(UiMessage::DownloadedSubs(output_file)).await?
-                            }
-                            Err(e) => {
-                                ui_tx.send(UiMessage::DownloadSubsFailed(e.to_string())).await?
-                            }
-                        }
+                let content_result = download(download_link_response.link).await;
 
+                match content_result {
+                    Ok(content) => {
+                        let output_file = output_file(
+                            &self.base_path,
+                            &self.file_name_opt,
+                            download_link_response.file_name.as_str(),
+                        );
+
+                        debug!("out: {:?}", output_file);
+
+                        tokio::fs::write(output_file.clone(), content).await?;
+
+                        Ok(output_file)
                     }
                     Err(e) => {
-                        ui_tx.send(UiMessage::DownloadSubsFailed(e.to_string())).await?
+                        error!("Error downloading subs: {e}");
+                        Err(e)
                     }
                 }
 
             }
-            None => {
-                break Ok(());
+            Err(e) => {
+                error!("Error downloading subs: {e}");
+                Err(e)
             }
         }
     }

@@ -2,7 +2,7 @@ use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::app::CurrentScreen::{Auth, Language, Main};
 use crate::ui::app::UiMessage::{Input, SubsFetched};
-use crate::ui::downloader_task::{SubsDownload, downloader_task};
+use crate::ui::downloader_task::{Downloader, SubsDownload};
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::logged_in_widget::LoggedInWidget;
@@ -36,7 +36,6 @@ use tokio::task::JoinHandle;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
-#[derive(Debug)]
 pub struct App {
     config_provider: ConfigProvider,
     current_screen: CurrentScreen,
@@ -46,8 +45,9 @@ pub struct App {
     status_widget: StatusWidget,
     login_widget: LoginWidget,
     logged_in_widget: LoggedInWidget,
+    ui_tx: Sender<UiMessage>,
     features_tx: Sender<SubtitlesQuery>,
-    downloader_tx: Sender<SubsDownload>,
+    downloader: Downloader,
     exit: bool,
 }
 
@@ -59,19 +59,12 @@ impl App {
     ) -> Result<()> {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<UiMessage>(100);
         let (features_tx, features_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
-        let (downloader_tx, downloader_rx) = tokio::sync::mpsc::channel::<SubsDownload>(100);
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
 
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
         tokio::spawn(subtitles_fetch_task(features_rx, ui_tx.clone()));
         tokio::spawn(spinner_task(ui_tx.clone()));
-        tokio::spawn(downloader_task(
-            downloader_rx,
-            ui_tx.clone(),
-            base_path.to_owned(),
-            file_name.map(|s| s.to_string()),
-        ));
 
         let provider = ConfigProvider::default();
         let languages = provider.get_config()?.languages;
@@ -84,8 +77,9 @@ impl App {
             status_widget: StatusWidget::from("...".into()),
             login_widget: LoginWidget::from(),
             logged_in_widget: LoggedInWidget::from(),
+            downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
+            ui_tx: ui_tx.clone(),
             features_tx,
-            downloader_tx,
             exit: false,
         };
 
@@ -172,8 +166,18 @@ impl App {
             }
 
             DownloadSubs(file_id) => {
-                self.downloader_tx.send(SubsDownload { file_id }).await?;
                 self.status_widget.info = "Downloading...".into();
+
+                let downloader = self.downloader.clone();
+                let ui_tx = self.ui_tx.clone();
+                tokio::spawn(async move {
+                    let msg = match downloader.download(file_id).await {
+                        Ok(path) => DownloadedSubs(path),
+                        Err(e) => DownloadSubsFailed(e.to_string()),
+                    };
+                    ui_tx.send(msg).await;
+                });
+
                 Ok(Some(StartSpinner))
             }
 
