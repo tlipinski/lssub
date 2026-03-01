@@ -1,3 +1,4 @@
+use gio::glib::Regex;
 use crate::ui::ui_messages::UiMessage;
 use log::info;
 use osb::subtitles::SubtitlesResponse;
@@ -24,6 +25,8 @@ pub struct Sub {
     language: String,
     upload_date: String,
     downloads: String,
+    ai_translated: String,
+    votes: String,
 }
 
 impl SubsWidget {
@@ -66,7 +69,16 @@ impl SubsWidget {
                 year: resp.attributes.feature_details.year.to_string(),
                 language: resp.attributes.language.clone(),
                 upload_date: resp.attributes.upload_date.clone(),
-                downloads: resp.attributes.download_count.to_string(),
+                downloads: (resp.attributes.download_count + resp.attributes.new_download_count)
+                    .to_string(),
+                ai_translated: match resp.attributes.ai_translated {
+                    true => "✓".to_string(),
+                    false => "".to_string(),
+                },
+                votes: match resp.attributes.votes {
+                    0 => "".to_string(),
+                    x => x.to_string(),
+                },
             })
             .collect::<Vec<Sub>>();
 
@@ -81,19 +93,23 @@ impl SubsWidget {
                 Cell::from(Text::from(item.year.as_str())),
                 Cell::from(Text::from(item.upload_date.as_str())),
                 Cell::from(Text::from(item.downloads.as_str())),
+                Cell::from(Text::from(item.ai_translated.as_str())),
+                Cell::from(Text::from(item.votes.as_str())),
             ])
         });
         let title = format!(" Results: {} ", self.subs.len()).bold();
 
         let block_bot = Block::bordered().title(title).border_set(border::THICK);
 
-        let table = Table::new(rows, [70, 10, 10, 10, 10])
+        let table = Table::new(rows, [70, 10, 10, 12, 10, 10, 10])
             .header(Row::from_iter(vec![
                 "Title",
                 "Language",
                 "Year",
                 "Uploaded",
                 "Downloads",
+                "AI",
+                "Votes",
             ]))
             .block(block_bot)
             .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));

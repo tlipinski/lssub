@@ -86,6 +86,9 @@ pub struct Attributes {
     pub feature_details: FeatureDetails,
     pub language: String,
     pub download_count: i32,
+    pub new_download_count: i32,
+    pub ai_translated: bool,
+    pub votes: i32,
     pub upload_date: String,
     pub release: String,
     pub files: Vec<File>
