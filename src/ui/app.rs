@@ -18,6 +18,7 @@ use crate::ui::ui_messages::UiMessage::{
     LanguagesUpdated, Login, LoginFailed, LoginSuccessful, QueryUpdated, SpinnerUpdate,
     StartSpinner, StopSpinner, SwitchScreen,
 };
+use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
 use log::{error, info};
@@ -40,6 +41,7 @@ pub struct App {
     config_provider: ConfigProvider,
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
+    user_widget: UserWidget,
     subs_widget: SubsWidget,
     language_widget: LanguageWidget,
     status_widget: StatusWidget,
@@ -72,6 +74,7 @@ impl App {
             config_provider: provider,
             current_screen: CurrentScreen::default(),
             search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
+            user_widget: UserWidget::from(),
             subs_widget: SubsWidget::default(),
             language_widget: LanguageWidget::from(languages),
             status_widget: StatusWidget::from("...".into()),
@@ -175,7 +178,7 @@ impl App {
                     match token_result {
                         Ok(token_opt) => {
                             let msg = match downloader.download(token_opt, file_id).await {
-                                Ok(downloaded) => DownloadedSubs(downloaded.path),
+                                Ok(downloaded) => DownloadedSubs(downloaded),
                                 Err(e) => DownloadSubsFailed(e.to_string()),
                             };
                             ui_tx.send(msg).await;
@@ -190,8 +193,10 @@ impl App {
                 Ok(Some(StartSpinner))
             }
 
-            DownloadedSubs(path) => {
-                self.status_widget.info = format!("Downloaded: {:?}", path);
+            DownloadedSubs(downloaded) => {
+                self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
+                self.user_widget.requests = downloaded.requests;
+                self.user_widget.remaining = downloaded.remaining;
                 Ok(Some(StopSpinner))
             }
 
@@ -271,7 +276,13 @@ impl App {
                     ])
                     .split(area);
 
-                self.search_widget.render(frame, layout[0]);
+                let top = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(85), Constraint::Percentage(15)])
+                    .split(layout[0]);
+
+                self.search_widget.render(frame, top[0]);
+                self.user_widget.render(frame, top[1]);
                 self.subs_widget.render(frame, layout[1]);
                 self.status_widget.render(frame, layout[2]);
             }

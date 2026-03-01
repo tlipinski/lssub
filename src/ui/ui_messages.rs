@@ -3,8 +3,8 @@ use crate::ui::app::CurrentScreen;
 use osb::subtitles::SubtitlesResponse;
 use ratatui::crossterm::event::Event;
 use osb::login::Credentials;
+use crate::ui::downloader::Downloaded;
 
-#[derive(Debug)]
 pub enum UiMessage {
     Input(Event),
     SubsFetched(SubtitlesResponse),
@@ -21,7 +21,7 @@ pub enum UiMessage {
     StopSpinner,
     Init,
     DownloadSubs(i64),
-    DownloadedSubs(PathBuf),
+    DownloadedSubs(Downloaded),
     SwitchScreen(CurrentScreen),
     DownloadSubsFailed(String),
     Exit,
