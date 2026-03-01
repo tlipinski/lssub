@@ -23,7 +23,7 @@ impl UserWidget {
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let mut title = " Downloads remaining ".to_string().bold();
+        let mut title = " Downloads remaining ".to_string().bold().into_centered_line();
 
         let block = Block::bordered().title(title).border_set(border::THICK);
 

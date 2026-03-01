@@ -315,7 +315,7 @@ impl App {
 
                 let status = Layout::default()
                     .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(85), Constraint::Percentage(15)])
+                    .constraints([Constraint::Fill(1), Constraint::Length(23)])
                     .split(layout[2]);
 
                 self.search_widget.render(frame, layout[0]);
