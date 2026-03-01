@@ -53,8 +53,8 @@ impl Downloader {
 
                         Ok(Downloaded {
                             path: output_file,
-                            requests: 444,
-                            remaining: 556,
+                            requests: download_link_response.requests,
+                            remaining: download_link_response.remaining,
                         })
                     }
                     Err(e) => {

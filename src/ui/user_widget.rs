@@ -18,20 +18,23 @@ impl UserWidget {
     pub fn from() -> Self {
         UserWidget {
             requests: 0,
-            remaining: 0
+            remaining: 0,
         }
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let mut title = " Downloads ".to_string().bold();
+        let mut title = " Downloads remaining ".to_string().bold();
 
         let block = Block::bordered().title(title).border_set(border::THICK);
 
-        let par = Line::from(format!("Remaining: {}", self.remaining));
+        let par = Line::from(format!(
+            "{} of {}",
+            self.remaining,
+            self.requests + self.remaining
+        )).centered();
 
         let view = Paragraph::new(par).block(block);
 
         frame.render_widget(view, area);
     }
-
 }
