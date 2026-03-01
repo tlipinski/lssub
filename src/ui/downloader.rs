@@ -31,9 +31,9 @@ impl Downloader {
 
         match download_link_result {
             Ok(download_link_response) => {
-                debug!("{:?}", download_link_response);
-                debug!("{:?}", self.base_path);
-                debug!("{:?}", self.file_name_opt);
+                debug!("Download link response: {:?}", download_link_response);
+                debug!("Base path: {:?}", self.base_path);
+                debug!("File name: {:?}", self.file_name_opt);
 
                 let content_result = download(download_link_response.link).await;
 
