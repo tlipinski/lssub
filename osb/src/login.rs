@@ -32,11 +32,11 @@ pub async fn login(credentials: &Credentials) -> Result<ApiToken> {
 
     match status {
         s if s.is_success() || s.is_redirection() => {
-            debug!("Response {}", text_body);
+            // debug!("Response {}", text_body);
             let json: Result<LoginResponse, _> = serde_json::from_str(&text_body);
             match json {
                 Ok(login_response) => {
-                    debug!("{:?}", login_response);
+                    debug!("Login response: {login_response:?}");
                     Ok(ApiToken(login_response.token))
                 }
                 Err(e) => {

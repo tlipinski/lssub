@@ -1,7 +1,7 @@
 use crate::login::ApiToken;
-use crate::values::{API_URL, API_VIP_URL, KEY, USER_AGENT};
+use crate::values::{API_URL, VIP_API_URL, KEY, USER_AGENT};
 use anyhow::{Error, Result};
-use log::{error, info, trace};
+use log::{debug, error, info, trace};
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +10,7 @@ pub async fn get_download_link(
     file_id: i64,
 ) -> Result<DownloadResponse> {
     let url = if let Some(_) = token_opt {
-        format!("{}/download", API_VIP_URL)
+        format!("{}/download", VIP_API_URL)
     } else {
         format!("{}/download", API_URL)
     };
