@@ -2,7 +2,7 @@ use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::app::CurrentScreen::{Auth, Language, Main};
 use crate::ui::app::UiMessage::{Input, SubsFetched};
-use crate::ui::downloader::{Downloader, SubsDownload};
+use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
 use crate::ui::logged_in_widget::LoggedInWidget;
@@ -175,7 +175,7 @@ impl App {
                     match token_result {
                         Ok(token_opt) => {
                             let msg = match downloader.download(token_opt, file_id).await {
-                                Ok(path) => DownloadedSubs(path),
+                                Ok(downloaded) => DownloadedSubs(downloaded.path),
                                 Err(e) => DownloadSubsFailed(e.to_string()),
                             };
                             ui_tx.send(msg).await;

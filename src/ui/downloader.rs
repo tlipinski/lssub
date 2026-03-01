@@ -1,13 +1,13 @@
+use anyhow::Result;
 use log::{debug, error, info};
 use osb::download::download;
 use osb::get_download_link::get_download_link;
+use osb::login::ApiToken;
+use secrecy::ExposeSecret;
 use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::{Path, PathBuf};
 use tokio::sync::mpsc::{Receiver, Sender};
-use anyhow::Result;
-use secrecy::ExposeSecret;
-use osb::login::ApiToken;
 
 #[derive(Clone)]
 pub struct Downloader {
@@ -16,12 +16,14 @@ pub struct Downloader {
 }
 
 impl Downloader {
-
     pub fn new(base_path: PathBuf, file_name_opt: Option<String>) -> Self {
-        Downloader { base_path, file_name_opt }
+        Downloader {
+            base_path,
+            file_name_opt,
+        }
     }
 
-    pub async fn download(&self, token_opt: Option<ApiToken>, file_id: i64) -> Result<PathBuf> {
+    pub async fn download(&self, token_opt: Option<ApiToken>, file_id: i64) -> Result<Downloaded> {
         // todo
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
@@ -49,14 +51,17 @@ impl Downloader {
 
                         tokio::fs::write(output_file.clone(), content).await?;
 
-                        Ok(output_file)
+                        Ok(Downloaded {
+                            path: output_file,
+                            requests: 444,
+                            remaining: 556,
+                        })
                     }
                     Err(e) => {
                         error!("Error downloading subs: {e}");
                         Err(e)
                     }
                 }
-
             }
             Err(e) => {
                 error!("Error downloading subs: {e}");
@@ -90,9 +95,10 @@ fn output_file(
     base_path.join(output_file)
 }
 
-#[derive(Debug)]
-pub struct SubsDownload {
-    pub file_id: i64,
+pub struct Downloaded {
+    pub path: PathBuf,
+    pub requests: i32,
+    pub remaining: i32,
 }
 
 #[cfg(test)]

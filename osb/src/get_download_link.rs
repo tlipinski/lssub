@@ -1,14 +1,14 @@
 use crate::login::ApiToken;
 use crate::values::{API_URL, VIP_API_URL, KEY, USER_AGENT};
 use anyhow::{Error, Result};
-use log::{debug, error, info, trace};
+use log::{error, info, trace};
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 
 pub async fn get_download_link(
     token_opt: Option<ApiToken>,
     file_id: i64,
-) -> Result<DownloadResponse> {
+) -> Result<DownloadLinkResponse> {
     let url = if let Some(_) = token_opt {
         format!("{}/download", VIP_API_URL)
     } else {
@@ -44,7 +44,7 @@ pub async fn get_download_link(
 
     match status {
         s if s.is_success() || s.is_redirection() => {
-            let json: Result<DownloadResponse, _> = serde_json::from_str(&text_body);
+            let json: Result<DownloadLinkResponse, _> = serde_json::from_str(&text_body);
             match json {
                 Ok(features_response) => {
                     trace!("{}", serde_json::to_string_pretty(&features_response)?);
@@ -74,7 +74,9 @@ struct DownloadRequest {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct DownloadResponse {
+pub struct DownloadLinkResponse {
     pub link: String,
     pub file_name: String,
+    pub requests: i32,
+    pub remaining: i32
 }
