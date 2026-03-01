@@ -1,7 +1,7 @@
 use crate::ui::ui_messages::UiMessage;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
-use ratatui::layout::Rect;
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
@@ -10,6 +10,7 @@ use tui_input::backend::crossterm::EventHandler;
 
 #[derive(Debug)]
 pub struct UserWidget {
+    pub username: String,
     pub requests: i32,
     pub remaining: i32,
 }
@@ -17,24 +18,53 @@ pub struct UserWidget {
 impl UserWidget {
     pub fn from() -> Self {
         UserWidget {
+            username: "aaa".into(),
             requests: 0,
             remaining: 0,
         }
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let mut title = " Downloads remaining ".to_string().bold().into_centered_line();
+        let user = {
+            let title = " Logged in as "
+                .to_string()
+                .bold()
+                .into_centered_line();
 
-        let block = Block::bordered().title(title).border_set(border::THICK);
+            let block = Block::bordered().title(title).border_set(border::THICK);
 
-        let par = Line::from(format!(
-            "{} of {}",
-            self.remaining,
-            self.requests + self.remaining
-        )).centered();
+            let line = Line::from(format!(
+                "{}",
+                self.username
+            )).centered();
 
-        let view = Paragraph::new(par).block(block);
+            Paragraph::new(line).block(block)
+        };
 
-        frame.render_widget(view, area);
+        let downloads = {
+            let title = " Downloads remaining "
+                .to_string()
+                .bold()
+                .into_centered_line();
+
+            let block = Block::bordered().title(title).border_set(border::THICK);
+
+            let line = Line::from(format!(
+                "{} of {}",
+                self.remaining,
+                self.requests + self.remaining
+            ))
+            .centered();
+
+            Paragraph::new(line).block(block)
+        };
+
+        let layout = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Fill(1), Constraint::Fill(1)])
+            .split(area);
+
+        frame.render_widget(user, layout[0]);
+        frame.render_widget(downloads, layout[1]);
     }
 }

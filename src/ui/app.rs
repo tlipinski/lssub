@@ -16,7 +16,7 @@ use crate::ui::ui_messages::UiMessage;
 use crate::ui::ui_messages::UiMessage::{
     DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init,
     LanguagesUpdated, Login, LoginFailed, LoginSuccessful, QueryUpdated, SpinnerUpdate,
-    StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount,
+    StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount, UpdateUsername,
 };
 use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
@@ -79,7 +79,7 @@ impl App {
             user_widget: UserWidget::from(),
             subs_widget: SubsWidget::default(),
             language_widget: LanguageWidget::from(languages),
-            status_widget: StatusWidget::from("...".into()),
+            status_widget: StatusWidget::from("".into()),
             login_widget: LoginWidget::from(),
             logged_in_widget: LoggedInWidget::from(),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
@@ -265,7 +265,9 @@ impl App {
                                         user_info.data.downloads_count,
                                         user_info.data.remaining_downloads,
                                     ))
-                                    .await
+                                    .await;
+
+                                ui_tx.send(UpdateUsername(user_info.data.username)).await
                             }
                             Err(e) => {
                                 error!("Error getting user info: {e}");
@@ -296,6 +298,10 @@ impl App {
                 self.user_widget.remaining = rm;
                 Ok(None)
             }
+            UpdateUsername(username) => {
+                self.user_widget.username = username;
+                Ok(None)
+            }
         }
     }
 
@@ -315,7 +321,7 @@ impl App {
 
                 let status = Layout::default()
                     .direction(Direction::Horizontal)
-                    .constraints([Constraint::Fill(1), Constraint::Length(23)])
+                    .constraints([Constraint::Fill(1), Constraint::Length(50)])
                     .split(layout[2]);
 
                 self.search_widget.render(frame, layout[0]);
