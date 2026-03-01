@@ -22,6 +22,7 @@ pub enum UiMessage {
     Init,
     DownloadSubs(i64),
     DownloadedSubs(Downloaded),
+    UpdateDownloadCount(i32, i32),
     SwitchScreen(CurrentScreen),
     DownloadSubsFailed(String),
     Exit,

@@ -16,7 +16,7 @@ use crate::ui::ui_messages::UiMessage;
 use crate::ui::ui_messages::UiMessage::{
     DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init,
     LanguagesUpdated, Login, LoginFailed, LoginSuccessful, QueryUpdated, SpinnerUpdate,
-    StartSpinner, StopSpinner, SwitchScreen,
+    StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount,
 };
 use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
@@ -24,6 +24,8 @@ use clap::builder::TypedValueParser;
 use log::{error, info};
 use osb::get_download_link::get_download_link;
 use osb::login::login;
+use osb::user_info;
+use osb::user_info::get_user_info;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::prelude::StatefulWidget;
@@ -34,7 +36,6 @@ use std::sync::mpsc;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use osb::user_info::get_user_info;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -252,27 +253,48 @@ impl App {
             }
 
             LoginSuccessful => {
-                tokio::spawn(async {
+                self.status_widget.info = "Login successful".into();
+
+                let ui_tx = self.ui_tx.clone();
+                tokio::spawn(async move {
                     match retrieve().await {
-                        Ok(Some(jwt)) => {
-                            get_user_info(&jwt).await
-                        }
+                        Ok(Some(jwt)) => match get_user_info(&jwt).await {
+                            Ok(user_info) => {
+                                ui_tx
+                                    .send(UpdateDownloadCount(
+                                        user_info.data.downloads_count,
+                                        user_info.data.remaining_downloads,
+                                    ))
+                                    .await
+                            }
+                            Err(e) => {
+                                error!("Error getting user info: {e}");
+                                Ok(())
+                            }
+                        },
                         Ok(None) => {
-                            Err(Error::msg("Why token isn't there?"))
+                            // todo pass token with ui message
+                            error!("Why token isn't there?");
+                            Ok(())
                         }
                         Err(e) => {
                             error!("Error retrieving jwt: {e}");
-                            Err(e.into())
+                            Ok(())
                         }
                     }
                 });
-                self.status_widget.info = "Login successful".into();
                 Ok(Some(SwitchScreen(Main)))
             }
 
             UiMessage::Logout => {
                 clear().await?;
                 Ok(Some(SwitchScreen(Auth)))
+            }
+
+            UpdateDownloadCount(rq, rm) => {
+                self.user_widget.requests = rq;
+                self.user_widget.remaining = rm;
+                Ok(None)
             }
         }
     }
