@@ -228,7 +228,7 @@ impl App {
                         Err(e) => LoginFailed(e.to_string()),
                     }
                 })
-                .await;
+                    .await;
 
                 match result {
                     Ok(msg) => Ok(vec!(msg)),
@@ -275,8 +275,8 @@ impl App {
                             }
                         },
                         Ok(None) => {
-                            // todo pass token with ui message
-                            error!("Why token isn't there?");
+                            ui_tx.send(UpdateDownloadCount(0, 0)).await;
+                            ui_tx.send(UpdateUsername("".to_string())).await;
                             Ok(())
                         }
                         Err(e) => {
@@ -290,8 +290,7 @@ impl App {
 
             UiMessage::Logout => {
                 clear().await?;
-                self.ui_tx.send(SwitchScreen(Auth)).await;
-                Ok(vec!())
+                Ok(vec!(UpdateUser, SwitchScreen(Auth)))
             }
 
             UpdateDownloadCount(rq, rm) => {
