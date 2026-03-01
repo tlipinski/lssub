@@ -290,7 +290,8 @@ impl App {
 
             UiMessage::Logout => {
                 clear().await?;
-                Ok(Some(SwitchScreen(Auth)))
+                self.ui_tx.send(SwitchScreen(Auth)).await;
+                Ok(None)
             }
 
             UpdateDownloadCount(rq, rm) => {
