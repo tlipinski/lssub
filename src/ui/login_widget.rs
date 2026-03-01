@@ -27,8 +27,8 @@ enum Editing {
 impl LoginWidget {
     pub fn from() -> Self {
         LoginWidget {
-            username: Input::new("user".into()),
-            password: Input::new("pass".into()),
+            username: Input::new("".into()),
+            password: Input::new("".into()),
             failed: String::new(),
             editing: Editing::Username,
         }

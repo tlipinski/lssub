@@ -276,15 +276,15 @@ impl App {
                     ])
                     .split(area);
 
-                let top = Layout::default()
+                let status = Layout::default()
                     .direction(Direction::Horizontal)
                     .constraints([Constraint::Percentage(85), Constraint::Percentage(15)])
-                    .split(layout[0]);
+                    .split(layout[2]);
 
-                self.search_widget.render(frame, top[0]);
-                self.user_widget.render(frame, top[1]);
+                self.search_widget.render(frame, layout[0]);
                 self.subs_widget.render(frame, layout[1]);
-                self.status_widget.render(frame, layout[2]);
+                self.status_widget.render(frame, status[0]);
+                self.user_widget.render(frame, status[1]);
             }
             Language => {
                 let area = frame.area();
