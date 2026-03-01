@@ -13,7 +13,7 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init, LanguagesUpdated, Login, LoginFailed, UpdateUser, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount, UpdateUsername};
+use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init, LanguagesUpdated, Login, LoginFailed, UpdateUser, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount, UpdateUsername, LimitSubsToId, NoLimitSubsToId};
 use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
@@ -147,7 +147,7 @@ impl App {
 
             FetchSubs(query, languages) => {
                 self.features_tx
-                    .send(SubtitlesQuery { query, languages })
+                    .send(SubtitlesQuery { query, languages, id: None })
                     .await?;
                 Ok(vec!(StartSpinner))
             }
@@ -298,9 +298,28 @@ impl App {
                 self.user_widget.remaining = rm;
                 Ok(vec!())
             }
+
             UpdateUsername(username) => {
                 self.user_widget.username = username;
                 Ok(vec!())
+            }
+
+            LimitSubsToId(id) => {
+                let languages = self.language_widget.languages();
+                let query = self.search_widget.input.value().into();
+                self.features_tx
+                    .send(SubtitlesQuery { query, languages, id: Some(id) })
+                    .await?;
+                Ok(vec!(StartSpinner))
+            }
+
+            NoLimitSubsToId => {
+                let languages = self.language_widget.languages();
+                let query = self.search_widget.input.value().into();
+                self.features_tx
+                    .send(SubtitlesQuery { query, languages, id: None })
+                    .await?;
+                Ok(vec!(StartSpinner))
             }
         }
     }
@@ -374,7 +393,8 @@ impl App {
                     | KeyCode::PageDown
                     | KeyCode::Up
                     | KeyCode::Down
-                    | KeyCode::Enter => self.subs_widget.handle_key_event(key_event),
+                    | KeyCode::Enter
+                    | KeyCode::F(5) => self.subs_widget.handle_key_event(key_event),
                     _ => self.search_widget.handle_key_event(event),
                 },
 

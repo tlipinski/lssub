@@ -4,13 +4,21 @@ use log::{debug, error, info, trace};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub async fn subtitles(filename: &str, languages: Vec<String>) -> Result<SubtitlesResponse> {
+pub async fn subtitles(
+    filename: &str,
+    languages: Vec<String>,
+    id: Option<i64>,
+) -> Result<SubtitlesResponse> {
     let url = format!("{}/subtitles", API_URL);
 
-    let mut params = HashMap::new();
-    params.insert("query", filename);
+    let mut params: HashMap<&'static str, String> = HashMap::new();
+    params.insert("query", filename.to_string());
     let langs = languages.join(",");
-    params.insert("languages", langs.as_str());
+    params.insert("languages", langs);
+
+    if let Some(i) = id {
+        params.insert("id", i.to_string());
+    }
 
     let req = reqwest::Client::new()
         .get(url)
@@ -72,13 +80,14 @@ pub struct Data {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct FeatureDetails {
+    pub feature_id: i64,
     pub movie_name: String,
-    pub year: i32
+    pub year: i32,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct File {
-    pub file_id: i64
+    pub file_id: i64,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -91,5 +100,5 @@ pub struct Attributes {
     pub votes: i32,
     pub upload_date: String,
     pub release: String,
-    pub files: Vec<File>
+    pub files: Vec<File>,
 }

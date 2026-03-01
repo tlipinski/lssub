@@ -14,6 +14,7 @@ use tokio::time::sleep;
 pub struct SubtitlesQuery {
     pub query: String,
     pub languages: Vec<String>,
+    pub id: Option<i64>,
 }
 
 pub async fn subtitles_fetch_task(
@@ -44,10 +45,10 @@ pub async fn subtitles_fetch_task(
 
         if let Some(text) = last {
             if text.query.len() < 3 {
-                tx.send(SubsFetched(SubtitlesResponse { data: vec![] })).await?
+                tx.send(SubsFetched(SubtitlesResponse { data: vec![] }))
+                    .await?
             } else {
-                // let result = subtitles(&text, vec![String::from("pl")]).await;
-                let result = subtitles(&text.query, text.languages).await;
+                let result = subtitles(&text.query, text.languages, text.id).await;
                 match result {
                     Ok(subtitles) => tx.send(SubsFetched(subtitles)).await?,
                     Err(_) => break 'outer Ok(()),

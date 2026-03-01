@@ -1,4 +1,6 @@
 use crate::ui::ui_messages::UiMessage;
+use crate::ui::ui_messages::UiMessage::{DownloadSubs, LimitSubsToId, NoLimitSubsToId};
+use crossterm::event::KeyModifiers;
 use log::info;
 use osb::subtitles::SubtitlesResponse;
 use ratatui::Frame;
@@ -13,11 +15,13 @@ use ratatui::widgets::{Block, Cell, Row, StatefulWidget, Table, TableState};
 #[derive(Debug, Default)]
 pub struct SubsWidget {
     pub subs: Vec<Sub>,
+    pub limiting_to_id: bool,
     pub state: TableState,
 }
 
 #[derive(Debug, Default)]
 pub struct Sub {
+    id: i64,
     file_id: i64,
     title: String,
     year: String,
@@ -30,30 +34,67 @@ pub struct Sub {
 
 impl SubsWidget {
     pub fn handle_key_event(&mut self, key_event: KeyEvent) -> Option<UiMessage> {
-        match key_event.code {
-            KeyCode::Up => {
+        match key_event {
+            KeyEvent {
+                code: KeyCode::Up, ..
+            } => {
                 self.state.select_previous();
                 None
             }
-            KeyCode::Down => {
+
+            KeyEvent {
+                code: KeyCode::Down,
+                ..
+            } => {
                 self.state.select_next();
                 None
             }
-            KeyCode::PageUp => {
+
+            KeyEvent {
+                code: KeyCode::PageUp,
+                ..
+            } => {
                 let next = self.state.selected().map_or(0, |i| i.saturating_sub(10));
                 self.state.select(Some(next));
                 None
             }
-            KeyCode::PageDown => {
+
+            KeyEvent {
+                code: KeyCode::PageDown,
+                ..
+            } => {
                 let next = self.state.selected().map_or(0, |i| i.saturating_add(10));
                 self.state.select(Some(next));
                 None
             }
-            KeyCode::Enter => self
+
+            KeyEvent {
+                code: KeyCode::Enter,
+                ..
+            } => self
                 .state
                 .selected()
                 .and_then(|selection| self.subs.get(selection))
-                .map(|s| UiMessage::DownloadSubs(s.file_id)),
+                .map(|s| DownloadSubs(s.file_id)),
+
+            KeyEvent {
+                code: KeyCode::F(5),
+                ..
+            } => {
+                self.limiting_to_id = !self.limiting_to_id;
+
+                self.state
+                    .selected()
+                    .and_then(|selection| self.subs.get(selection))
+                    .map(|s| {
+                        if (self.limiting_to_id) {
+                            LimitSubsToId(s.id)
+                        } else {
+                            NoLimitSubsToId
+                        }
+                    })
+            }
+
             _ => None,
         }
     }
@@ -63,16 +104,18 @@ impl SubsWidget {
             .data
             .iter()
             .map(|resp| Sub {
+                id: resp.attributes.feature_details.feature_id,
                 file_id: resp.attributes.files.first().unwrap().file_id,
                 title: resp.attributes.release.clone(),
                 year: resp.attributes.feature_details.year.to_string(),
                 language: resp.attributes.language.clone(),
-                upload_date: resp.attributes.upload_date
+                upload_date: resp
+                    .attributes
+                    .upload_date
                     .split('T')
                     .next()
                     .unwrap_or(&resp.attributes.upload_date)
-                    .to_string
-                    (),
+                    .to_string(),
                 downloads: (resp.attributes.download_count + resp.attributes.new_download_count)
                     .to_string(),
                 ai_translated: match resp.attributes.ai_translated {

@@ -4,6 +4,7 @@ use osb::subtitles::SubtitlesResponse;
 use ratatui::crossterm::event::Event;
 use osb::login::Credentials;
 use crate::ui::downloader::Downloaded;
+use crate::ui::subtitles_fetcher::SubtitlesQuery;
 
 pub enum UiMessage {
     Input(Event),
@@ -26,5 +27,7 @@ pub enum UiMessage {
     UpdateUsername(String),
     SwitchScreen(CurrentScreen),
     DownloadSubsFailed(String),
+    LimitSubsToId(i64),
+    NoLimitSubsToId,
     Exit,
 }
