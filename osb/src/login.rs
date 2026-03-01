@@ -5,7 +5,7 @@ use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
 use crate::values::API_URL;
 
-pub async fn login(credentials: &Credentials) -> Result<ApiToken> {
+pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
     info!("Loggin in");
     let url = format!("{}/login", API_URL);
 
@@ -37,7 +37,7 @@ pub async fn login(credentials: &Credentials) -> Result<ApiToken> {
             match json {
                 Ok(login_response) => {
                     debug!("Login response: {login_response:?}");
-                    Ok(ApiToken(login_response.token))
+                    Ok(JwtToken(login_response.token))
                 }
                 Err(e) => {
                     error!("Failed decoding body {:?} {}", e, text_body);
@@ -68,7 +68,7 @@ pub struct Credentials {
 }
 
 #[derive(Debug)]
-pub struct ApiToken(pub SecretBox<String>);
+pub struct JwtToken(pub SecretBox<String>);
 
 #[derive(Serialize, Debug)]
 struct LoginRequest<'a> {

@@ -1,12 +1,12 @@
 use anyhow::Result;
 use libsecret::{Schema, SchemaAttributeType, SchemaFlags};
 use log::{debug, error};
-use osb::login::ApiToken;
+use osb::login::JwtToken;
 use secrecy::{ExposeSecret, SecretBox};
 use std::collections::HashMap;
 use tokio::task;
 
-pub async fn store(api_token: &ApiToken, username: &str) -> Result<()> {
+pub async fn store(api_token: &JwtToken, username: &str) -> Result<()> {
     debug!("Storing api token");
     let token = api_token.0.expose_secret().clone();
     let un = username.to_string();
@@ -34,7 +34,7 @@ pub async fn store(api_token: &ApiToken, username: &str) -> Result<()> {
     Ok(())
 }
 
-pub async fn retrieve() -> Result<Option<ApiToken>> {
+pub async fn retrieve() -> Result<Option<JwtToken>> {
     task::spawn_blocking(move || {
         let schema = create_schema();
         match libsecret::password_lookup_sync(
@@ -42,7 +42,7 @@ pub async fn retrieve() -> Result<Option<ApiToken>> {
             HashMap::new(),
             None::<&gio::Cancellable>,
         ) {
-            Ok(Some(token)) => Ok(Some(ApiToken(SecretBox::from(Box::new(String::from(
+            Ok(Some(token)) => Ok(Some(JwtToken(SecretBox::from(Box::new(String::from(
                 token.as_str(),
             )))))),
             Ok(None) => Ok(None),

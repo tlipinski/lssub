@@ -34,6 +34,7 @@ use std::sync::mpsc;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
+use osb::user_info::get_user_info;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -251,6 +252,20 @@ impl App {
             }
 
             LoginSuccessful => {
+                tokio::spawn(async {
+                    match retrieve().await {
+                        Ok(Some(jwt)) => {
+                            get_user_info(&jwt).await
+                        }
+                        Ok(None) => {
+                            Err(Error::msg("Why token isn't there?"))
+                        }
+                        Err(e) => {
+                            error!("Error retrieving jwt: {e}");
+                            Err(e.into())
+                        }
+                    }
+                });
                 self.status_widget.info = "Login successful".into();
                 Ok(Some(SwitchScreen(Main)))
             }

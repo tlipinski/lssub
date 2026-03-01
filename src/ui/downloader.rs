@@ -2,7 +2,7 @@ use anyhow::Result;
 use log::{debug, error, info};
 use osb::download::download;
 use osb::get_download_link::get_download_link;
-use osb::login::ApiToken;
+use osb::login::JwtToken;
 use secrecy::ExposeSecret;
 use std::ffi::{OsStr, OsString};
 use std::fs;
@@ -23,7 +23,7 @@ impl Downloader {
         }
     }
 
-    pub async fn download(&self, token_opt: Option<ApiToken>, file_id: i64) -> Result<Downloaded> {
+    pub async fn download(&self, token_opt: Option<JwtToken>, file_id: i64) -> Result<Downloaded> {
         // todo
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 

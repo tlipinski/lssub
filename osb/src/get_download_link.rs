@@ -1,4 +1,4 @@
-use crate::login::ApiToken;
+use crate::login::JwtToken;
 use crate::values::{API_URL, VIP_API_URL, KEY, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{error, info, trace};
@@ -6,7 +6,7 @@ use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 
 pub async fn get_download_link(
-    token_opt: Option<ApiToken>,
+    token_opt: Option<JwtToken>,
     file_id: i64,
 ) -> Result<DownloadLinkResponse> {
     let url = if let Some(_) = token_opt {
