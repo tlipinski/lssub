@@ -18,7 +18,7 @@ pub struct UserWidget {
 impl UserWidget {
     pub fn from() -> Self {
         UserWidget {
-            username: "aaa".into(),
+            username: "".into(),
             requests: 0,
             remaining: 0,
         }

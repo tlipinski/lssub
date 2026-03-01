@@ -12,7 +12,7 @@ pub enum UiMessage {
     LanguagesUpdated(Vec<String>),
     Login(Credentials),
     LoginFailed(String),
-    LoginSuccessful,
+    UpdateUser,
     Logout,
     GoToLogin,
     QueryUpdated(String),

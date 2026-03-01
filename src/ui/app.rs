@@ -13,11 +13,7 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{
-    DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init,
-    LanguagesUpdated, Login, LoginFailed, LoginSuccessful, QueryUpdated, SpinnerUpdate,
-    StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount, UpdateUsername,
-};
+use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init, LanguagesUpdated, Login, LoginFailed, UpdateUser, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount, UpdateUsername};
 use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
@@ -30,9 +26,11 @@ use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::prelude::StatefulWidget;
 use ratatui::{DefaultTerminal, Frame};
+use std::collections::VecDeque;
 use std::ops::Deref;
 use std::path::Path;
 use std::sync::mpsc;
+use gio::prelude::DBusInterfaceSkeletonExt;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -88,23 +86,21 @@ impl App {
             exit: false,
         };
 
-        let mut message_opt = Some(Init);
+        let mut messages = VecDeque::from([Init, UpdateUser]);
 
         while !app.exit {
-            while let Some(msg) = message_opt {
-                let result = app.update(msg).await;
-                match result {
-                    Ok(r) => message_opt = r,
+            while let Some(msg) = messages.pop_front() {
+                match app.update(msg).await {
+                    Ok(next) => messages.extend(next),
                     Err(e) => {
                         error!("Error while updating UI: {e}");
-                        message_opt = None
                     }
-                }
+                };
             }
 
             terminal.draw(|frame| app.draw(frame))?;
 
-            message_opt = ui_rx.recv().await;
+            messages.extend(ui_rx.recv().await);
         }
 
         shutdown_tx.send(())?;
@@ -112,19 +108,25 @@ impl App {
         Ok(())
     }
 
-    async fn update(&mut self, ui_message: UiMessage) -> Result<Option<UiMessage>> {
+    async fn update(&mut self, ui_message: UiMessage) -> Result<Vec<UiMessage>> {
         match ui_message {
-            Input(event) => Ok(self.handle_key_event(event)),
+            Input(event) => {
+                if let Some(m) = self.handle_key_event(event) {
+                    Ok(vec!(m))
+                } else {
+                    Ok(vec!())
+                }
+            }
 
             SubsFetched(subtitles) => {
                 self.subs_widget.update_subtitles(&subtitles);
                 self.status_widget.info = format!("{} results", subtitles.data.len());
-                Ok(Some(StopSpinner))
+                Ok(vec!(StopSpinner))
             }
 
             SpinnerUpdate(chr) => {
                 self.status_widget.spin(chr);
-                Ok(None)
+                Ok(vec![])
             }
 
             LanguagesUpdated(languages) => {
@@ -135,38 +137,38 @@ impl App {
                     updated.languages = languages.clone();
                     updated
                 });
-                Ok(Some(FetchSubs(query, languages)))
+                Ok(vec!(FetchSubs(query, languages)))
             }
 
             QueryUpdated(query) => {
                 let languages = self.language_widget.languages();
-                Ok(Some(FetchSubs(query, languages)))
+                Ok(vec!(FetchSubs(query, languages)))
             }
 
             FetchSubs(query, languages) => {
                 self.features_tx
                     .send(SubtitlesQuery { query, languages })
                     .await?;
-                Ok(Some(StartSpinner))
+                Ok(vec!(StartSpinner))
             }
 
             StartSpinner => {
                 self.status_widget.spinning = true;
-                Ok(None)
+                Ok(vec!())
             }
 
             StopSpinner => {
                 self.status_widget.spinning = false;
-                Ok(None)
+                Ok(vec!())
             }
 
             Init => {
                 let query: String = self.search_widget.input.value().into();
                 if (!query.is_empty()) {
                     let languages = self.language_widget.languages();
-                    Ok(Some(FetchSubs(query, languages)))
+                    Ok(vec!(FetchSubs(query, languages)))
                 } else {
-                    Ok(None)
+                    Ok(vec!())
                 }
             }
 
@@ -192,26 +194,26 @@ impl App {
                     }
                 });
 
-                Ok(Some(StartSpinner))
+                Ok(vec!(StartSpinner))
             }
 
             DownloadedSubs(downloaded) => {
                 self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
                 self.user_widget.requests = downloaded.requests;
                 self.user_widget.remaining = downloaded.remaining;
-                Ok(Some(StopSpinner))
+                Ok(vec!(StopSpinner))
             }
 
             SwitchScreen(screen) => {
                 self.current_screen = screen;
-                Ok(None)
+                Ok(vec!())
             }
 
             GoToLogin => {
                 let result = retrieve().await;
                 match result {
-                    Ok(Some(token)) => Ok(Some(SwitchScreen(CurrentScreen::Logout))),
-                    Ok(None) => Ok(Some(SwitchScreen(Auth))),
+                    Ok(Some(token)) => Ok(vec!(SwitchScreen(CurrentScreen::Logout))),
+                    Ok(None) => Ok(vec!(SwitchScreen(Auth))),
                     Err(e) => Err(e),
                 }
             }
@@ -221,7 +223,7 @@ impl App {
                     match login(&credentials).await {
                         Ok(api_token) => {
                             store(&api_token, &credentials.username).await;
-                            LoginSuccessful
+                            UpdateUser
                         }
                         Err(e) => LoginFailed(e.to_string()),
                     }
@@ -229,7 +231,7 @@ impl App {
                 .await;
 
                 match result {
-                    Ok(msg) => Ok(Some(msg)),
+                    Ok(msg) => Ok(vec!(msg)),
                     Err(e) => {
                         error!("Error logging in: {}", e);
                         Err(e.into())
@@ -239,22 +241,20 @@ impl App {
 
             LoginFailed(reason) => {
                 self.login_widget.failed = reason;
-                Ok(None)
+                Ok(vec!())
             }
 
             DownloadSubsFailed(error) => {
                 self.status_widget.info = format!("Error: {:?}", error);
-                Ok(Some(StopSpinner))
+                Ok(vec!(StopSpinner))
             }
 
             Exit => {
                 self.exit = true;
-                Ok(None)
+                Ok(vec!())
             }
 
-            LoginSuccessful => {
-                self.status_widget.info = "Login successful".into();
-
+            UpdateUser => {
                 let ui_tx = self.ui_tx.clone();
                 tokio::spawn(async move {
                     match retrieve().await {
@@ -285,23 +285,23 @@ impl App {
                         }
                     }
                 });
-                Ok(Some(SwitchScreen(Main)))
+                Ok(vec!(SwitchScreen(Main)))
             }
 
             UiMessage::Logout => {
                 clear().await?;
                 self.ui_tx.send(SwitchScreen(Auth)).await;
-                Ok(None)
+                Ok(vec!())
             }
 
             UpdateDownloadCount(rq, rm) => {
                 self.user_widget.requests = rq;
                 self.user_widget.remaining = rm;
-                Ok(None)
+                Ok(vec!())
             }
             UpdateUsername(username) => {
                 self.user_widget.username = username;
-                Ok(None)
+                Ok(vec!())
             }
         }
     }
