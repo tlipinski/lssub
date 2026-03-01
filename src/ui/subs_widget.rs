@@ -1,4 +1,3 @@
-use gio::glib::Regex;
 use crate::ui::ui_messages::UiMessage;
 use log::info;
 use osb::subtitles::SubtitlesResponse;
@@ -68,7 +67,12 @@ impl SubsWidget {
                 title: resp.attributes.release.clone(),
                 year: resp.attributes.feature_details.year.to_string(),
                 language: resp.attributes.language.clone(),
-                upload_date: resp.attributes.upload_date.clone(),
+                upload_date: resp.attributes.upload_date
+                    .split('T')
+                    .next()
+                    .unwrap_or(&resp.attributes.upload_date)
+                    .to_string
+                    (),
                 downloads: (resp.attributes.download_count + resp.attributes.new_download_count)
                     .to_string(),
                 ai_translated: match resp.attributes.ai_translated {
