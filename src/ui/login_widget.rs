@@ -22,6 +22,7 @@ pub struct LoginWidget {
 enum Editing {
     Username,
     Password,
+    None,
 }
 
 impl LoginWidget {
@@ -69,6 +70,7 @@ impl LoginWidget {
             Editing::Password => {
                 pass_block = pass_block.border_set(border::THICK);
             }
+            Editing::None => {}
         }
 
         let buttons_block = Block::default().title(
@@ -108,6 +110,7 @@ impl LoginWidget {
                 layout[1].x + (self.password.visual_cursor() + 1) as u16,
                 layout[1].y + 1,
             )),
+            Editing::None => {}
         };
     }
 
@@ -130,6 +133,7 @@ impl LoginWidget {
                     match self.editing {
                         Editing::Username => self.editing = Editing::Password,
                         Editing::Password => self.editing = Editing::Username,
+                        Editing::None => self.editing = Editing::None,
                     }
                     None
                 }
@@ -140,6 +144,9 @@ impl LoginWidget {
                         }
                         Editing::Password => {
                             self.password.handle_event(&event);
+                        }
+                        Editing::None => {
+                            
                         }
                     }
                     None
