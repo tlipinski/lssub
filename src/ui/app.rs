@@ -4,12 +4,12 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
-    Exit, FetchSubs, GoToLogin, Init, LanguagesUpdated, Login, LoginFailed, Logout, QueryUpdated,
-    SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount, UpdateUser,
-    UpdateUsername,
+    Exit, FetchSubs, SwitchToAccountScreen, Init, LanguagesUpdated, Login, LoginFailed, Logout,
+    QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount,
+    UpdateUser, UpdateUsername,
 };
 use crate::ui::app::Action::{Input, SubsFetched};
-use crate::ui::app::CurrentScreen::{Auth, Language, Main};
+use crate::ui::app::CurrentScreen::{Account, Auth, Language, Main};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
@@ -220,12 +220,15 @@ impl App {
                 Ok(vec![])
             }
 
-            GoToLogin => {
+            SwitchToAccountScreen => {
                 let result = retrieve().await;
                 match result {
-                    Ok(Some(token)) => Ok(vec![SwitchScreen(CurrentScreen::Logout)]),
+                    Ok(Some(token)) => Ok(vec![SwitchScreen(Account)]),
                     Ok(None) => Ok(vec![SwitchScreen(Auth)]),
-                    Err(e) => Err(e),
+                    Err(e) => {
+                        error!("Failed to retrieve token: {e}");
+                        Ok(vec![])
+                    }
                 }
             }
 
@@ -239,7 +242,7 @@ impl App {
                         Err(e) => LoginFailed(e.to_string()),
                     }
                 })
-                    .await;
+                .await;
 
                 match result {
                     Ok(msg) => Ok(vec![msg]),
@@ -365,9 +368,12 @@ impl App {
 
                 let main_nav = {
                     Paragraph::new(Line::from(vec![
-                        Span::from("F2:").bold(), Span::from(" Languages | "),
-                        Span::from("F10:").bold(), Span::from(" Exit | "),
-                        Span::from("F12:").bold(), Span::from(" Account"),
+                        Span::from("F2:").bold(),
+                        Span::from(" Languages | "),
+                        Span::from("F10:").bold(),
+                        Span::from(" Exit | "),
+                        Span::from("F12:").bold(),
+                        Span::from(" Account"),
                     ]))
                     .block(Block::default().borders(Borders::ALL))
                 };
@@ -399,7 +405,7 @@ impl App {
                 self.login_widget.render(frame, area);
             }
 
-            CurrentScreen::Logout => {
+            CurrentScreen::Account => {
                 let area = frame.area();
 
                 let right = Layout::default()
@@ -418,7 +424,7 @@ impl App {
                 Main => match key_event.code {
                     KeyCode::F(10) => Some(Exit),
                     KeyCode::F(2) => Some(SwitchScreen(Language)),
-                    KeyCode::F(12) => Some(GoToLogin),
+                    KeyCode::F(12) => Some(SwitchToAccountScreen),
                     KeyCode::PageUp
                     | KeyCode::PageDown
                     | KeyCode::Up
@@ -441,7 +447,7 @@ impl App {
                     _ => self.login_widget.handle_key_event(event),
                 },
 
-                CurrentScreen::Logout => match key_event.code {
+                CurrentScreen::Account => match key_event.code {
                     KeyCode::F(10) => Some(Exit),
                     QUIT_KEY => Some(SwitchScreen(Main)),
                     _ => self.account_widget.handle_key_event(event),
@@ -459,5 +465,5 @@ pub enum CurrentScreen {
     Main,
     Language,
     Auth,
-    Logout,
+    Account,
 }

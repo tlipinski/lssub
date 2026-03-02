@@ -15,7 +15,7 @@ pub enum Action {
     LoginFailed(String),
     UpdateUser,
     Logout,
-    GoToLogin,
+    SwitchToAccountScreen,
     QueryUpdated(String),
     FetchSubs(String, Vec<String>),
     StartSpinner,
