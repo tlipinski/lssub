@@ -5,7 +5,7 @@ use crate::ui::app::Action::{Input, SubsFetched};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
-use crate::ui::logged_in_widget::LoggedInWidget;
+use crate::ui::account_widget::AccountWidget;
 use crate::ui::login_widget::LoginWidget;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::spinner_task;
@@ -46,7 +46,7 @@ pub struct App {
     language_widget: LanguageWidget,
     status_widget: StatusWidget,
     login_widget: LoginWidget,
-    logged_in_widget: LoggedInWidget,
+    account_widget: AccountWidget,
     ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
     downloader: Downloader,
@@ -79,7 +79,7 @@ impl App {
             language_widget: LanguageWidget::from(languages),
             status_widget: StatusWidget::from("".into()),
             login_widget: LoginWidget::from(),
-            logged_in_widget: LoggedInWidget::from(),
+            account_widget: AccountWidget::from(),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
             ui_tx: ui_tx.clone(),
             features_tx,
@@ -377,7 +377,7 @@ impl App {
                     .constraints([Constraint::Length(3), Constraint::Length(3)])
                     .split(area);
 
-                self.logged_in_widget.render(frame, area);
+                self.account_widget.render(frame, area);
             }
         }
     }
@@ -414,7 +414,7 @@ impl App {
                 CurrentScreen::Logout => match key_event.code {
                     KeyCode::F(10) => Some(Exit),
                     QUIT_KEY => Some(SwitchScreen(Main)),
-                    _ => self.logged_in_widget.handle_key_event(event),
+                    _ => self.account_widget.handle_key_event(event),
                 },
             }
         } else {

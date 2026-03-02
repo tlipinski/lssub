@@ -9,5 +9,5 @@ mod subtitles_fetcher;
 mod actions;
 mod status_widget;
 mod login_widget;
-mod logged_in_widget;
+mod account_widget;
 mod user_widget;

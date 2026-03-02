@@ -1,3 +1,5 @@
+use crossterm::event::KeyModifiers;
+use log::info;
 use crate::ui::actions::Action;
 use osb::login::Credentials;
 use ratatui::Frame;
@@ -11,13 +13,15 @@ use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 
 #[derive(Debug)]
-pub struct LoggedInWidget {
+pub struct AccountWidget {
     pub username: String,
 }
 
-impl LoggedInWidget {
+impl AccountWidget {
     pub fn from() -> Self {
-        LoggedInWidget { username: "...".into() }
+        AccountWidget {
+            username: "".into(),
+        }
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
@@ -42,14 +46,15 @@ impl LoggedInWidget {
         let buttons_block = Block::default().title(
             Line::from(vec![
                 Span::from("Logout").bold(),
-                Span::from(" [Enter]  "),
+                Span::from(" [F4]  "),
                 Span::from("Cancel").bold(),
                 Span::from(" [Esc]"),
             ])
             .right_aligned(),
         );
 
-        let already_logged = Paragraph::new("Already logged in as: ...").block(Block::bordered());
+        let already_logged =
+            Paragraph::new(format!("Logged in as: {}", self.username)).block(Block::bordered());
 
         frame.render_widget(block, area);
         frame.render_widget(already_logged, layout[0]);
@@ -57,9 +62,13 @@ impl LoggedInWidget {
     }
 
     pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+        info!("key event: {:?}", event);
         if let Event::Key(key_event) = event {
-            match key_event.code {
-                KeyCode::Enter => Some(Action::Logout),
+            match key_event {
+                KeyEvent {
+                    code: KeyCode::F(4),
+                    ..
+                } => Some(Action::Logout),
                 _ => None,
             }
         } else {
