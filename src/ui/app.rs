@@ -1,22 +1,28 @@
 use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
-use crate::ui::app::CurrentScreen::{Auth, Language, Main};
+use crate::ui::account_widget::AccountWidget;
+use crate::ui::actions::Action;
+use crate::ui::actions::Action::{
+    DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
+    Exit, FetchSubs, GoToLogin, Init, LanguagesUpdated, Login, LoginFailed, Logout, QueryUpdated,
+    SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount, UpdateUser,
+    UpdateUsername,
+};
 use crate::ui::app::Action::{Input, SubsFetched};
+use crate::ui::app::CurrentScreen::{Auth, Language, Main};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
-use crate::ui::account_widget::AccountWidget;
 use crate::ui::login_widget::LoginWidget;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::spinner_task;
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
-use crate::ui::actions::Action;
-use crate::ui::actions::Action::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init, LanguagesUpdated, Login, LoginFailed, UpdateUser, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount, UpdateUsername, EnabledLimitSubsToId, DisabledLimitSubsToId, Logout};
 use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
+use gio::prelude::DBusInterfaceSkeletonExt;
 use log::{error, info};
 use osb::get_download_link::get_download_link;
 use osb::login::login;
@@ -24,13 +30,14 @@ use osb::user_info;
 use osb::user_info::get_user_info;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
-use ratatui::prelude::StatefulWidget;
+use ratatui::prelude::{StatefulWidget, Stylize};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::{DefaultTerminal, Frame};
 use std::collections::VecDeque;
 use std::ops::Deref;
 use std::path::Path;
 use std::sync::mpsc;
-use gio::prelude::DBusInterfaceSkeletonExt;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -112,16 +119,16 @@ impl App {
         match action {
             Input(event) => {
                 if let Some(m) = self.handle_key_event(event) {
-                    Ok(vec!(m))
+                    Ok(vec![m])
                 } else {
-                    Ok(vec!())
+                    Ok(vec![])
                 }
             }
 
             SubsFetched(subtitles) => {
                 self.subs_widget.update_subtitles(&subtitles);
                 self.status_widget.info = format!("{} results", subtitles.data.len());
-                Ok(vec!(StopSpinner))
+                Ok(vec![StopSpinner])
             }
 
             SpinnerUpdate(chr) => {
@@ -137,38 +144,42 @@ impl App {
                     updated.languages = languages.clone();
                     updated
                 });
-                Ok(vec!(FetchSubs(query, languages)))
+                Ok(vec![FetchSubs(query, languages)])
             }
 
             QueryUpdated(query) => {
                 let languages = self.language_widget.languages();
-                Ok(vec!(FetchSubs(query, languages)))
+                Ok(vec![FetchSubs(query, languages)])
             }
 
             FetchSubs(query, languages) => {
                 self.features_tx
-                    .send(SubtitlesQuery { query, languages, id: None })
+                    .send(SubtitlesQuery {
+                        query,
+                        languages,
+                        id: None,
+                    })
                     .await?;
-                Ok(vec!(StartSpinner))
+                Ok(vec![StartSpinner])
             }
 
             StartSpinner => {
                 self.status_widget.spinning = true;
-                Ok(vec!())
+                Ok(vec![])
             }
 
             StopSpinner => {
                 self.status_widget.spinning = false;
-                Ok(vec!())
+                Ok(vec![])
             }
 
             Init => {
                 let query: String = self.search_widget.input.value().into();
                 if (!query.is_empty()) {
                     let languages = self.language_widget.languages();
-                    Ok(vec!(FetchSubs(query, languages)))
+                    Ok(vec![FetchSubs(query, languages)])
                 } else {
-                    Ok(vec!())
+                    Ok(vec![])
                 }
             }
 
@@ -194,26 +205,26 @@ impl App {
                     }
                 });
 
-                Ok(vec!(StartSpinner))
+                Ok(vec![StartSpinner])
             }
 
             DownloadedSubs(downloaded) => {
                 self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
                 self.user_widget.requests = downloaded.requests;
                 self.user_widget.remaining = downloaded.remaining;
-                Ok(vec!(StopSpinner))
+                Ok(vec![StopSpinner])
             }
 
             SwitchScreen(screen) => {
                 self.current_screen = screen;
-                Ok(vec!())
+                Ok(vec![])
             }
 
             GoToLogin => {
                 let result = retrieve().await;
                 match result {
-                    Ok(Some(token)) => Ok(vec!(SwitchScreen(CurrentScreen::Logout))),
-                    Ok(None) => Ok(vec!(SwitchScreen(Auth))),
+                    Ok(Some(token)) => Ok(vec![SwitchScreen(CurrentScreen::Logout)]),
+                    Ok(None) => Ok(vec![SwitchScreen(Auth)]),
                     Err(e) => Err(e),
                 }
             }
@@ -231,7 +242,7 @@ impl App {
                     .await;
 
                 match result {
-                    Ok(msg) => Ok(vec!(msg)),
+                    Ok(msg) => Ok(vec![msg]),
                     Err(e) => {
                         error!("Error logging in: {}", e);
                         Err(e.into())
@@ -241,17 +252,17 @@ impl App {
 
             LoginFailed(reason) => {
                 self.login_widget.failed = reason;
-                Ok(vec!())
+                Ok(vec![])
             }
 
             DownloadSubsFailed(error) => {
                 self.status_widget.info = format!("Error: {:?}", error);
-                Ok(vec!(StopSpinner))
+                Ok(vec![StopSpinner])
             }
 
             Exit => {
                 self.exit = true;
-                Ok(vec!())
+                Ok(vec![])
             }
 
             UpdateUser => {
@@ -285,41 +296,49 @@ impl App {
                         }
                     }
                 });
-                Ok(vec!(SwitchScreen(Main)))
+                Ok(vec![SwitchScreen(Main)])
             }
 
             Logout => {
                 clear().await?;
-                Ok(vec!(UpdateUser, SwitchScreen(Auth)))
+                Ok(vec![UpdateUser, SwitchScreen(Auth)])
             }
 
             UpdateDownloadCount(rq, rm) => {
                 self.user_widget.requests = rq;
                 self.user_widget.remaining = rm;
-                Ok(vec!())
+                Ok(vec![])
             }
 
             UpdateUsername(username) => {
                 self.user_widget.username = username;
-                Ok(vec!())
+                Ok(vec![])
             }
 
             EnabledLimitSubsToId(id) => {
                 let languages = self.language_widget.languages();
                 let query = self.search_widget.input.value().into();
                 self.features_tx
-                    .send(SubtitlesQuery { query, languages, id: Some(id) })
+                    .send(SubtitlesQuery {
+                        query,
+                        languages,
+                        id: Some(id),
+                    })
                     .await?;
-                Ok(vec!(StartSpinner))
+                Ok(vec![StartSpinner])
             }
 
             DisabledLimitSubsToId => {
                 let languages = self.language_widget.languages();
                 let query = self.search_widget.input.value().into();
                 self.features_tx
-                    .send(SubtitlesQuery { query, languages, id: None })
+                    .send(SubtitlesQuery {
+                        query,
+                        languages,
+                        id: None,
+                    })
                     .await?;
-                Ok(vec!(StartSpinner))
+                Ok(vec![StartSpinner])
             }
         }
     }
@@ -335,6 +354,7 @@ impl App {
                         Constraint::Length(3),
                         Constraint::Min(10),
                         Constraint::Length(3),
+                        Constraint::Length(3),
                     ])
                     .split(area);
 
@@ -343,10 +363,20 @@ impl App {
                     .constraints([Constraint::Fill(1), Constraint::Length(50)])
                     .split(layout[2]);
 
+                let main_nav = {
+                    Paragraph::new(Line::from(vec![
+                        Span::from("F2:").bold(), Span::from(" Languages | "),
+                        Span::from("F10:").bold(), Span::from(" Exit | "),
+                        Span::from("F12:").bold(), Span::from(" Account"),
+                    ]))
+                    .block(Block::default().borders(Borders::ALL))
+                };
+
                 self.search_widget.render(frame, layout[0]);
                 self.subs_widget.render(frame, layout[1]);
                 self.status_widget.render(frame, status[0]);
                 self.user_widget.render(frame, status[1]);
+                frame.render_widget(main_nav, layout[3]);
             }
             Language => {
                 let area = frame.area();
