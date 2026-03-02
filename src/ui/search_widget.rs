@@ -1,5 +1,5 @@
 use crate::ui::app::QUIT_KEY;
-use crate::ui::ui_messages::UiMessage;
+use crate::ui::actions::Action;
 use anyhow::Result;
 use gio::glib::random_int_range;
 use ratatui::Frame;
@@ -42,11 +42,11 @@ impl SearchWidget {
         frame.render_widget(view, area);
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if let Some(state_changed) = self.input.handle_event(&event)
             && state_changed.value
         {
-            return Some(UiMessage::QueryUpdated(self.input.value().into()));
+            return Some(Action::QueryUpdated(self.input.value().into()));
         }
         None
     }

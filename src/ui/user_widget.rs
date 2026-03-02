@@ -1,4 +1,4 @@
-use crate::ui::ui_messages::UiMessage;
+use crate::ui::actions::Action;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};

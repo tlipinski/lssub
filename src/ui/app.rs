@@ -1,7 +1,7 @@
 use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::app::CurrentScreen::{Auth, Language, Main};
-use crate::ui::app::UiMessage::{Input, SubsFetched};
+use crate::ui::app::Action::{Input, SubsFetched};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
@@ -12,8 +12,8 @@ use crate::ui::spinner::spinner_task;
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_widget::SubsWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
-use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init, LanguagesUpdated, Login, LoginFailed, UpdateUser, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount, UpdateUsername, LimitSubsToId, NoLimitSubsToId};
+use crate::ui::actions::Action;
+use crate::ui::actions::Action::{DownloadSubs, DownloadSubsFailed, DownloadedSubs, Exit, FetchSubs, GoToLogin, Init, LanguagesUpdated, Login, LoginFailed, UpdateUser, QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount, UpdateUsername, EnabledLimitSubsToId, DisabledLimitSubsToId, Logout};
 use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
@@ -47,7 +47,7 @@ pub struct App {
     status_widget: StatusWidget,
     login_widget: LoginWidget,
     logged_in_widget: LoggedInWidget,
-    ui_tx: Sender<UiMessage>,
+    ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
     downloader: Downloader,
     exit: bool,
@@ -59,7 +59,7 @@ impl App {
         base_path: &Path,
         file_name: Option<&str>,
     ) -> Result<()> {
-        let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<UiMessage>(100);
+        let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
         let (features_tx, features_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
@@ -108,8 +108,8 @@ impl App {
         Ok(())
     }
 
-    async fn update(&mut self, ui_message: UiMessage) -> Result<Vec<UiMessage>> {
-        match ui_message {
+    async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
+        match action {
             Input(event) => {
                 if let Some(m) = self.handle_key_event(event) {
                     Ok(vec!(m))
@@ -288,7 +288,7 @@ impl App {
                 Ok(vec!(SwitchScreen(Main)))
             }
 
-            UiMessage::Logout => {
+            Logout => {
                 clear().await?;
                 Ok(vec!(UpdateUser, SwitchScreen(Auth)))
             }
@@ -304,7 +304,7 @@ impl App {
                 Ok(vec!())
             }
 
-            LimitSubsToId(id) => {
+            EnabledLimitSubsToId(id) => {
                 let languages = self.language_widget.languages();
                 let query = self.search_widget.input.value().into();
                 self.features_tx
@@ -313,7 +313,7 @@ impl App {
                 Ok(vec!(StartSpinner))
             }
 
-            NoLimitSubsToId => {
+            DisabledLimitSubsToId => {
                 let languages = self.language_widget.languages();
                 let query = self.search_widget.input.value().into();
                 self.features_tx
@@ -382,7 +382,7 @@ impl App {
         }
     }
 
-    fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
+    fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match self.current_screen {
                 Main => match key_event.code {

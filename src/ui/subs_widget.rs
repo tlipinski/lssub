@@ -1,5 +1,5 @@
-use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::{DownloadSubs, LimitSubsToId, NoLimitSubsToId};
+use crate::ui::actions::Action;
+use crate::ui::actions::Action::{DownloadSubs, EnabledLimitSubsToId, DisabledLimitSubsToId};
 use crossterm::event::KeyModifiers;
 use log::info;
 use osb::subtitles::SubtitlesResponse;
@@ -33,7 +33,7 @@ pub struct Sub {
 }
 
 impl SubsWidget {
-    pub fn handle_key_event(&mut self, key_event: KeyEvent) -> Option<UiMessage> {
+    pub fn handle_key_event(&mut self, key_event: KeyEvent) -> Option<Action> {
         match key_event {
             KeyEvent {
                 code: KeyCode::Up, ..
@@ -88,9 +88,9 @@ impl SubsWidget {
                     .and_then(|selection| self.subs.get(selection))
                     .map(|s| {
                         if (self.limiting_to_id) {
-                            LimitSubsToId(s.id)
+                            EnabledLimitSubsToId(s.id)
                         } else {
-                            NoLimitSubsToId
+                            DisabledLimitSubsToId
                         }
                     })
             }

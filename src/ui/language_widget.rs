@@ -1,4 +1,4 @@
-use crate::ui::ui_messages::UiMessage;
+use crate::ui::actions::Action;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::Rect;
@@ -41,10 +41,10 @@ impl LanguageWidget {
         v.iter().map(|&x| String::from(x)).collect::<Vec<String>>()
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                KeyCode::Enter => Some(UiMessage::LanguagesUpdated(self.languages())),
+                KeyCode::Enter => Some(Action::LanguagesUpdated(self.languages())),
                 _ => {
                     self.input.handle_event(&event);
                     None

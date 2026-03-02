@@ -1,4 +1,4 @@
-use crate::ui::ui_messages::UiMessage;
+use crate::ui::actions::Action;
 use osb::login::Credentials;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
@@ -56,10 +56,10 @@ impl LoggedInWidget {
         frame.render_widget(buttons_block, layout[1]);
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                KeyCode::Enter => Some(UiMessage::Logout),
+                KeyCode::Enter => Some(Action::Logout),
                 _ => None,
             }
         } else {

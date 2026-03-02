@@ -6,7 +6,7 @@ use osb::login::Credentials;
 use crate::ui::downloader::Downloaded;
 use crate::ui::subtitles_fetcher::SubtitlesQuery;
 
-pub enum UiMessage {
+pub enum Action {
     Input(Event),
     SubsFetched(SubtitlesResponse),
     SpinnerUpdate(char),
@@ -27,7 +27,7 @@ pub enum UiMessage {
     UpdateUsername(String),
     SwitchScreen(CurrentScreen),
     DownloadSubsFailed(String),
-    LimitSubsToId(i64),
-    NoLimitSubsToId,
+    EnabledLimitSubsToId(i64),
+    DisabledLimitSubsToId,
     Exit,
 }

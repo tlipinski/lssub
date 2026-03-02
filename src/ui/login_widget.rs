@@ -1,4 +1,4 @@
-use crate::ui::ui_messages::UiMessage;
+use crate::ui::actions::Action;
 use osb::login::Credentials;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
@@ -111,10 +111,10 @@ impl LoginWidget {
         };
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<UiMessage> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                KeyCode::Enter => Some(UiMessage::Login(Credentials {
+                KeyCode::Enter => Some(Action::Login(Credentials {
                     username: self.username.value().to_owned(),
                     password: self.password.value().to_owned(),
                 })),

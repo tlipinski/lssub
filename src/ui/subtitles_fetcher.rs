@@ -1,5 +1,5 @@
-use crate::ui::ui_messages::UiMessage;
-use crate::ui::ui_messages::UiMessage::SubsFetched;
+use crate::ui::actions::Action;
+use crate::ui::actions::Action::SubsFetched;
 use anyhow::{Context, Result, bail};
 use log::{debug, error, info};
 use osb::features::{FeaturesResponse, features};
@@ -19,7 +19,7 @@ pub struct SubtitlesQuery {
 
 pub async fn subtitles_fetch_task(
     mut rx: Receiver<SubtitlesQuery>,
-    tx: Sender<UiMessage>,
+    tx: Sender<Action>,
 ) -> Result<()> {
     'outer: loop {
         sleep(Duration::from_millis(1000)).await;
@@ -30,7 +30,6 @@ pub async fn subtitles_fetch_task(
         'debouncing: loop {
             match rx.try_recv() {
                 Ok(ev) => {
-                    // debug!("Debouncing: {}", ev);
                     last = Some(ev)
                 }
 

@@ -1,9 +1,9 @@
-use crate::ui::ui_messages::UiMessage;
+use crate::ui::actions::Action;
 use tokio::sync::broadcast::Receiver;
 use tokio::sync::mpsc::Sender;
 use tokio::time::{Duration, sleep};
 
-pub async fn spinner_task(tx: Sender<UiMessage>) -> anyhow::Result<()> {
+pub async fn spinner_task(tx: Sender<Action>) -> anyhow::Result<()> {
     let spinner = ['|', '/', '-', '\\'];
     let mut pos = 0;
     loop {
@@ -11,6 +11,6 @@ pub async fn spinner_task(tx: Sender<UiMessage>) -> anyhow::Result<()> {
         pos += 1;
         pos %= spinner.len();
         let ch = spinner[pos];
-        tx.send(UiMessage::SpinnerUpdate(ch)).await?
+        tx.send(Action::SpinnerUpdate(ch)).await?
     }
 }

@@ -1,5 +1,5 @@
 use crate::ui::app::QUIT_KEY;
-use crate::ui::ui_messages::UiMessage;
+use crate::ui::actions::Action;
 use anyhow::Result;
 use gio::glib::random_int_range;
 use ratatui::buffer::Buffer;

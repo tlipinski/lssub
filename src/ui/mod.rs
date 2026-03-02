@@ -6,7 +6,7 @@ mod search_widget;
 mod spinner;
 mod subs_widget;
 mod subtitles_fetcher;
-mod ui_messages;
+mod actions;
 mod status_widget;
 mod login_widget;
 mod logged_in_widget;
