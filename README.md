@@ -1,4 +1,4 @@
-# subster
+# lssub
 
 A Rust CLI and TUI application for interacting with the OpenSubtitles API.
 
@@ -51,15 +51,15 @@ Note: This README documents what is present in the repository without inventing 
     - `export OSBK=YOUR_OPENSUBTITLES_API_KEY`
 
 - Runtime configuration file:
-  - Path: `~/.config/subster/config.toml` (XDG base directories with prefix `subster`).
+  - Path: `~/.config/lssub/config.toml` (XDG base directories with prefix `lssub`).
   - Current schema: The `Config` struct in the code is empty, but the application tries to read and parse this file on startup. Create an empty file to avoid errors until configuration fields are defined.
   - Minimal setup:
-    - `mkdir -p ~/.config/subster`
-    - `: > ~/.config/subster/config.toml`  (an empty file)
+    - `mkdir -p ~/.config/lssub`
+    - `: > ~/.config/lssub/config.toml`  (an empty file)
   - TODO: Document configuration fields once they are introduced.
 
 - Secrets storage:
-  - After a successful login, the API token is stored in the system Secret Service using schema `com.subster` with `username` attribute. The token is later retrieved for authenticated operations (e.g., `userinfo`).
+  - After a successful login, the API token is stored in the system Secret Service using schema `com.lssub` with `username` attribute. The token is later retrieved for authenticated operations (e.g., `userinfo`).
 
 - Logging:
   - Logs are written to `logs.txt` in the repository’s working directory at runtime, with log level set to `Debug` by default in code. The setup currently does not honor `RUST_LOG` since the logger is configured programmatically.
@@ -76,11 +76,11 @@ Optionally install the binary:
 
 
 ## Usage
-All commands are subcommands of the `subster` binary.
+All commands are subcommands of the `lssub` binary.
 
 - Show help and version:
   - `cargo run -- --help`
-  - After installation: `subster --help`
+  - After installation: `lssub --help`
 
 - Login (stores token in secret storage):
   - `cargo run -- login`
@@ -124,7 +124,7 @@ All commands are subcommands of the `subster` binary.
 
 
 ## Project Structure
-- `Cargo.toml` — Main crate manifest (`subster`).
+- `Cargo.toml` — Main crate manifest (`lssub`).
 - `build.rs` — Build script that requires `OSBK` environment variable.
 - `src/main.rs` — Application entry point (tokio async main) that initializes logging, loads config, and dispatches CLI subcommands.
 - `src/cli/` — CLI module:
@@ -164,6 +164,6 @@ All commands are subcommands of the `subster` binary.
 
 ## Troubleshooting
 - Build error: `OSBK not set` — Ensure `export OSBK=...` is set before `cargo build`.
-- Runtime error loading config — Create an empty file at `~/.config/subster/config.toml` until configuration fields are defined.
+- Runtime error loading config — Create an empty file at `~/.config/lssub/config.toml` until configuration fields are defined.
 - Login issues — Verify your OpenSubtitles credentials; token is stored via libsecret; ensure a Secret Service is running.
 - TUI display/input issues — Ensure your terminal supports crossterm; try another terminal emulator.
