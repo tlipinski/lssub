@@ -11,9 +11,12 @@ pub struct ConfigProvider {
 }
 
 impl ConfigProvider {
+    fn xdg_dirs(&self) -> Result<xdg::BaseDirectories> {
+        Ok(xdg::BaseDirectories::with_prefix(self.prefix.clone())?)
+    }
+
     fn config_path(&self) -> Result<PathBuf> {
-        let xdg_dirs = xdg::BaseDirectories::with_prefix(self.prefix.clone())?;
-        Ok(xdg_dirs.get_config_file(self.path.clone()))
+        Ok(self.xdg_dirs()?.get_config_file(self.path.clone()))
     }
 
     pub fn modify(&self, f: impl Fn(&Config) -> (Config)) -> Result<()> {
@@ -37,6 +40,7 @@ impl ConfigProvider {
             Ok(config)
         } else {
             let default = Config::default();
+            self.xdg_dirs()?.place_config_file(&self.path);
             self.save_config(&default)?;
             Ok(default)
         }
