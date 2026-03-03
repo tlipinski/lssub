@@ -21,7 +21,7 @@ pub enum Action {
     StartSpinner,
     StopSpinner,
     Init,
-    DownloadSubs(i64),
+    DownloadSubs(i64, String),
     DownloadedSubs(Downloaded),
     UpdateDownloadCount(i32, i32),
     UpdateUsername(String),

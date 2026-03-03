@@ -183,7 +183,7 @@ impl App {
                 }
             }
 
-            DownloadSubs(file_id) => {
+            DownloadSubs(file_id, language) => {
                 self.status_widget.info = "Downloading...".into();
 
                 let downloader = self.downloader.clone();
@@ -192,7 +192,7 @@ impl App {
                     let token_result = retrieve().await;
                     match token_result {
                         Ok(token_opt) => {
-                            let msg = match downloader.download(token_opt, file_id).await {
+                            let msg = match downloader.download(token_opt, file_id, &language).await {
                                 Ok(downloaded) => DownloadedSubs(downloaded),
                                 Err(e) => DownloadSubsFailed(e.to_string()),
                             };

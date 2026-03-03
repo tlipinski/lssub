@@ -75,7 +75,7 @@ impl SubsWidget {
                 .state
                 .selected()
                 .and_then(|selection| self.subs.get(selection))
-                .map(|s| DownloadSubs(s.file_id)),
+                .map(|s| DownloadSubs(s.file_id, s.language.clone())),
 
             KeyEvent {
                 code: KeyCode::F(5),
