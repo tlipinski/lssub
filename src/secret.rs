@@ -20,7 +20,7 @@ pub async fn store(api_token: &JwtToken, username: &str) -> Result<()> {
             Some(&schema),
             attributes,
             Some(libsecret::COLLECTION_DEFAULT),
-            "Subster",
+            "lssub",
             token.as_str(),
             None::<&gio::Cancellable>,
         ) {
@@ -77,5 +77,5 @@ fn create_schema() -> Schema {
     let mut attributes = HashMap::new();
     attributes.insert("username", SchemaAttributeType::String);
 
-    Schema::new("com.subster", SchemaFlags::NONE, attributes)
+    Schema::new("com.lssub", SchemaFlags::NONE, attributes)
 }

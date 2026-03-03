@@ -22,7 +22,7 @@ async fn main() {
         .create(true)
         .write(true)
         .truncate(true)
-        .open("/tmp/subster.log")
+        .open("/tmp/lssub.log")
         .expect("Failed to open log file");
 
     // Configure env_logger to write logs to the file

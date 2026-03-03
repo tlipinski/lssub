@@ -1306,6 +1306,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "lssub"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "crossterm",
+ "env_logger",
+ "gio",
+ "libsecret",
+ "log",
+ "osb",
+ "ratatui",
+ "secrecy",
+ "serde",
+ "tokio",
+ "toml 1.0.3+spec-1.1.0",
+ "tui-input",
+ "xdg",
+]
+
+[[package]]
 name = "mac_address"
 version = "1.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2237,27 +2258,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
-]
-
-[[package]]
-name = "subster"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "crossterm",
- "env_logger",
- "gio",
- "libsecret",
- "log",
- "osb",
- "ratatui",
- "secrecy",
- "serde",
- "tokio",
- "toml 1.0.3+spec-1.1.0",
- "tui-input",
- "xdg",
 ]
 
 [[package]]

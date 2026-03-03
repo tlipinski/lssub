@@ -51,7 +51,7 @@ impl ConfigProvider {
 impl Default for ConfigProvider {
     fn default() -> Self {
         ConfigProvider {
-            prefix: "subster".to_string(),
+            prefix: "lssub".to_string(),
             path: "config.toml".into(),
         }
     }

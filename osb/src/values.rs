@@ -3,7 +3,7 @@ use std::iter::Iterator;
 
 pub const API_URL: &str = "https://api.opensubtitles.com/api/v1";
 pub const VIP_API_URL: &str = "https://vip-api.opensubtitles.com/api/v1";
-pub const USER_AGENT: &str = "subster v0.1.0";
+pub const USER_AGENT: &str = "lssub v0.1.0";
 const K: &str = env!("OSBK");
 
 lazy_static! {
