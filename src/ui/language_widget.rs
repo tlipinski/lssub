@@ -21,7 +21,7 @@ impl LanguageWidget {
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let mut title = " Language ".to_string().bold();
+        let mut title = "Language".to_string().bold();
 
         let block = Block::bordered().title(title).border_set(border::THICK);
 

@@ -28,7 +28,7 @@ impl SearchWidget {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let block = Block::bordered()
-            .title(" Search ")
+            .title("Search")
             // .title_bottom(instructions.centered())
             .border_set(border::THICK);
 

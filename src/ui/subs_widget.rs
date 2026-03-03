@@ -144,7 +144,7 @@ impl SubsWidget {
                 Cell::from(Text::from(item.votes.as_str())),
             ])
         });
-        let title = format!(" Results: {} ", self.subs.len()).bold();
+        let title = format!("Results: {}", self.subs.len()).bold();
 
         let block_bot = Block::bordered().title(title).border_set(border::THICK);
 

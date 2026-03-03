@@ -37,7 +37,7 @@ impl LoginWidget {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let block = Block::bordered()
-            .title(" Login ".to_string().bold())
+            .title("Login".to_string().bold())
             .border_set(border::THICK);
 
         let outer_layout = Layout::default()
@@ -59,9 +59,9 @@ impl LoginWidget {
             ])
             .split(block.inner(outer_layout[1]));
 
-        let mut user_block = Block::bordered().title(" Username ");
+        let mut user_block = Block::bordered().title("Username");
 
-        let mut pass_block = Block::bordered().title(" Password ");
+        let mut pass_block = Block::bordered().title("Password");
 
         match self.editing {
             Editing::Username => {
@@ -97,7 +97,7 @@ impl LoginWidget {
 
         if (!self.failed.is_empty()) {
             let failure_par =
-                Paragraph::new(self.failed.clone()).block(Block::bordered().title(" Failed "));
+                Paragraph::new(self.failed.clone()).block(Block::bordered().title("Failed"));
             frame.render_widget(failure_par, layout[3]);
         }
 

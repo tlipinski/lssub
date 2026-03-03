@@ -26,7 +26,7 @@ impl AccountWidget {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let block = Block::bordered()
-            .title(" Login ".to_string().bold())
+            .title("Login".to_string().bold())
             .border_set(border::THICK);
 
         let outer_layout = Layout::default()

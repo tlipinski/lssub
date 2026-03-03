@@ -34,9 +34,9 @@ impl StatusWidget {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let mut title = if (self.spinning) {
-            (" Status ".to_string() + &self.spinner.to_string() + " ").bold()
+            ("Status ".to_string() + &self.spinner.to_string()).bold()
         } else {
-            (" Status ".to_string()).bold()
+            ("Status".to_string()).bold()
         };
 
         let block = Block::bordered()

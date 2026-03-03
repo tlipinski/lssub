@@ -26,7 +26,7 @@ impl UserWidget {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let user = {
-            let title = " Logged in as "
+            let title = "Logged in as"
                 .to_string()
                 .bold()
                 .into_centered_line();
@@ -42,7 +42,7 @@ impl UserWidget {
         };
 
         let downloads = {
-            let title = " Downloads remaining "
+            let title = "Downloads remaining"
                 .to_string()
                 .bold()
                 .into_centered_line();
