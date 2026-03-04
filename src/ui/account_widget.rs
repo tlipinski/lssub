@@ -46,7 +46,7 @@ impl AccountWidget {
         let buttons_block = Block::default().title(
             Line::from(vec![
                 Span::from("Logout").bold(),
-                Span::from(" [F4]  "),
+                Span::from(" [F12]  "),
                 Span::from("Cancel").bold(),
                 Span::from(" [Esc]"),
             ])
@@ -66,7 +66,7 @@ impl AccountWidget {
         if let Event::Key(key_event) = event {
             match key_event {
                 KeyEvent {
-                    code: KeyCode::F(4),
+                    code: KeyCode::F(12),
                     ..
                 } => Some(Action::Logout),
                 _ => None,

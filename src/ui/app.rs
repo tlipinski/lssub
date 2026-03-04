@@ -4,9 +4,9 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
-    Exit, FetchSubs, SwitchToAccountScreen, Init, LanguagesUpdated, Login, LoginFailed, Logout,
-    QueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount,
-    UpdateUser, UpdateUsername,
+    Exit, FetchSubs, Init, LanguagesUpdated, Login, LoginFailed, Logout, QueryUpdated,
+    SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, SwitchToAccountScreen,
+    UpdateDownloadCount, UpdateUser, UpdateUsername,
 };
 use crate::ui::app::Action::{Input, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Auth, Language, Main};
@@ -192,7 +192,8 @@ impl App {
                     let token_result = retrieve().await;
                     match token_result {
                         Ok(token_opt) => {
-                            let msg = match downloader.download(token_opt, file_id, &language).await {
+                            let msg = match downloader.download(token_opt, file_id, &language).await
+                            {
                                 Ok(downloaded) => DownloadedSubs(downloaded),
                                 Err(e) => DownloadSubsFailed(e.to_string()),
                             };
@@ -369,12 +370,14 @@ impl App {
                 let main_nav = {
                     Paragraph::new(Line::from(vec![
                         Span::from("F2:").bold(),
+                        Span::from(" Search | "),
+                        Span::from("F3:").bold(),
+                        Span::from(" Account | "),
+                        Span::from("F4:").bold(),
                         Span::from(" Languages | "),
                         Span::from("F10:").bold(),
-                        Span::from(" Exit | "),
-                        Span::from("F12:").bold(),
-                        Span::from(" Account"),
-                    ]))
+                        Span::from(" Exit"),
+                    ])).centered()
                     .block(Block::default().borders(Borders::ALL))
                 };
 
@@ -420,37 +423,35 @@ impl App {
 
     fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
-            match self.current_screen {
-                Main => match key_event.code {
-                    KeyCode::F(10) => Some(Exit),
-                    KeyCode::F(2) => Some(SwitchScreen(Language)),
-                    KeyCode::F(12) => Some(SwitchToAccountScreen),
-                    KeyCode::PageUp
-                    | KeyCode::PageDown
-                    | KeyCode::Up
-                    | KeyCode::Down
-                    | KeyCode::Enter
-                    | KeyCode::F(5) => self.subs_widget.handle_key_event(key_event),
-                    _ => self.search_widget.handle_key_event(event),
-                },
+            match key_event.code {
+                QUIT_KEY => Some(SwitchScreen(Main)),
+                KeyCode::F(2) => Some(SwitchScreen(Main)),
+                KeyCode::F(3) => Some(SwitchToAccountScreen),
+                KeyCode::F(4) => Some(SwitchScreen(Language)),
+                KeyCode::F(10) => Some(Exit),
 
-                Language => match key_event.code {
-                    KeyCode::F(10) => Some(Exit),
-                    QUIT_KEY => Some(SwitchScreen(Main)),
-                    KeyCode::F(2) => Some(SwitchScreen(Main)),
-                    _ => self.language_widget.handle_key_event(event),
-                },
+                _ => match self.current_screen {
+                    Main => match key_event.code {
+                        KeyCode::PageUp
+                        | KeyCode::PageDown
+                        | KeyCode::Up
+                        | KeyCode::Down
+                        | KeyCode::Enter
+                        | KeyCode::F(5) => self.subs_widget.handle_key_event(key_event),
+                        _ => self.search_widget.handle_key_event(event),
+                    },
 
-                Auth => match key_event.code {
-                    KeyCode::F(10) => Some(Exit),
-                    QUIT_KEY => Some(SwitchScreen(Main)),
-                    _ => self.login_widget.handle_key_event(event),
-                },
+                    Language => match key_event.code {
+                        _ => self.language_widget.handle_key_event(event),
+                    },
 
-                CurrentScreen::Account => match key_event.code {
-                    KeyCode::F(10) => Some(Exit),
-                    QUIT_KEY => Some(SwitchScreen(Main)),
-                    _ => self.account_widget.handle_key_event(event),
+                    Auth => match key_event.code {
+                        _ => self.login_widget.handle_key_event(event),
+                    },
+
+                    Account => match key_event.code {
+                        _ => self.account_widget.handle_key_event(event),
+                    },
                 },
             }
         } else {
