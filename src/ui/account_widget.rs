@@ -1,7 +1,10 @@
+use crate::secret::clear;
+use crate::ui::actions::Action;
+use anyhow::Result;
 use crossterm::event::KeyModifiers;
 use log::info;
-use crate::ui::actions::Action;
 use osb::login::Credentials;
+use osb::user_info::UserInfo;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -14,14 +17,12 @@ use tui_input::backend::crossterm::EventHandler;
 
 #[derive(Debug)]
 pub struct AccountWidget {
-    pub username: String,
+    pub user_info: UserInfo,
 }
 
 impl AccountWidget {
-    pub fn from() -> Self {
-        AccountWidget {
-            username: "".into(),
-        }
+    pub fn from(user_info: UserInfo) -> Self {
+        AccountWidget { user_info }
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
@@ -54,25 +55,30 @@ impl AccountWidget {
         );
 
         let already_logged =
-            Paragraph::new(format!("Logged in as: {}", self.username)).block(Block::bordered());
+            Paragraph::new(format!("Logged in as: {}", self.user_info.data.username))
+                .block(Block::bordered());
 
         frame.render_widget(block, area);
         frame.render_widget(already_logged, layout[0]);
         frame.render_widget(buttons_block, layout[1]);
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         info!("key event: {:?}", event);
         if let Event::Key(key_event) = event {
             match key_event {
                 KeyEvent {
                     code: KeyCode::F(12),
                     ..
-                } => Some(Action::Logout),
-                _ => None,
+                } => {
+                    clear().await;
+                    self.user_info = UserInfo::default();
+                    Ok(Some(Action::LoggedOut))
+                }
+                _ => Ok(None),
             }
         } else {
-            None
+            Ok(None)
         }
     }
 }

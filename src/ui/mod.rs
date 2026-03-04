@@ -1,7 +1,6 @@
 pub mod app;
 mod downloader;
 mod input_handler;
-mod language_widget;
 mod search_widget;
 mod spinner;
 mod subs_widget;
@@ -11,3 +10,7 @@ mod status_widget;
 mod login_widget;
 mod account_widget;
 mod user_widget;
+mod account_screen;
+mod languages_screen;
+mod search_screen;
+mod nav_widget;

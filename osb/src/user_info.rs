@@ -33,12 +33,12 @@ pub async fn get_user_info(token: &JwtToken) -> Result<UserInfo> {
 
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default, Clone)]
 pub struct UserInfo {
     pub data: UserData,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default, Clone)]
 pub struct UserData {
     pub username: String,
     pub downloads_count: i32,

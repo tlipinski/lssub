@@ -6,27 +6,23 @@ use osb::login::Credentials;
 use crate::ui::downloader::Downloaded;
 use crate::ui::subtitles_fetcher::SubtitlesQuery;
 
+#[derive(Debug)]
 pub enum Action {
     Input(Event),
     SubsFetched(SubtitlesResponse),
     SpinnerUpdate(char),
-    LanguagesUpdated(Vec<String>),
-    Login(Credentials),
-    LoginFailed(String),
-    UpdateUser,
-    Logout,
-    SwitchToAccountScreen,
-    QueryUpdated(String),
+    LanguagesUpdated,
+    LoggedIn,
+    LoggedOut,
+    RequestedSubs,
+    SearchQueryUpdated,
     FetchSubs(String, Vec<String>),
     StartSpinner,
     StopSpinner,
     Init,
     DownloadSubs(i64, String),
     DownloadedSubs(Downloaded),
-    UpdateDownloadCount(i32, i32),
-    UpdateUsername(String),
     SwitchScreen(CurrentScreen),
-    DownloadSubsFailed(String),
     EnabledLimitSubsToId(i64),
     DisabledLimitSubsToId,
     Exit,

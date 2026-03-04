@@ -1,19 +1,17 @@
+use crate::ui::nav_widget::NavWidget;
 use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
+use crate::ui::account_screen::AccountScreen;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{
-    DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
-    Exit, FetchSubs, Init, LanguagesUpdated, Login, LoginFailed, Logout, QueryUpdated,
-    SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, SwitchToAccountScreen,
-    UpdateDownloadCount, UpdateUser, UpdateUsername,
-};
+use crate::ui::actions::Action::{DisabledLimitSubsToId, DownloadSubs, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, LoggedIn, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
 use crate::ui::app::Action::{Input, SubsFetched};
-use crate::ui::app::CurrentScreen::{Account, Auth, Language, Main};
+use crate::ui::app::CurrentScreen::{Account, Language, Main};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
-use crate::ui::language_widget::LanguageWidget;
+use crate::ui::languages_screen::LanguagesScreen;
 use crate::ui::login_widget::LoginWidget;
+use crate::ui::search_screen::SearchScreen;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::spinner_task;
 use crate::ui::status_widget::StatusWidget;
@@ -23,11 +21,11 @@ use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
 use gio::prelude::DBusInterfaceSkeletonExt;
-use log::{error, info};
+use log::{debug, error, info};
 use osb::get_download_link::get_download_link;
 use osb::login::login;
 use osb::user_info;
-use osb::user_info::get_user_info;
+use osb::user_info::{UserInfo, get_user_info};
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::prelude::{StatefulWidget, Stylize};
@@ -45,18 +43,15 @@ use tokio::task::JoinHandle;
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
 pub struct App {
-    config_provider: ConfigProvider,
     current_screen: CurrentScreen,
-    search_widget: SearchWidget,
-    user_widget: UserWidget,
-    subs_widget: SubsWidget,
-    language_widget: LanguageWidget,
+    search_screen: SearchScreen,
+    languages_screen: LanguagesScreen,
+    account_screen: AccountScreen,
     status_widget: StatusWidget,
-    login_widget: LoginWidget,
-    account_widget: AccountWidget,
+    user_widget: UserWidget,
+    nav_widget: NavWidget,
     ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
-    downloader: Downloader,
     exit: bool,
 }
 
@@ -76,24 +71,22 @@ impl App {
         tokio::spawn(spinner_task(ui_tx.clone()));
 
         let provider = ConfigProvider::default();
-        let languages = provider.get_config()?.languages;
+        let search_screen = SearchScreen::from(base_path, file_name)?;
+
         let mut app = App {
-            config_provider: provider,
+            search_screen,
             current_screen: CurrentScreen::default(),
-            search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
-            user_widget: UserWidget::from(),
-            subs_widget: SubsWidget::default(),
-            language_widget: LanguageWidget::from(languages),
+            languages_screen: LanguagesScreen::new(provider)?,
+            account_screen: AccountScreen::new(),
             status_widget: StatusWidget::from("".into()),
-            login_widget: LoginWidget::from(),
-            account_widget: AccountWidget::from(),
-            downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
+            user_widget: UserWidget::from(),
+            nav_widget: NavWidget::new(),
             ui_tx: ui_tx.clone(),
             features_tx,
             exit: false,
         };
 
-        let mut messages = VecDeque::from([Init, UpdateUser]);
+        let mut messages = VecDeque::from([Init]);
 
         while !app.exit {
             while let Some(msg) = messages.pop_front() {
@@ -116,9 +109,10 @@ impl App {
     }
 
     async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
+        debug!("action: {:?}", action);
         match action {
             Input(event) => {
-                if let Some(m) = self.handle_key_event(event) {
+                if let Ok(Some(m)) = self.handle_key_event(event).await {
                     Ok(vec![m])
                 } else {
                     Ok(vec![])
@@ -126,7 +120,7 @@ impl App {
             }
 
             SubsFetched(subtitles) => {
-                self.subs_widget.update_subtitles(&subtitles);
+                self.search_screen.update_subtitles(&subtitles);
                 self.status_widget.info = format!("{} results", subtitles.data.len());
                 Ok(vec![StopSpinner])
             }
@@ -136,19 +130,37 @@ impl App {
                 Ok(vec![])
             }
 
-            LanguagesUpdated(languages) => {
-                self.current_screen = Main;
-                let query: String = self.search_widget.input.value().into();
-                self.config_provider.modify(|c: &Config| {
-                    let mut updated = c.clone();
-                    updated.languages = languages.clone();
-                    updated
-                });
-                Ok(vec![FetchSubs(query, languages)])
+            LanguagesUpdated => {
+                let languages = self.languages_screen.languages();
+                let query: String = self.search_screen.search_widget.input.value().into();
+                Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
             }
 
-            QueryUpdated(query) => {
-                let languages = self.language_widget.languages();
+            LoggedIn => {
+                match self.account_screen.user_info() {
+                    Some(user_info) => {
+                        self.user_widget.requests = user_info.data.downloads_count;
+                        self.user_widget.remaining = user_info.data.remaining_downloads;
+                        self.nav_widget.username = Some(user_info.data.username);
+                    }
+
+                    None => {}
+                }
+
+                Ok(vec![SwitchScreen(Main)])
+            }
+
+            LoggedOut => {
+                self.user_widget.requests = 0;
+                self.user_widget.remaining = 0;
+                self.nav_widget.username = None;
+
+                Ok(vec![])
+            }
+
+            SearchQueryUpdated => {
+                let languages = self.languages_screen.languages();
+                let query = self.search_screen.search_widget.input.value().to_string();
                 Ok(vec![FetchSubs(query, languages)])
             }
 
@@ -160,6 +172,7 @@ impl App {
                         id: None,
                     })
                     .await?;
+
                 Ok(vec![StartSpinner])
             }
 
@@ -174,39 +187,15 @@ impl App {
             }
 
             Init => {
-                let query: String = self.search_widget.input.value().into();
-                if (!query.is_empty()) {
-                    let languages = self.language_widget.languages();
-                    Ok(vec![FetchSubs(query, languages)])
-                } else {
-                    Ok(vec![])
+                let mut actions = self.account_screen.update(Init).await?;
+
+                let query: String = self.search_screen.search_widget.input.value().into();
+                if !query.is_empty() {
+                    let languages = self.languages_screen.languages();
+                    actions.push(FetchSubs(query, languages));
                 }
-            }
 
-            DownloadSubs(file_id, language) => {
-                self.status_widget.info = "Downloading...".into();
-
-                let downloader = self.downloader.clone();
-                let ui_tx = self.ui_tx.clone();
-                tokio::spawn(async move {
-                    let token_result = retrieve().await;
-                    match token_result {
-                        Ok(token_opt) => {
-                            let msg = match downloader.download(token_opt, file_id, &language).await
-                            {
-                                Ok(downloaded) => DownloadedSubs(downloaded),
-                                Err(e) => DownloadSubsFailed(e.to_string()),
-                            };
-                            ui_tx.send(msg).await;
-                        }
-                        Err(e) => {
-                            let msg = DownloadSubsFailed(e.to_string());
-                            ui_tx.send(msg).await;
-                        }
-                    }
-                });
-
-                Ok(vec![StartSpinner])
+                Ok(actions)
             }
 
             DownloadedSubs(downloaded) => {
@@ -221,241 +210,103 @@ impl App {
                 Ok(vec![])
             }
 
-            SwitchToAccountScreen => {
-                let result = retrieve().await;
-                match result {
-                    Ok(Some(token)) => Ok(vec![SwitchScreen(Account)]),
-                    Ok(None) => Ok(vec![SwitchScreen(Auth)]),
-                    Err(e) => {
-                        error!("Failed to retrieve token: {e}");
-                        Ok(vec![])
-                    }
-                }
-            }
-
-            Login(credentials) => {
-                let result = tokio::spawn(async move {
-                    match login(&credentials).await {
-                        Ok(api_token) => {
-                            store(&api_token, &credentials.username).await;
-                            UpdateUser
-                        }
-                        Err(e) => LoginFailed(e.to_string()),
-                    }
-                })
-                .await;
-
-                match result {
-                    Ok(msg) => Ok(vec![msg]),
-                    Err(e) => {
-                        error!("Error logging in: {}", e);
-                        Err(e.into())
-                    }
-                }
-            }
-
-            LoginFailed(reason) => {
-                self.login_widget.failed = reason;
-                Ok(vec![])
-            }
-
-            DownloadSubsFailed(error) => {
-                self.status_widget.info = format!("Error: {:?}", error);
-                Ok(vec![StopSpinner])
-            }
-
             Exit => {
                 self.exit = true;
                 Ok(vec![])
             }
 
-            UpdateUser => {
-                let ui_tx = self.ui_tx.clone();
-                tokio::spawn(async move {
-                    match retrieve().await {
-                        Ok(Some(jwt)) => match get_user_info(&jwt).await {
-                            Ok(user_info) => {
-                                ui_tx
-                                    .send(UpdateDownloadCount(
-                                        user_info.data.downloads_count,
-                                        user_info.data.remaining_downloads,
-                                    ))
-                                    .await;
+            // EnabledLimitSubsToId(id) => {
+            //     let languages = self.languages_screen.languages();
+            //     let query = self.search_widget.input.value().into();
+            //     self.features_tx
+            //         .send(SubtitlesQuery {
+            //             query,
+            //             languages,
+            //             id: Some(id),
+            //         })
+            //         .await?;
+            //     Ok(vec![StartSpinner])
+            // }
 
-                                ui_tx.send(UpdateUsername(user_info.data.username)).await
-                            }
-                            Err(e) => {
-                                error!("Error getting user info: {e}");
-                                Ok(())
-                            }
-                        },
-                        Ok(None) => {
-                            ui_tx.send(UpdateDownloadCount(0, 0)).await;
-                            ui_tx.send(UpdateUsername("".to_string())).await;
-                            Ok(())
-                        }
-                        Err(e) => {
-                            error!("Error retrieving jwt: {e}");
-                            Ok(())
-                        }
-                    }
-                });
-                Ok(vec![SwitchScreen(Main)])
-            }
-
-            Logout => {
-                clear().await?;
-                Ok(vec![UpdateUser, SwitchScreen(Auth)])
-            }
-
-            UpdateDownloadCount(rq, rm) => {
-                self.user_widget.requests = rq;
-                self.user_widget.remaining = rm;
-                Ok(vec![])
-            }
-
-            UpdateUsername(username) => {
-                self.user_widget.username = username;
-                Ok(vec![])
-            }
-
-            EnabledLimitSubsToId(id) => {
-                let languages = self.language_widget.languages();
-                let query = self.search_widget.input.value().into();
-                self.features_tx
-                    .send(SubtitlesQuery {
-                        query,
-                        languages,
-                        id: Some(id),
-                    })
-                    .await?;
-                Ok(vec![StartSpinner])
-            }
-
-            DisabledLimitSubsToId => {
-                let languages = self.language_widget.languages();
-                let query = self.search_widget.input.value().into();
-                self.features_tx
-                    .send(SubtitlesQuery {
-                        query,
-                        languages,
-                        id: None,
-                    })
-                    .await?;
-                Ok(vec![StartSpinner])
-            }
+            // DisabledLimitSubsToId => {
+            //     let languages = self.languages_screen.languages();
+            //     let query = self.search_widget.input.value().into();
+            //     self.features_tx
+            //         .send(SubtitlesQuery {
+            //             query,
+            //             languages,
+            //             id: None,
+            //         })
+            //         .await?;
+            //     Ok(vec![StartSpinner])
+            // }
+            _ => Ok(vec![]),
         }
     }
 
     fn draw(&mut self, frame: &mut Frame) {
-        match self.current_screen {
+        let area = frame.area();
+
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(3),
+                Constraint::Length(3),
+            ])
+            .split(area);
+
+        let status = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(
+                [
+                    Constraint::Fill(1),
+                    Constraint::Length(23),
+                ]
+            ).split(layout[1]);
+
+        self.status_widget.render(frame, status[0]);
+        self.user_widget.render(frame, status[1]);
+        self.nav_widget.render(frame, layout[2]);
+
+        match &self.current_screen {
             Main => {
-                let area = frame.area();
-
-                let layout = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([
-                        Constraint::Length(3),
-                        Constraint::Min(10),
-                        Constraint::Length(3),
-                        Constraint::Length(3),
-                    ])
-                    .split(area);
-
-                let status = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Fill(1), Constraint::Length(50)])
-                    .split(layout[2]);
-
-                let main_nav = {
-                    Paragraph::new(Line::from(vec![
-                        Span::from("F2:").bold(),
-                        Span::from(" Search | "),
-                        Span::from("F3:").bold(),
-                        Span::from(" Account | "),
-                        Span::from("F4:").bold(),
-                        Span::from(" Languages | "),
-                        Span::from("F10:").bold(),
-                        Span::from(" Exit"),
-                    ])).centered()
-                    .block(Block::default().borders(Borders::ALL))
-                };
-
-                self.search_widget.render(frame, layout[0]);
-                self.subs_widget.render(frame, layout[1]);
-                self.status_widget.render(frame, status[0]);
-                self.user_widget.render(frame, status[1]);
-                frame.render_widget(main_nav, layout[3]);
+                self.search_screen.render(frame, layout[0]);
             }
             Language => {
-                let area = frame.area();
-
-                let right = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Length(3)])
-                    .split(area);
-
-                self.language_widget.render(frame, area);
+                self.languages_screen.render(frame, layout[0]);
             }
-            Auth => {
-                let area = frame.area();
-
-                let right = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Length(3), Constraint::Length(3)])
-                    .split(area);
-
-                self.login_widget.render(frame, area);
-            }
-
-            CurrentScreen::Account => {
-                let area = frame.area();
-
-                let right = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Length(3), Constraint::Length(3)])
-                    .split(area);
-
-                self.account_widget.render(frame, area);
+            Account => {
+                self.account_screen.render(frame, layout[0]);
             }
         }
     }
 
-    fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                QUIT_KEY => Some(SwitchScreen(Main)),
-                KeyCode::F(2) => Some(SwitchScreen(Main)),
-                KeyCode::F(3) => Some(SwitchToAccountScreen),
-                KeyCode::F(4) => Some(SwitchScreen(Language)),
-                KeyCode::F(10) => Some(Exit),
+                QUIT_KEY => Ok(Some(SwitchScreen(Main))),
+                KeyCode::F(2) => Ok(Some(SwitchScreen(Main))),
+                KeyCode::F(3) => Ok(Some(SwitchScreen(Account))),
+                KeyCode::F(4) => Ok(Some(SwitchScreen(Language))),
+                KeyCode::F(10) => Ok(Some(Exit)),
 
                 _ => match self.current_screen {
                     Main => match key_event.code {
-                        KeyCode::PageUp
-                        | KeyCode::PageDown
-                        | KeyCode::Up
-                        | KeyCode::Down
-                        | KeyCode::Enter
-                        | KeyCode::F(5) => self.subs_widget.handle_key_event(key_event),
-                        _ => self.search_widget.handle_key_event(event),
+                        _ => self.search_screen.handle_key_event(event).await,
                     },
 
                     Language => match key_event.code {
-                        _ => self.language_widget.handle_key_event(event),
-                    },
-
-                    Auth => match key_event.code {
-                        _ => self.login_widget.handle_key_event(event),
+                        _ => self.languages_screen.handle_key_event(event),
                     },
 
                     Account => match key_event.code {
-                        _ => self.account_widget.handle_key_event(event),
+                        _ => self.account_screen.handle_key_event(event).await,
                     },
                 },
             }
         } else {
-            None
+            Ok(None)
         }
     }
 }
@@ -464,7 +315,6 @@ impl App {
 pub enum CurrentScreen {
     #[default]
     Main,
-    Language,
-    Auth,
     Account,
+    Language,
 }

@@ -1,5 +1,6 @@
-use crate::ui::app::QUIT_KEY;
 use crate::ui::actions::Action;
+use crate::ui::app::QUIT_KEY;
+use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use anyhow::Result;
 use gio::glib::random_int_range;
 use ratatui::Frame;
@@ -13,6 +14,7 @@ use std::sync::mpsc::Sender;
 use std::thread::sleep;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use crate::ui::actions::Action::{SearchQueryUpdated, RequestedSubs};
 
 #[derive(Debug)]
 pub struct SearchWidget {
@@ -42,12 +44,12 @@ impl SearchWidget {
         frame.render_widget(view, area);
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Some(state_changed) = self.input.handle_event(&event)
             && state_changed.value
         {
-            return Some(Action::QueryUpdated(self.input.value().into()));
+            return Ok(Some(SearchQueryUpdated));
         }
-        None
+        Ok(None)
     }
 }
