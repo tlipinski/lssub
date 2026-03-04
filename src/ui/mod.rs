@@ -11,3 +11,4 @@ mod status_widget;
 mod login_widget;
 mod account_widget;
 mod user_widget;
+mod account_screen;

@@ -9,7 +9,7 @@ use crate::ui::actions::Action::{
     UpdateDownloadCount, UpdateUser, UpdateUsername,
 };
 use crate::ui::app::Action::{Input, SubsFetched};
-use crate::ui::app::CurrentScreen::{Account, Auth, Language, Main};
+use crate::ui::app::CurrentScreen::{Account, Language, Main};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
@@ -41,6 +41,7 @@ use std::sync::mpsc;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
+use crate::ui::account_screen::AccountScreen;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -52,8 +53,7 @@ pub struct App {
     subs_widget: SubsWidget,
     language_widget: LanguageWidget,
     status_widget: StatusWidget,
-    login_widget: LoginWidget,
-    account_widget: AccountWidget,
+    account_screen: AccountScreen,
     ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
     downloader: Downloader,
@@ -85,8 +85,7 @@ impl App {
             subs_widget: SubsWidget::default(),
             language_widget: LanguageWidget::from(languages),
             status_widget: StatusWidget::from("".into()),
-            login_widget: LoginWidget::from(),
-            account_widget: AccountWidget::from(),
+            account_screen: AccountScreen::new(),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
             ui_tx: ui_tx.clone(),
             features_tx,
@@ -222,15 +221,16 @@ impl App {
             }
 
             SwitchToAccountScreen => {
-                let result = retrieve().await;
-                match result {
-                    Ok(Some(token)) => Ok(vec![SwitchScreen(Account)]),
-                    Ok(None) => Ok(vec![SwitchScreen(Auth)]),
-                    Err(e) => {
-                        error!("Failed to retrieve token: {e}");
-                        Ok(vec![])
-                    }
-                }
+                // let result = retrieve().await;
+                // match result {
+                //     Ok(Some(token)) => Ok(vec![SwitchScreen(Account)]),
+                //     Ok(None) => Ok(vec![SwitchScreen(Auth)]),
+                //     Err(e) => {
+                //         error!("Failed to retrieve token: {e}");
+                //         Ok(vec![])
+                //     }
+                // }
+                unimplemented!()
             }
 
             Login(credentials) => {
@@ -304,8 +304,9 @@ impl App {
             }
 
             Logout => {
-                clear().await?;
-                Ok(vec![UpdateUser, SwitchScreen(Auth)])
+                // clear().await?;
+                // Ok(vec![UpdateUser, SwitchScreen(Auth)])
+                unimplemented!()
             }
 
             UpdateDownloadCount(rq, rm) => {
@@ -405,10 +406,10 @@ impl App {
                     .constraints([Constraint::Length(3), Constraint::Length(3)])
                     .split(area);
 
-                self.login_widget.render(frame, area);
+                self.account_screen.render(frame, area);
             }
 
-            CurrentScreen::Account => {
+            Account => {
                 let area = frame.area();
 
                 let right = Layout::default()
@@ -416,7 +417,7 @@ impl App {
                     .constraints([Constraint::Length(3), Constraint::Length(3)])
                     .split(area);
 
-                self.account_widget.render(frame, area);
+                self.account_screen.render(frame, area);
             }
         }
     }
@@ -445,12 +446,8 @@ impl App {
                         _ => self.language_widget.handle_key_event(event),
                     },
 
-                    Auth => match key_event.code {
-                        _ => self.login_widget.handle_key_event(event),
-                    },
-
                     Account => match key_event.code {
-                        _ => self.account_widget.handle_key_event(event),
+                        _ => self.account_screen.handle_key_event(event),
                     },
                 },
             }
@@ -464,7 +461,6 @@ impl App {
 pub enum CurrentScreen {
     #[default]
     Main,
-    Language,
-    Auth,
     Account,
+    Language,
 }
