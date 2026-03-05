@@ -11,7 +11,7 @@ pub enum Action {
     SubsFetched(SubtitlesResponse),
     SpinnerUpdate(char),
     LanguagesUpdated,
-    Login(Credentials),
+    LoggedIn,
     LoginFailed(String),
     UpdateUser,
     Logout,

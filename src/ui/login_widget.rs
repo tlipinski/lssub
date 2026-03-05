@@ -1,5 +1,9 @@
+use crate::secret::store;
 use crate::ui::actions::Action;
-use osb::login::Credentials;
+use crate::ui::actions::Action::LoggedIn;
+use anyhow::Result;
+use log::error;
+use osb::login::{Credentials, login};
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -9,13 +13,12 @@ use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use anyhow::Result;
 
 #[derive(Debug)]
 pub struct LoginWidget {
     pub username: Input,
     pub password: Input,
-    pub failed: String,
+    failed: String,
     editing: Editing,
 }
 
@@ -115,13 +118,38 @@ impl LoginWidget {
         };
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
+    pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                KeyCode::Enter => Ok(Some(Action::Login(Credentials {
-                    username: self.username.value().to_owned(),
-                    password: self.password.value().to_owned(),
-                }))),
+                KeyCode::Enter => {
+                    let credentials = Credentials {
+                        username: self.username.value().to_owned(),
+                        password: self.password.value().to_owned(),
+                    };
+
+                    let result = tokio::spawn(async move {
+                        match login(&credentials).await {
+                            Ok(api_token) => {
+                                store(&api_token, &credentials.username).await;
+                                Ok(())
+                            }
+                            Err(e) => {
+                                error!("Error logging in: {}", e);
+                                Err(e)
+                            }
+                        }
+                    })
+                    .await?;
+
+                    match result {
+                        Ok(msg) => Ok(Some(LoggedIn)),
+                        Err(e) => {
+                            error!("Error logging in: {}", e);
+                            self.failed = e.to_string();
+                            Err(e.into())
+                        }
+                    }
+                }
                 KeyCode::Up => {
                     self.editing = Editing::Username;
                     Ok(None)
@@ -146,9 +174,7 @@ impl LoginWidget {
                         Editing::Password => {
                             self.password.handle_event(&event);
                         }
-                        Editing::None => {
-                            
-                        }
+                        Editing::None => {}
                     }
                     Ok(None)
                 }
@@ -157,11 +183,4 @@ impl LoginWidget {
             Ok(None)
         }
     }
-
-}
-
-enum LoginAction {
-    Login(Credentials),
-    LoginFailed(String),
-    Logout
 }

@@ -5,7 +5,7 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
-    Exit, FetchSubs, Init, LanguagesUpdated, Login, LoginFailed, Logout, QueryUpdated,
+    Exit, FetchSubs, Init, LanguagesUpdated, LoginFailed, Logout, QueryUpdated,
     SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, SwitchToAccountScreen,
     UpdateDownloadCount, UpdateUser, UpdateUsername,
 };
@@ -115,7 +115,7 @@ impl App {
     async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
         match action {
             Input(event) => {
-                if let Ok(Some(m)) = self.handle_key_event(event) {
+                if let Ok(Some(m)) = self.handle_key_event(event).await {
                     Ok(vec![m])
                 } else {
                     Ok(vec![])
@@ -213,47 +213,6 @@ impl App {
                 Ok(vec![])
             }
 
-            SwitchToAccountScreen => {
-                // let result = retrieve().await;
-                // match result {
-                //     Ok(Some(token)) => Ok(vec![SwitchScreen(Account)]),
-                //     Ok(None) => Ok(vec![SwitchScreen(Auth)]),
-                //     Err(e) => {
-                //         error!("Failed to retrieve token: {e}");
-                //         Ok(vec![])
-                //     }
-                // }
-                unimplemented!()
-            }
-
-            Login(credentials) => {
-                // let result = tokio::spawn(async move {
-                //     match login(&credentials).await {
-                //         Ok(api_token) => {
-                //             store(&api_token, &credentials.username).await;
-                //             UpdateUser
-                //         }
-                //         Err(e) => LoginFailed(e.to_string()),
-                //     }
-                // })
-                // .await;
-                //
-                // match result {
-                //     Ok(msg) => Ok(vec![msg]),
-                //     Err(e) => {
-                //         error!("Error logging in: {}", e);
-                //         Err(e.into())
-                //     }
-                // }
-                unimplemented!()
-            }
-
-            LoginFailed(reason) => {
-                // self.login_widget.failed = reason;
-                // Ok(vec![])
-                unimplemented!()
-            }
-
             DownloadSubsFailed(error) => {
                 self.status_widget.info = format!("Error: {:?}", error);
                 Ok(vec![StopSpinner])
@@ -340,6 +299,7 @@ impl App {
                     .await?;
                 Ok(vec![StartSpinner])
             }
+            _ => {Ok(vec![])}
         }
     }
 
@@ -408,12 +368,12 @@ impl App {
         }
     }
 
-    fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
+    async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Event::Key(key_event) = event {
             match key_event.code {
                 QUIT_KEY => Ok(Some(SwitchScreen(Main))),
                 KeyCode::F(2) => Ok(Some(SwitchScreen(Main))),
-                KeyCode::F(3) => Ok(Some(SwitchToAccountScreen)),
+                KeyCode::F(3) => Ok(Some(SwitchScreen(Account))),
                 KeyCode::F(4) => Ok(Some(SwitchScreen(Language))),
                 KeyCode::F(10) => Ok(Some(Exit)),
 
@@ -433,7 +393,7 @@ impl App {
                     },
 
                     Account => match key_event.code {
-                        _ => self.account_screen.handle_key_event(event),
+                        _ => self.account_screen.handle_key_event(event).await,
                     },
                 },
             }
