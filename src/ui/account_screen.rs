@@ -97,7 +97,14 @@ impl AccountScreen {
                 other => Ok(other),
             }
         } else {
-            self.login_widget.handle_key_event(event).await
+            match self.login_widget.handle_key_event(event).await? {
+                Some(LoggedIn) => {
+                    self.logged_in = true;
+                    self.update(Action::Init).await?; // todo
+                    Ok(Some(LoggedIn))
+                }
+                other => Ok(other),
+            }
         }
     }
 }
