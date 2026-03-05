@@ -1,7 +1,6 @@
 pub mod app;
 mod downloader;
 mod input_handler;
-mod language_widget;
 mod search_widget;
 mod spinner;
 mod subs_widget;

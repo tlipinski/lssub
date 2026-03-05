@@ -13,7 +13,6 @@ use crate::ui::app::Action::{Input, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
-use crate::ui::language_widget::LanguageWidget;
 use crate::ui::languages_screen::LanguagesScreen;
 use crate::ui::login_widget::LoginWidget;
 use crate::ui::search_widget::SearchWidget;

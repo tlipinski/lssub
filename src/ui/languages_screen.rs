@@ -2,7 +2,6 @@ use crate::config::{Config, ConfigProvider};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{FetchSubs, LanguagesUpdated};
 use crate::ui::app::CurrentScreen::Main;
-use crate::ui::language_widget::LanguageWidget;
 use crossterm::event::{Event, KeyCode};
 use ratatui::Frame;
 use ratatui::layout::Rect;
@@ -15,8 +14,7 @@ use anyhow::Result;
 
 pub struct LanguagesScreen {
     config_provider: ConfigProvider,
-    // pub language_widget: LanguageWidget,
-    pub input: Input,
+    input: Input,
 }
 
 impl LanguagesScreen {
