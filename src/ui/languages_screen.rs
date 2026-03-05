@@ -2,6 +2,7 @@ use crate::config::{Config, ConfigProvider};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{FetchSubs, LanguagesUpdated};
 use crate::ui::app::CurrentScreen::Main;
+use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
 use ratatui::Frame;
 use ratatui::layout::Rect;
@@ -10,7 +11,6 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use anyhow::Result;
 
 pub struct LanguagesScreen {
     config_provider: ConfigProvider,
@@ -36,14 +36,13 @@ impl LanguagesScreen {
         if let Event::Key(key_event) = event {
             match key_event.code {
                 KeyCode::Enter => {
-                    let languages = self.languages();
                     self.config_provider.modify(|c: &Config| {
                         let mut updated = c.clone();
-                        updated.languages = languages.clone();
+                        updated.languages = self.languages().clone();
                         updated
                     });
                     Ok(Some(LanguagesUpdated))
-                },
+                }
 
                 _ => {
                     self.input.handle_event(&event);
