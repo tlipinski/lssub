@@ -8,6 +8,7 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{Input, Login, LoginFailed, Logout, SwitchScreen, UpdateUser};
 use crate::ui::login_widget::LoginWidget;
+use anyhow::Result;
 
 pub struct AccountScreen {
     login_widget: LoginWidget,
@@ -28,13 +29,6 @@ impl AccountScreen {
     async fn update(&mut self, action: Action) -> anyhow::Result<Vec<Action>> {
         match action {
             // todo: handle Input action or let main app call handle_key_event?
-            Input(event) => {
-                if let Some(m) = self.handle_key_event(event) {
-                    Ok(vec![m])
-                } else {
-                    Ok(vec![])
-                }
-            }
 
             Login(credentials) => {
                 let result = tokio::spawn(async move {
@@ -79,7 +73,7 @@ impl AccountScreen {
         }
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    pub fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if (self.logged_in) {
             self.account_widget.handle_key_event(event)
         } else {

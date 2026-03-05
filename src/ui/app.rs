@@ -433,7 +433,7 @@ impl App {
                     },
 
                     Account => match key_event.code {
-                        _ => Ok(self.account_screen.handle_key_event(event)),
+                        _ => self.account_screen.handle_key_event(event),
                     },
                 },
             }

@@ -9,6 +9,7 @@ use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use anyhow::Result;
 
 #[derive(Debug)]
 pub struct LoginWidget {
@@ -114,20 +115,20 @@ impl LoginWidget {
         };
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    pub fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                KeyCode::Enter => Some(Action::Login(Credentials {
+                KeyCode::Enter => Ok(Some(Action::Login(Credentials {
                     username: self.username.value().to_owned(),
                     password: self.password.value().to_owned(),
-                })),
+                }))),
                 KeyCode::Up => {
                     self.editing = Editing::Username;
-                    None
+                    Ok(None)
                 }
                 KeyCode::Down => {
                     self.editing = Editing::Password;
-                    None
+                    Ok(None)
                 }
                 KeyCode::Tab => {
                     match self.editing {
@@ -135,7 +136,7 @@ impl LoginWidget {
                         Editing::Password => self.editing = Editing::Username,
                         Editing::None => self.editing = Editing::None,
                     }
-                    None
+                    Ok(None)
                 }
                 _ => {
                     match self.editing {
@@ -149,11 +150,11 @@ impl LoginWidget {
                             
                         }
                     }
-                    None
+                    Ok(None)
                 }
             }
         } else {
-            None
+            Ok(None)
         }
     }
 
