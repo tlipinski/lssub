@@ -170,6 +170,8 @@ impl App {
             }
 
             Init => {
+                self.account_screen.update(Init).await;
+
                 let query: String = self.search_widget.input.value().into();
                 if (!query.is_empty()) {
                     let languages = self.languages_screen.languages();
@@ -297,7 +299,7 @@ impl App {
                     .await?;
                 Ok(vec![StartSpinner])
             }
-            
+
             _ => Ok(vec![]),
         }
     }
