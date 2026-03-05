@@ -12,3 +12,4 @@ mod account_widget;
 mod user_widget;
 mod account_screen;
 mod languages_screen;
+mod search_screen;

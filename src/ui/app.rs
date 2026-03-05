@@ -14,6 +14,7 @@ use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::languages_screen::LanguagesScreen;
 use crate::ui::login_widget::LoginWidget;
+use crate::ui::search_screen::SearchScreen;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::spinner_task;
 use crate::ui::status_widget::StatusWidget;
@@ -46,15 +47,11 @@ pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
 pub struct App {
     current_screen: CurrentScreen,
-    search_widget: SearchWidget,
-    user_widget: UserWidget,
-    subs_widget: SubsWidget,
+    search_screen: SearchScreen,
     languages_screen: LanguagesScreen,
-    status_widget: StatusWidget,
     account_screen: AccountScreen,
     ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
-    downloader: Downloader,
     exit: bool,
 }
 
@@ -74,16 +71,13 @@ impl App {
         tokio::spawn(spinner_task(ui_tx.clone()));
 
         let provider = ConfigProvider::default();
-        let languages = provider.get_config()?.languages;
+        let search_screen = SearchScreen::from(base_path, file_name)?;
+
         let mut app = App {
+            search_screen,
             current_screen: CurrentScreen::default(),
-            search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
-            user_widget: UserWidget::from(),
-            subs_widget: SubsWidget::default(),
             languages_screen: LanguagesScreen::new(provider)?,
-            status_widget: StatusWidget::from("".into()),
             account_screen: AccountScreen::new(),
-            downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
             ui_tx: ui_tx.clone(),
             features_tx,
             exit: false,
@@ -122,156 +116,156 @@ impl App {
                 }
             }
 
-            SubsFetched(subtitles) => {
-                self.subs_widget.update_subtitles(&subtitles);
-                self.status_widget.info = format!("{} results", subtitles.data.len());
-                Ok(vec![StopSpinner])
-            }
+            // SubsFetched(subtitles) => {
+                // self.subs_widget.update_subtitles(&subtitles);
+                // self.status_widget.info = format!("{} results", subtitles.data.len());
+                // Ok(vec![StopSpinner])
+            // }
 
-            SpinnerUpdate(chr) => {
-                self.status_widget.spin(chr);
-                Ok(vec![])
-            }
+            // SpinnerUpdate(chr) => {
+                // self.status_widget.spin(chr);
+                // Ok(vec![])
+            // }
 
-            LanguagesUpdated => {
-                let languages = self.languages_screen.languages();
-                let query: String = self.search_widget.input.value().into();
-                Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
-            }
+            // LanguagesUpdated => {
+                // let languages = self.languages_screen.languages();
+                // let query: String = self.search_widget.input.value().into();
+                // Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
+            // }
 
-            Action::LoggedIn => {
-                match self.account_screen.user_info() {
-                    Some(user_info) => {
-                        self.user_widget.requests = user_info.data.downloads_count;
-                        self.user_widget.remaining = user_info.data.remaining_downloads;
-                        self.user_widget.username = user_info.data.username.clone();
-                    }
+            // Action::LoggedIn => {
+            //     match self.account_screen.user_info() {
+            //         Some(user_info) => {
+            //             self.search_screen.user_widget.requests = user_info.data.downloads_count;
+            //             self.search_screen.user_widget.remaining = user_info.data.remaining_downloads;
+            //             self.search_screen.user_widget.username = user_info.data.username.clone();
+            //         }
+            //
+            //         None => {}
+            //     }
+            //
+            //     Ok(vec![SwitchScreen(Main)])
+            // }
 
-                    None => {}
-                }
+            // LoggedOut => {
+            //     self.search_screen.user_widget.requests = 0;
+            //     self.search_screen.user_widget.remaining = 0;
+            //     self.search_screen.user_widget.username = "".into();
+            //
+            //     Ok(vec![])
+            // }
 
-                Ok(vec![SwitchScreen(Main)])
-            }
+            // QueryUpdated(query) => {
+            //     let languages = self.languages_screen.languages();
+            //     Ok(vec![FetchSubs(query, languages)])
+            // }
 
-            LoggedOut => {
-                self.user_widget.requests = 0;
-                self.user_widget.remaining = 0;
-                self.user_widget.username = "".into();
+            // FetchSubs(query, languages) => {
+            //     self.features_tx
+            //         .send(SubtitlesQuery {
+            //             query,
+            //             languages,
+            //             id: None,
+            //         })
+            //         .await?;
+            //     Ok(vec![StartSpinner])
+            // }
 
-                Ok(vec![])
-            }
-
-            QueryUpdated(query) => {
-                let languages = self.languages_screen.languages();
-                Ok(vec![FetchSubs(query, languages)])
-            }
-
-            FetchSubs(query, languages) => {
-                self.features_tx
-                    .send(SubtitlesQuery {
-                        query,
-                        languages,
-                        id: None,
-                    })
-                    .await?;
-                Ok(vec![StartSpinner])
-            }
-
-            StartSpinner => {
-                self.status_widget.spinning = true;
-                Ok(vec![])
-            }
-
-            StopSpinner => {
-                self.status_widget.spinning = false;
-                Ok(vec![])
-            }
+            // StartSpinner => {
+            //     self.search_screen.status_widget.spinning = true;
+            //     Ok(vec![])
+            // }
+            //
+            // StopSpinner => {
+            //     self.search_screen.status_widget.spinning = false;
+            //     Ok(vec![])
+            // }
 
             Init => {
                 let mut actions = self.account_screen.update(Init).await?;
 
-                let query: String = self.search_widget.input.value().into();
-                if !query.is_empty() {
-                    let languages = self.languages_screen.languages();
-                    actions.push(FetchSubs(query, languages));
-                }
+                // let query: String = self.search_widget.input.value().into();
+                // if !query.is_empty() {
+                //     let languages = self.languages_screen.languages();
+                //     actions.push(FetchSubs(query, languages));
+                // }
 
                 Ok(actions)
             }
 
-            DownloadSubs(file_id, language) => {
-                self.status_widget.info = "Downloading...".into();
+            // DownloadSubs(file_id, language) => {
+            //     self.status_widget.info = "Downloading...".into();
+            //
+            //     let downloader = self.downloader.clone();
+            //     let ui_tx = self.ui_tx.clone();
+            //     tokio::spawn(async move {
+            //         let token_result = retrieve().await;
+            //         match token_result {
+            //             Ok(token_opt) => {
+            //                 let msg = match downloader.download(token_opt, file_id, &language).await
+            //                 {
+            //                     Ok(downloaded) => DownloadedSubs(downloaded),
+            //                     Err(e) => DownloadSubsFailed(e.to_string()),
+            //                 };
+            //                 ui_tx.send(msg).await;
+            //             }
+            //             Err(e) => {
+            //                 let msg = DownloadSubsFailed(e.to_string());
+            //                 ui_tx.send(msg).await;
+            //             }
+            //         }
+            //     });
+            //
+            //     Ok(vec![StartSpinner])
+            // }
 
-                let downloader = self.downloader.clone();
-                let ui_tx = self.ui_tx.clone();
-                tokio::spawn(async move {
-                    let token_result = retrieve().await;
-                    match token_result {
-                        Ok(token_opt) => {
-                            let msg = match downloader.download(token_opt, file_id, &language).await
-                            {
-                                Ok(downloaded) => DownloadedSubs(downloaded),
-                                Err(e) => DownloadSubsFailed(e.to_string()),
-                            };
-                            ui_tx.send(msg).await;
-                        }
-                        Err(e) => {
-                            let msg = DownloadSubsFailed(e.to_string());
-                            ui_tx.send(msg).await;
-                        }
-                    }
-                });
-
-                Ok(vec![StartSpinner])
-            }
-
-            DownloadedSubs(downloaded) => {
-                self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
-                self.user_widget.requests = downloaded.requests;
-                self.user_widget.remaining = downloaded.remaining;
-                Ok(vec![StopSpinner])
-            }
+            // DownloadedSubs(downloaded) => {
+            //     self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
+            //     self.user_widget.requests = downloaded.requests;
+            //     self.user_widget.remaining = downloaded.remaining;
+            //     Ok(vec![StopSpinner])
+            // }
 
             SwitchScreen(screen) => {
                 self.current_screen = screen;
                 Ok(vec![])
             }
 
-            DownloadSubsFailed(error) => {
-                self.status_widget.info = format!("Error: {:?}", error);
-                Ok(vec![StopSpinner])
-            }
+            // DownloadSubsFailed(error) => {
+            //     self.status_widget.info = format!("Error: {:?}", error);
+            //     Ok(vec![StopSpinner])
+            // }
 
             Exit => {
                 self.exit = true;
                 Ok(vec![])
             }
 
-            EnabledLimitSubsToId(id) => {
-                let languages = self.languages_screen.languages();
-                let query = self.search_widget.input.value().into();
-                self.features_tx
-                    .send(SubtitlesQuery {
-                        query,
-                        languages,
-                        id: Some(id),
-                    })
-                    .await?;
-                Ok(vec![StartSpinner])
-            }
+            // EnabledLimitSubsToId(id) => {
+            //     let languages = self.languages_screen.languages();
+            //     let query = self.search_widget.input.value().into();
+            //     self.features_tx
+            //         .send(SubtitlesQuery {
+            //             query,
+            //             languages,
+            //             id: Some(id),
+            //         })
+            //         .await?;
+            //     Ok(vec![StartSpinner])
+            // }
 
-            DisabledLimitSubsToId => {
-                let languages = self.languages_screen.languages();
-                let query = self.search_widget.input.value().into();
-                self.features_tx
-                    .send(SubtitlesQuery {
-                        query,
-                        languages,
-                        id: None,
-                    })
-                    .await?;
-                Ok(vec![StartSpinner])
-            }
+            // DisabledLimitSubsToId => {
+            //     let languages = self.languages_screen.languages();
+            //     let query = self.search_widget.input.value().into();
+            //     self.features_tx
+            //         .send(SubtitlesQuery {
+            //             query,
+            //             languages,
+            //             id: None,
+            //         })
+            //         .await?;
+            //     Ok(vec![StartSpinner])
+            // }
 
             _ => Ok(vec![]),
         }
@@ -281,42 +275,7 @@ impl App {
         match &self.current_screen {
             Main => {
                 let area = frame.area();
-
-                let layout = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([
-                        Constraint::Length(3),
-                        Constraint::Min(10),
-                        Constraint::Length(3),
-                        Constraint::Length(3),
-                    ])
-                    .split(area);
-
-                let status = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Fill(1), Constraint::Length(50)])
-                    .split(layout[2]);
-
-                let main_nav = {
-                    Paragraph::new(Line::from(vec![
-                        Span::from("F2:").bold(),
-                        Span::from(" Search | "),
-                        Span::from("F3:").bold(),
-                        Span::from(" Account | "),
-                        Span::from("F4:").bold(),
-                        Span::from(" Languages | "),
-                        Span::from("F10:").bold(),
-                        Span::from(" Exit"),
-                    ]))
-                    .centered()
-                    .block(Block::default().borders(Borders::ALL))
-                };
-
-                self.search_widget.render(frame, layout[0]);
-                self.subs_widget.render(frame, layout[1]);
-                self.status_widget.render(frame, status[0]);
-                self.user_widget.render(frame, status[1]);
-                frame.render_widget(main_nav, layout[3]);
+                self.search_screen.render(frame);
             }
             Language => {
                 let area = frame.area();
@@ -352,15 +311,9 @@ impl App {
                 KeyCode::F(10) => Ok(Some(Exit)),
 
                 _ => match self.current_screen {
-                    Main => match key_event.code {
-                        KeyCode::PageUp
-                        | KeyCode::PageDown
-                        | KeyCode::Up
-                        | KeyCode::Down
-                        | KeyCode::Enter
-                        | KeyCode::F(5) => Ok(self.subs_widget.handle_key_event(key_event)),
-                        _ => Ok(self.search_widget.handle_key_event(event)),
-                    },
+                    Main =>  match key_event.code {
+                        _ => self.search_screen.handle_key_event(event).await
+                    }
 
                     Language => match key_event.code {
                         _ => self.languages_screen.handle_key_event(event),
