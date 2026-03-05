@@ -23,7 +23,7 @@ use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
 use gio::prelude::DBusInterfaceSkeletonExt;
-use log::{error, info};
+use log::{debug, error, info};
 use osb::get_download_link::get_download_link;
 use osb::login::login;
 use osb::user_info;
@@ -112,6 +112,7 @@ impl App {
     }
 
     async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
+        debug!("action: {:?}", action);
         match action {
             Input(event) => {
                 if let Ok(Some(m)) = self.handle_key_event(event).await {
@@ -138,8 +139,8 @@ impl App {
                 Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
             }
 
-            Action::LoggedIn | LoggedOut => {
-                match &self.account_screen.user_info {
+            Action::LoggedIn => {
+                match self.account_screen.user_info() {
                     Some(user_info) => {
                         self.user_widget.requests = user_info.data.downloads_count;
                         self.user_widget.remaining = user_info.data.remaining_downloads;
@@ -150,6 +151,14 @@ impl App {
                 }
 
                 Ok(vec![SwitchScreen(Main)])
+            }
+
+            LoggedOut => {
+                self.user_widget.requests = 0;
+                self.user_widget.remaining = 0;
+                self.user_widget.username = "".into();
+
+                Ok(vec![])
             }
 
             QueryUpdated(query) => {

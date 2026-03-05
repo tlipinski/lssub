@@ -6,6 +6,7 @@ use osb::login::Credentials;
 use crate::ui::downloader::Downloaded;
 use crate::ui::subtitles_fetcher::SubtitlesQuery;
 
+#[derive(Debug)]
 pub enum Action {
     Input(Event),
     SubsFetched(SubtitlesResponse),

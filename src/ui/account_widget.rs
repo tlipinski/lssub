@@ -1,7 +1,10 @@
+use crate::secret::clear;
+use crate::ui::actions::Action;
+use anyhow::Result;
 use crossterm::event::KeyModifiers;
 use log::info;
-use crate::ui::actions::Action;
 use osb::login::Credentials;
+use osb::user_info::UserInfo;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -11,19 +14,15 @@ use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use anyhow::Result;
-use crate::secret::clear;
 
 #[derive(Debug)]
 pub struct AccountWidget {
-    pub username: String,
+    pub user_info: UserInfo,
 }
 
 impl AccountWidget {
-    pub fn from() -> Self {
-        AccountWidget {
-            username: "".into(),
-        }
+    pub fn from(user_info: UserInfo) -> Self {
+        AccountWidget { user_info }
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
@@ -56,7 +55,8 @@ impl AccountWidget {
         );
 
         let already_logged =
-            Paragraph::new(format!("Logged in as: {}", self.username)).block(Block::bordered());
+            Paragraph::new(format!("Logged in as: {}", self.user_info.data.username))
+                .block(Block::bordered());
 
         frame.render_widget(block, area);
         frame.render_widget(already_logged, layout[0]);
@@ -72,8 +72,9 @@ impl AccountWidget {
                     ..
                 } => {
                     clear().await;
+                    self.user_info = UserInfo::default();
                     Ok(Some(Action::LoggedOut))
-                },
+                }
                 _ => Ok(None),
             }
         } else {

@@ -109,6 +109,7 @@ fn output_file(
     base_path.join(output_file)
 }
 
+#[derive(Debug)]
 pub struct Downloaded {
     pub path: PathBuf,
     pub requests: i32,
