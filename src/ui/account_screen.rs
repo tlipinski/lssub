@@ -27,6 +27,7 @@ impl AccountScreen {
 
     async fn update(&mut self, action: Action) -> anyhow::Result<Vec<Action>> {
         match action {
+            // todo: handle Input action or let main app call handle_key_event?
             Input(event) => {
                 if let Some(m) = self.handle_key_event(event) {
                     Ok(vec![m])
