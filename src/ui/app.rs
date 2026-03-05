@@ -5,9 +5,9 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
-    Exit, FetchSubs, Init, LanguagesUpdated, LoginFailed, Logout, QueryUpdated,
-    SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, SwitchToAccountScreen,
-    UpdateDownloadCount, UpdateUser, UpdateUsername,
+    Exit, FetchSubs, Init, LanguagesUpdated, Logout, QueryUpdated, SpinnerUpdate,
+    StartSpinner, StopSpinner, SwitchScreen, SwitchToAccountScreen, UpdateDownloadCount,
+    UpdateUser, UpdateUsername,
 };
 use crate::ui::app::Action::{Input, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
@@ -133,10 +133,14 @@ impl App {
                 Ok(vec![])
             }
 
-            LanguagesUpdated=> {
+            LanguagesUpdated => {
                 let languages = self.languages_screen.languages();
                 let query: String = self.search_widget.input.value().into();
                 Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
+            }
+
+            Action::LoggedIn => {
+                Ok(vec![SwitchScreen(Main)])
             }
 
             QueryUpdated(query) => {
@@ -299,7 +303,7 @@ impl App {
                     .await?;
                 Ok(vec![StartSpinner])
             }
-            _ => {Ok(vec![])}
+            _ => Ok(vec![]),
         }
     }
 

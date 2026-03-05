@@ -12,7 +12,6 @@ pub enum Action {
     SpinnerUpdate(char),
     LanguagesUpdated,
     LoggedIn,
-    LoginFailed(String),
     UpdateUser,
     Logout,
     SwitchToAccountScreen,
