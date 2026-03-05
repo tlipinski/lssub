@@ -11,6 +11,7 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use anyhow::Result;
 
 pub struct LanguagesScreen {
     config_provider: ConfigProvider,
@@ -27,34 +28,32 @@ impl LanguagesScreen {
         })
     }
 
-    async fn update(&mut self, action: Action) -> anyhow::Result<Vec<Action>> {
+    async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
         match action {
-            LanguagesUpdated(languages) => {
-                // self.current_screen = Main;
-                // let query: String = self.search_widget.input.value().into();
-                self.config_provider.modify(|c: &Config| {
-                    let mut updated = c.clone();
-                    updated.languages = languages.clone();
-                    updated
-                });
-                Ok(vec![FetchSubs(query, languages)])
-            }
-
             _ => Ok(vec![]),
         }
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    pub fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                KeyCode::Enter => Some(Action::LanguagesUpdated(self.languages())),
+                KeyCode::Enter => {
+                    let languages = self.languages();
+                    self.config_provider.modify(|c: &Config| {
+                        let mut updated = c.clone();
+                        updated.languages = languages.clone();
+                        updated
+                    });
+                    Ok(Some(LanguagesUpdated(vec![])))
+                },
+
                 _ => {
                     self.input.handle_event(&event);
-                    None
+                    Ok(None)
                 }
             }
         } else {
-            None
+            Ok(None)
         }
     }
 

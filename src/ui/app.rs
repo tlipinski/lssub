@@ -1,5 +1,6 @@
 use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
+use crate::ui::account_screen::AccountScreen;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
@@ -13,6 +14,7 @@ use crate::ui::app::CurrentScreen::{Account, Language, Main};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::language_widget::LanguageWidget;
+use crate::ui::languages_screen::LanguagesScreen;
 use crate::ui::login_widget::LoginWidget;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::spinner_task;
@@ -41,8 +43,6 @@ use std::sync::mpsc;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use crate::ui::account_screen::AccountScreen;
-use crate::ui::languages_screen::LanguagesScreen;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
@@ -116,7 +116,7 @@ impl App {
     async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
         match action {
             Input(event) => {
-                if let Some(m) = self.handle_key_event(event) {
+                if let Ok(Some(m)) = self.handle_key_event(event) {
                     Ok(vec![m])
                 } else {
                     Ok(vec![])
@@ -380,7 +380,8 @@ impl App {
                         Span::from(" Languages | "),
                         Span::from("F10:").bold(),
                         Span::from(" Exit"),
-                    ])).centered()
+                    ]))
+                    .centered()
                     .block(Block::default().borders(Borders::ALL))
                 };
 
@@ -414,14 +415,14 @@ impl App {
         }
     }
 
-    fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                QUIT_KEY => Some(SwitchScreen(Main)),
-                KeyCode::F(2) => Some(SwitchScreen(Main)),
-                KeyCode::F(3) => Some(SwitchToAccountScreen),
-                KeyCode::F(4) => Some(SwitchScreen(Language)),
-                KeyCode::F(10) => Some(Exit),
+                QUIT_KEY => Ok(Some(SwitchScreen(Main))),
+                KeyCode::F(2) => Ok(Some(SwitchScreen(Main))),
+                KeyCode::F(3) => Ok(Some(SwitchToAccountScreen)),
+                KeyCode::F(4) => Ok(Some(SwitchScreen(Language))),
+                KeyCode::F(10) => Ok(Some(Exit)),
 
                 _ => match self.current_screen {
                     Main => match key_event.code {
@@ -430,8 +431,8 @@ impl App {
                         | KeyCode::Up
                         | KeyCode::Down
                         | KeyCode::Enter
-                        | KeyCode::F(5) => self.subs_widget.handle_key_event(key_event),
-                        _ => self.search_widget.handle_key_event(event),
+                        | KeyCode::F(5) => Ok(self.subs_widget.handle_key_event(key_event)),
+                        _ => Ok(self.search_widget.handle_key_event(event)),
                     },
 
                     Language => match key_event.code {
@@ -439,12 +440,12 @@ impl App {
                     },
 
                     Account => match key_event.code {
-                        _ => self.account_screen.handle_key_event(event),
+                        _ => Ok(self.account_screen.handle_key_event(event)),
                     },
                 },
             }
         } else {
-            None
+            Ok(None)
         }
     }
 }
