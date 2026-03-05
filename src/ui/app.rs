@@ -6,7 +6,7 @@ use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
     Exit, FetchSubs, Init, LanguagesUpdated, LoggedOut, QueryUpdated, SpinnerUpdate, StartSpinner,
-    StopSpinner, SwitchScreen, UpdateUser,
+    StopSpinner, SwitchScreen,
 };
 use crate::ui::app::Action::{Input, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
@@ -89,7 +89,7 @@ impl App {
             exit: false,
         };
 
-        let mut messages = VecDeque::from([Init, UpdateUser]);
+        let mut messages = VecDeque::from([Init]);
 
         while !app.exit {
             while let Some(msg) = messages.pop_front() {
