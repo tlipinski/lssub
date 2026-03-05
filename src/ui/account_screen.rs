@@ -1,10 +1,12 @@
 use crossterm::event::Event;
+use log::error;
 use ratatui::Frame;
 use ratatui::layout::Rect;
-use crate::secret::clear;
+use osb::login::login;
+use crate::secret::{clear, store};
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{Input, Logout, SwitchScreen, UpdateUser};
+use crate::ui::actions::Action::{Input, Login, LoginFailed, Logout, SwitchScreen, UpdateUser};
 use crate::ui::login_widget::LoginWidget;
 
 pub struct AccountScreen {
@@ -33,9 +35,35 @@ impl AccountScreen {
                 }
             }
 
+            Login(credentials) => {
+                let result = tokio::spawn(async move {
+                    match login(&credentials).await {
+                        Ok(api_token) => {
+                            store(&api_token, &credentials.username).await;
+                            UpdateUser
+                        }
+                        Err(e) => LoginFailed(e.to_string()),
+                    }
+                })
+                    .await;
+
+                match result {
+                    Ok(msg) => Ok(vec![msg]),
+                    Err(e) => {
+                        error!("Error logging in: {}", e);
+                        Err(e.into())
+                    }
+                }
+            }
+
             Logout => {
                 clear().await?;
                 Ok(vec![UpdateUser])
+            }
+
+            LoginFailed(reason) => {
+                self.login_widget.failed = reason;
+                Ok(vec![])
             }
 
             _ => Ok(vec![]),

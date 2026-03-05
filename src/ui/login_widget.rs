@@ -156,4 +156,11 @@ impl LoginWidget {
             None
         }
     }
+
+}
+
+enum LoginAction {
+    Login(Credentials),
+    LoginFailed(String),
+    Logout
 }

@@ -234,29 +234,31 @@ impl App {
             }
 
             Login(credentials) => {
-                let result = tokio::spawn(async move {
-                    match login(&credentials).await {
-                        Ok(api_token) => {
-                            store(&api_token, &credentials.username).await;
-                            UpdateUser
-                        }
-                        Err(e) => LoginFailed(e.to_string()),
-                    }
-                })
-                .await;
-
-                match result {
-                    Ok(msg) => Ok(vec![msg]),
-                    Err(e) => {
-                        error!("Error logging in: {}", e);
-                        Err(e.into())
-                    }
-                }
+                // let result = tokio::spawn(async move {
+                //     match login(&credentials).await {
+                //         Ok(api_token) => {
+                //             store(&api_token, &credentials.username).await;
+                //             UpdateUser
+                //         }
+                //         Err(e) => LoginFailed(e.to_string()),
+                //     }
+                // })
+                // .await;
+                //
+                // match result {
+                //     Ok(msg) => Ok(vec![msg]),
+                //     Err(e) => {
+                //         error!("Error logging in: {}", e);
+                //         Err(e.into())
+                //     }
+                // }
+                unimplemented!()
             }
 
             LoginFailed(reason) => {
-                self.login_widget.failed = reason;
-                Ok(vec![])
+                // self.login_widget.failed = reason;
+                // Ok(vec![])
+                unimplemented!()
             }
 
             DownloadSubsFailed(error) => {
@@ -349,7 +351,7 @@ impl App {
     }
 
     fn draw(&mut self, frame: &mut Frame) {
-        match self.current_screen {
+        match &self.current_screen {
             Main => {
                 let area = frame.area();
 
@@ -397,16 +399,6 @@ impl App {
                     .split(area);
 
                 self.language_widget.render(frame, area);
-            }
-            Auth => {
-                let area = frame.area();
-
-                let right = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Length(3), Constraint::Length(3)])
-                    .split(area);
-
-                self.account_screen.render(frame, area);
             }
 
             Account => {
