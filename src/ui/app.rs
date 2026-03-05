@@ -143,6 +143,10 @@ impl App {
                 Ok(vec![SwitchScreen(Main)])
             }
 
+            Action::LoggedOut => {
+                Ok(vec![SwitchScreen(Main)])
+            }
+
             QueryUpdated(query) => {
                 let languages = self.languages_screen.languages();
                 Ok(vec![FetchSubs(query, languages)])
@@ -227,40 +231,6 @@ impl App {
             Exit => {
                 self.exit = true;
                 Ok(vec![])
-            }
-
-            UpdateUser => {
-                let ui_tx = self.ui_tx.clone();
-                tokio::spawn(async move {
-                    match retrieve().await {
-                        Ok(Some(jwt)) => match get_user_info(&jwt).await {
-                            Ok(user_info) => {
-                                ui_tx
-                                    .send(UpdateDownloadCount(
-                                        user_info.data.downloads_count,
-                                        user_info.data.remaining_downloads,
-                                    ))
-                                    .await;
-
-                                ui_tx.send(UpdateUsername(user_info.data.username)).await
-                            }
-                            Err(e) => {
-                                error!("Error getting user info: {e}");
-                                Ok(())
-                            }
-                        },
-                        Ok(None) => {
-                            ui_tx.send(UpdateDownloadCount(0, 0)).await;
-                            ui_tx.send(UpdateUsername("".to_string())).await;
-                            Ok(())
-                        }
-                        Err(e) => {
-                            error!("Error retrieving jwt: {e}");
-                            Ok(())
-                        }
-                    }
-                });
-                Ok(vec![SwitchScreen(Main)])
             }
 
             UpdateDownloadCount(rq, rm) => {

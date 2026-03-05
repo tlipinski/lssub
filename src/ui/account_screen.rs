@@ -82,7 +82,7 @@ impl AccountScreen {
 
     pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if (self.logged_in) {
-            self.account_widget.handle_key_event(event)
+            self.account_widget.handle_key_event(event).await
         } else {
             self.login_widget.handle_key_event(event).await
         }

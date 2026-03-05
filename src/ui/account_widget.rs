@@ -12,6 +12,7 @@ use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 use anyhow::Result;
+use crate::secret::clear;
 
 #[derive(Debug)]
 pub struct AccountWidget {
@@ -62,14 +63,17 @@ impl AccountWidget {
         frame.render_widget(buttons_block, layout[1]);
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
+    pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         info!("key event: {:?}", event);
         if let Event::Key(key_event) = event {
             match key_event {
                 KeyEvent {
                     code: KeyCode::F(12),
                     ..
-                } => Ok(Some(Action::LoggedOut)),
+                } => {
+                    clear().await;
+                    Ok(Some(Action::LoggedOut))
+                },
                 _ => Ok(None),
             }
         } else {
