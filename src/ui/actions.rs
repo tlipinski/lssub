@@ -14,6 +14,7 @@ pub enum Action {
     LanguagesUpdated,
     LoggedIn,
     LoggedOut,
+    RequestedSubs,
     QueryUpdated(String),
     FetchSubs(String, Vec<String>),
     StartSpinner,

@@ -1,5 +1,6 @@
-use crate::ui::app::QUIT_KEY;
 use crate::ui::actions::Action;
+use crate::ui::app::QUIT_KEY;
+use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use anyhow::Result;
 use gio::glib::random_int_range;
 use ratatui::Frame;
@@ -13,16 +14,21 @@ use std::sync::mpsc::Sender;
 use std::thread::sleep;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use crate::ui::actions::Action::RequestedSubs;
 
 #[derive(Debug)]
 pub struct SearchWidget {
     pub input: Input,
+    languages: Vec<String>,
+    features_tx: tokio::sync::mpsc::Sender<SubtitlesQuery>,
 }
 
 impl SearchWidget {
-    pub fn from(search_text: String) -> Self {
+    pub fn from(search_text: String, features_tx: tokio::sync::mpsc::Sender<SubtitlesQuery>) -> Self {
         SearchWidget {
             input: Input::from(search_text),
+            languages: Vec::new(),
+            features_tx,
         }
     }
 
@@ -42,12 +48,20 @@ impl SearchWidget {
         frame.render_widget(view, area);
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Some(state_changed) = self.input.handle_event(&event)
             && state_changed.value
         {
-            return Some(Action::QueryUpdated(self.input.value().into()));
+            let query = self.input.value().into();
+            self.features_tx
+                .send(SubtitlesQuery {
+                    query,
+                    languages: self.languages.clone(),
+                    id: None,
+                })
+                .await?;
+            return Ok(Some(RequestedSubs));
         }
-        None
+        Ok(None)
     }
 }

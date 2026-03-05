@@ -21,19 +21,24 @@ use ratatui::prelude::{StatefulWidget, Stylize};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use std::path::Path;
+use tokio::sync::mpsc::Sender;
 
 pub struct SearchScreen {
     pub search_widget: SearchWidget,
     pub user_widget: UserWidget,
-    subs_widget: SubsWidget,
+    pub subs_widget: SubsWidget,
     pub status_widget: StatusWidget,
     downloader: Downloader,
 }
 
 impl SearchScreen {
-    pub fn from(base_path: &Path, file_name: Option<&str>) -> Result<SearchScreen> {
+    pub fn from(
+        base_path: &Path,
+        file_name: Option<&str>,
+        features_tx: Sender<SubtitlesQuery>,
+    ) -> Result<SearchScreen> {
         Ok(Self {
-            search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
+            search_widget: SearchWidget::from(file_name.unwrap_or("").into(), features_tx),
             user_widget: UserWidget::from(),
             subs_widget: SubsWidget::default(),
             status_widget: StatusWidget::from("".into()),
@@ -96,7 +101,7 @@ impl SearchScreen {
                 | KeyCode::Down
                 | KeyCode::Enter
                 | KeyCode::F(5) => Ok(self.subs_widget.handle_key_event(key_event)),
-                _ => Ok(self.search_widget.handle_key_event(event)),
+                _ => self.search_widget.handle_key_event(event).await,
             }
         } else {
             Ok(None)

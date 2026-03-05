@@ -51,7 +51,6 @@ pub struct App {
     languages_screen: LanguagesScreen,
     account_screen: AccountScreen,
     ui_tx: Sender<Action>,
-    features_tx: Sender<SubtitlesQuery>,
     exit: bool,
 }
 
@@ -71,7 +70,7 @@ impl App {
         tokio::spawn(spinner_task(ui_tx.clone()));
 
         let provider = ConfigProvider::default();
-        let search_screen = SearchScreen::from(base_path, file_name)?;
+        let search_screen = SearchScreen::from(base_path, file_name, features_tx)?;
 
         let mut app = App {
             search_screen,
@@ -79,7 +78,6 @@ impl App {
             languages_screen: LanguagesScreen::new(provider)?,
             account_screen: AccountScreen::new(),
             ui_tx: ui_tx.clone(),
-            features_tx,
             exit: false,
         };
 
@@ -116,11 +114,11 @@ impl App {
                 }
             }
 
-            // SubsFetched(subtitles) => {
-                // self.subs_widget.update_subtitles(&subtitles);
+            SubsFetched(subtitles) => {
+                self.search_screen.subs_widget.update_subtitles(&subtitles);
                 // self.status_widget.info = format!("{} results", subtitles.data.len());
-                // Ok(vec![StopSpinner])
-            // }
+                Ok(vec![StopSpinner])
+            }
 
             // SpinnerUpdate(chr) => {
                 // self.status_widget.spin(chr);
@@ -155,10 +153,10 @@ impl App {
             //     Ok(vec![])
             // }
 
-            // QueryUpdated(query) => {
-            //     let languages = self.languages_screen.languages();
-            //     Ok(vec![FetchSubs(query, languages)])
-            // }
+            QueryUpdated(query) => {
+                let languages = self.languages_screen.languages();
+                Ok(vec![FetchSubs(query, languages)])
+            }
 
             // FetchSubs(query, languages) => {
             //     self.features_tx
