@@ -69,7 +69,7 @@ impl AccountWidget {
                 KeyEvent {
                     code: KeyCode::F(12),
                     ..
-                } => Ok(Some(Action::Logout)),
+                } => Ok(Some(Action::LoggedOut)),
                 _ => Ok(None),
             }
         } else {

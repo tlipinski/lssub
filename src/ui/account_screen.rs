@@ -6,7 +6,7 @@ use osb::login::login;
 use crate::secret::{clear, store};
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{Input, Logout, SwitchScreen, UpdateUser};
+use crate::ui::actions::Action::{Input, LoggedOut, SwitchScreen, UpdateUser};
 use crate::ui::login_widget::LoginWidget;
 use anyhow::Result;
 

@@ -5,8 +5,8 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
-    Exit, FetchSubs, Init, LanguagesUpdated, Logout, QueryUpdated, SpinnerUpdate,
-    StartSpinner, StopSpinner, SwitchScreen, SwitchToAccountScreen, UpdateDownloadCount,
+    Exit, FetchSubs, Init, LanguagesUpdated, LoggedOut, QueryUpdated, SpinnerUpdate,
+    StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount,
     UpdateUser, UpdateUsername,
 };
 use crate::ui::app::Action::{Input, SubsFetched};
@@ -261,12 +261,6 @@ impl App {
                 Ok(vec![SwitchScreen(Main)])
             }
 
-            Logout => {
-                // clear().await?;
-                // Ok(vec![UpdateUser, SwitchScreen(Auth)])
-                unimplemented!()
-            }
-
             UpdateDownloadCount(rq, rm) => {
                 self.user_widget.requests = rq;
                 self.user_widget.remaining = rm;
@@ -303,6 +297,7 @@ impl App {
                     .await?;
                 Ok(vec![StartSpinner])
             }
+            
             _ => Ok(vec![]),
         }
     }
