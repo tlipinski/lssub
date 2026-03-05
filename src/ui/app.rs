@@ -147,7 +147,7 @@ impl App {
             }
 
             QueryUpdated(query) => {
-                let languages = self.languages_screen.language_widget.languages();
+                let languages = self.languages_screen.languages();
                 Ok(vec![FetchSubs(query, languages)])
             }
 
@@ -175,7 +175,7 @@ impl App {
             Init => {
                 let query: String = self.search_widget.input.value().into();
                 if (!query.is_empty()) {
-                    let languages = self.languages_screen.language_widget.languages();
+                    let languages = self.languages_screen.languages();
                     Ok(vec![FetchSubs(query, languages)])
                 } else {
                     Ok(vec![])
@@ -323,7 +323,7 @@ impl App {
             }
 
             EnabledLimitSubsToId(id) => {
-                let languages = self.languages_screen.language_widget.languages();
+                let languages = self.languages_screen.languages();
                 let query = self.search_widget.input.value().into();
                 self.features_tx
                     .send(SubtitlesQuery {
@@ -336,7 +336,7 @@ impl App {
             }
 
             DisabledLimitSubsToId => {
-                let languages = self.languages_screen.language_widget.languages();
+                let languages = self.languages_screen.languages();
                 let query = self.search_widget.input.value().into();
                 self.features_tx
                     .send(SubtitlesQuery {
@@ -398,7 +398,7 @@ impl App {
                     .constraints([Constraint::Length(3)])
                     .split(area);
 
-                self.languages_screen.language_widget.render(frame, area);
+                self.languages_screen.render(frame, area);
             }
 
             Account => {
@@ -435,7 +435,7 @@ impl App {
                     },
 
                     Language => match key_event.code {
-                        _ => self.languages_screen.language_widget.handle_key_event(event),
+                        _ => self.languages_screen.handle_key_event(event),
                     },
 
                     Account => match key_event.code {
