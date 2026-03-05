@@ -7,6 +7,7 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use crate::ui::actions::Action::LanguagesUpdated;
 
 #[derive(Debug)]
 pub struct LanguageWidget {
@@ -44,7 +45,7 @@ impl LanguageWidget {
     pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                KeyCode::Enter => Some(Action::LanguagesUpdated(self.languages())),
+                KeyCode::Enter => Some(LanguagesUpdated),
                 _ => {
                     self.input.handle_event(&event);
                     None

@@ -134,16 +134,10 @@ impl App {
                 Ok(vec![])
             }
 
-            LanguagesUpdated(languages) => {
-                // self.current_screen = Main;
-                // let query: String = self.search_widget.input.value().into();
-                // self.config_provider.modify(|c: &Config| {
-                //     let mut updated = c.clone();
-                //     updated.languages = languages.clone();
-                //     updated
-                // });
-                // Ok(vec![FetchSubs(query, languages)])
-                unimplemented!()
+            LanguagesUpdated=> {
+                let languages = self.languages_screen.languages();
+                let query: String = self.search_widget.input.value().into();
+                Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
             }
 
             QueryUpdated(query) => {

@@ -44,7 +44,7 @@ impl LanguagesScreen {
                         updated.languages = languages.clone();
                         updated
                     });
-                    Ok(Some(LanguagesUpdated(vec![])))
+                    Ok(Some(LanguagesUpdated))
                 },
 
                 _ => {

@@ -10,7 +10,7 @@ pub enum Action {
     Input(Event),
     SubsFetched(SubtitlesResponse),
     SpinnerUpdate(char),
-    LanguagesUpdated(Vec<String>),
+    LanguagesUpdated,
     Login(Credentials),
     LoginFailed(String),
     UpdateUser,
