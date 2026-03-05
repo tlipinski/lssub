@@ -42,16 +42,16 @@ use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use crate::ui::account_screen::AccountScreen;
+use crate::ui::languages_screen::LanguagesScreen;
 
 pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
 pub struct App {
-    config_provider: ConfigProvider,
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
     user_widget: UserWidget,
     subs_widget: SubsWidget,
-    language_widget: LanguageWidget,
+    languages_screen: LanguagesScreen,
     status_widget: StatusWidget,
     account_screen: AccountScreen,
     ui_tx: Sender<Action>,
@@ -78,12 +78,11 @@ impl App {
         let provider = ConfigProvider::default();
         let languages = provider.get_config()?.languages;
         let mut app = App {
-            config_provider: provider,
             current_screen: CurrentScreen::default(),
             search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
             user_widget: UserWidget::from(),
             subs_widget: SubsWidget::default(),
-            language_widget: LanguageWidget::from(languages),
+            languages_screen: LanguagesScreen::new(provider)?,
             status_widget: StatusWidget::from("".into()),
             account_screen: AccountScreen::new(),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
@@ -136,18 +135,19 @@ impl App {
             }
 
             LanguagesUpdated(languages) => {
-                self.current_screen = Main;
-                let query: String = self.search_widget.input.value().into();
-                self.config_provider.modify(|c: &Config| {
-                    let mut updated = c.clone();
-                    updated.languages = languages.clone();
-                    updated
-                });
-                Ok(vec![FetchSubs(query, languages)])
+                // self.current_screen = Main;
+                // let query: String = self.search_widget.input.value().into();
+                // self.config_provider.modify(|c: &Config| {
+                //     let mut updated = c.clone();
+                //     updated.languages = languages.clone();
+                //     updated
+                // });
+                // Ok(vec![FetchSubs(query, languages)])
+                unimplemented!()
             }
 
             QueryUpdated(query) => {
-                let languages = self.language_widget.languages();
+                let languages = self.languages_screen.language_widget.languages();
                 Ok(vec![FetchSubs(query, languages)])
             }
 
@@ -175,7 +175,7 @@ impl App {
             Init => {
                 let query: String = self.search_widget.input.value().into();
                 if (!query.is_empty()) {
-                    let languages = self.language_widget.languages();
+                    let languages = self.languages_screen.language_widget.languages();
                     Ok(vec![FetchSubs(query, languages)])
                 } else {
                     Ok(vec![])
@@ -323,7 +323,7 @@ impl App {
             }
 
             EnabledLimitSubsToId(id) => {
-                let languages = self.language_widget.languages();
+                let languages = self.languages_screen.language_widget.languages();
                 let query = self.search_widget.input.value().into();
                 self.features_tx
                     .send(SubtitlesQuery {
@@ -336,7 +336,7 @@ impl App {
             }
 
             DisabledLimitSubsToId => {
-                let languages = self.language_widget.languages();
+                let languages = self.languages_screen.language_widget.languages();
                 let query = self.search_widget.input.value().into();
                 self.features_tx
                     .send(SubtitlesQuery {
@@ -398,7 +398,7 @@ impl App {
                     .constraints([Constraint::Length(3)])
                     .split(area);
 
-                self.language_widget.render(frame, area);
+                self.languages_screen.language_widget.render(frame, area);
             }
 
             Account => {
@@ -435,7 +435,7 @@ impl App {
                     },
 
                     Language => match key_event.code {
-                        _ => self.language_widget.handle_key_event(event),
+                        _ => self.languages_screen.language_widget.handle_key_event(event),
                     },
 
                     Account => match key_event.code {
