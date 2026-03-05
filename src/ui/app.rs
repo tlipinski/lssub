@@ -115,20 +115,19 @@ impl App {
             }
 
             SubsFetched(subtitles) => {
-                self.search_screen.subs_widget.update_subtitles(&subtitles);
-                // self.status_widget.info = format!("{} results", subtitles.data.len());
+                self.search_screen.update_subtitles(&subtitles);
                 Ok(vec![StopSpinner])
             }
 
             // SpinnerUpdate(chr) => {
-                // self.status_widget.spin(chr);
-                // Ok(vec![])
+            // self.status_widget.spin(chr);
+            // Ok(vec![])
             // }
 
             // LanguagesUpdated => {
-                // let languages = self.languages_screen.languages();
-                // let query: String = self.search_widget.input.value().into();
-                // Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
+            // let languages = self.languages_screen.languages();
+            // let query: String = self.search_widget.input.value().into();
+            // Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
             // }
 
             // Action::LoggedIn => {
@@ -152,7 +151,6 @@ impl App {
             //
             //     Ok(vec![])
             // }
-
             QueryUpdated(query) => {
                 let languages = self.languages_screen.languages();
                 Ok(vec![FetchSubs(query, languages)])
@@ -178,7 +176,6 @@ impl App {
             //     self.search_screen.status_widget.spinning = false;
             //     Ok(vec![])
             // }
-
             Init => {
                 let mut actions = self.account_screen.update(Init).await?;
 
@@ -223,7 +220,6 @@ impl App {
             //     self.user_widget.remaining = downloaded.remaining;
             //     Ok(vec![StopSpinner])
             // }
-
             SwitchScreen(screen) => {
                 self.current_screen = screen;
                 Ok(vec![])
@@ -233,7 +229,6 @@ impl App {
             //     self.status_widget.info = format!("Error: {:?}", error);
             //     Ok(vec![StopSpinner])
             // }
-
             Exit => {
                 self.exit = true;
                 Ok(vec![])
@@ -264,37 +259,44 @@ impl App {
             //         .await?;
             //     Ok(vec![StartSpinner])
             // }
-
             _ => Ok(vec![]),
         }
     }
 
     fn draw(&mut self, frame: &mut Frame) {
+        let main_nav = {
+            Paragraph::new(Line::from(vec![
+                Span::from("F2:").bold(),
+                Span::from(" Search | "),
+                Span::from("F3:").bold(),
+                Span::from(" Account | "),
+                Span::from("F4:").bold(),
+                Span::from(" Languages | "),
+                Span::from("F10:").bold(),
+                Span::from(" Exit"),
+            ]))
+            .centered()
+            .block(Block::default().borders(Borders::ALL))
+        };
+
+        let area = frame.area();
+
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Fill(1), Constraint::Length(3)])
+            .split(area);
+
+        frame.render_widget(main_nav, layout[1]);
+
         match &self.current_screen {
             Main => {
-                let area = frame.area();
-                self.search_screen.render(frame);
+                self.search_screen.render(frame, layout[0]);
             }
             Language => {
-                let area = frame.area();
-
-                let right = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Length(3)])
-                    .split(area);
-
-                self.languages_screen.render(frame, area);
+                self.languages_screen.render(frame, layout[0]);
             }
-
             Account => {
-                let area = frame.area();
-
-                let right = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Length(3), Constraint::Length(3)])
-                    .split(area);
-
-                self.account_screen.render(frame, area);
+                self.account_screen.render(frame, layout[0]);
             }
         }
     }
@@ -309,9 +311,9 @@ impl App {
                 KeyCode::F(10) => Ok(Some(Exit)),
 
                 _ => match self.current_screen {
-                    Main =>  match key_event.code {
-                        _ => self.search_screen.handle_key_event(event).await
-                    }
+                    Main => match key_event.code {
+                        _ => self.search_screen.handle_key_event(event).await,
+                    },
 
                     Language => match key_event.code {
                         _ => self.languages_screen.handle_key_event(event),

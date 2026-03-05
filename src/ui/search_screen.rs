@@ -16,16 +16,16 @@ use crate::ui::user_widget::UserWidget;
 use anyhow::Result;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode};
-use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{StatefulWidget, Stylize};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use std::path::Path;
 use tokio::sync::mpsc::Sender;
+use osb::subtitles::SubtitlesResponse;
 
 pub struct SearchScreen {
     pub search_widget: SearchWidget,
-    pub user_widget: UserWidget,
     pub subs_widget: SubsWidget,
     pub status_widget: StatusWidget,
     downloader: Downloader,
@@ -39,7 +39,6 @@ impl SearchScreen {
     ) -> Result<SearchScreen> {
         Ok(Self {
             search_widget: SearchWidget::from(file_name.unwrap_or("").into(), features_tx),
-            user_widget: UserWidget::from(),
             subs_widget: SubsWidget::default(),
             status_widget: StatusWidget::from("".into()),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
@@ -52,44 +51,19 @@ impl SearchScreen {
         }
     }
 
-    pub fn render(&mut self, frame: &mut Frame) {
-        let area = frame.area();
-
+    pub fn render(&mut self, frame: &mut Frame, area: Rect) {
         let layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Length(3),
                 Constraint::Min(10),
-                Constraint::Length(3),
-                Constraint::Length(3),
+                Constraint::Length(3)
             ])
             .split(area);
 
-        let status = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Fill(1), Constraint::Length(50)])
-            .split(layout[2]);
-
-        let main_nav = {
-            Paragraph::new(Line::from(vec![
-                Span::from("F2:").bold(),
-                Span::from(" Search | "),
-                Span::from("F3:").bold(),
-                Span::from(" Account | "),
-                Span::from("F4:").bold(),
-                Span::from(" Languages | "),
-                Span::from("F10:").bold(),
-                Span::from(" Exit"),
-            ]))
-            .centered()
-            .block(Block::default().borders(Borders::ALL))
-        };
-
         self.search_widget.render(frame, layout[0]);
         self.subs_widget.render(frame, layout[1]);
-        self.status_widget.render(frame, status[0]);
-        self.user_widget.render(frame, status[1]);
-        frame.render_widget(main_nav, layout[3]);
+        self.status_widget.render(frame, layout[2]);
     }
 
     pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
@@ -106,5 +80,10 @@ impl SearchScreen {
         } else {
             Ok(None)
         }
+    }
+
+    pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
+        self.subs_widget.update_subtitles(subtitles_response);
+        self.status_widget.info = format!("{} results", subtitles_response.data.len());
     }
 }
