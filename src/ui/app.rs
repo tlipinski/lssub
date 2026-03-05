@@ -5,9 +5,8 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
-    Exit, FetchSubs, Init, LanguagesUpdated, LoggedOut, QueryUpdated, SpinnerUpdate,
-    StartSpinner, StopSpinner, SwitchScreen, UpdateDownloadCount,
-    UpdateUser, UpdateUsername,
+    Exit, FetchSubs, Init, LanguagesUpdated, LoggedOut, QueryUpdated, SpinnerUpdate, StartSpinner,
+    StopSpinner, SwitchScreen, UpdateUser,
 };
 use crate::ui::app::Action::{Input, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
@@ -28,7 +27,7 @@ use log::{error, info};
 use osb::get_download_link::get_download_link;
 use osb::login::login;
 use osb::user_info;
-use osb::user_info::get_user_info;
+use osb::user_info::{UserInfo, get_user_info};
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::prelude::{StatefulWidget, Stylize};
@@ -139,11 +138,17 @@ impl App {
                 Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
             }
 
-            Action::LoggedIn => {
-                Ok(vec![SwitchScreen(Main)])
-            }
+            Action::LoggedIn | LoggedOut => {
+                match &self.account_screen.user_info {
+                    Some(user_info) => {
+                        self.user_widget.requests = user_info.data.downloads_count;
+                        self.user_widget.remaining = user_info.data.remaining_downloads;
+                        self.user_widget.username = user_info.data.username.clone();
+                    }
 
-            Action::LoggedOut => {
+                    None => {}
+                }
+
                 Ok(vec![SwitchScreen(Main)])
             }
 
@@ -174,15 +179,15 @@ impl App {
             }
 
             Init => {
-                self.account_screen.update(Init).await;
+                let mut actions = self.account_screen.update(Init).await?;
 
                 let query: String = self.search_widget.input.value().into();
-                if (!query.is_empty()) {
+                if !query.is_empty() {
                     let languages = self.languages_screen.languages();
-                    Ok(vec![FetchSubs(query, languages)])
-                } else {
-                    Ok(vec![])
+                    actions.push(FetchSubs(query, languages));
                 }
+
+                Ok(actions)
             }
 
             DownloadSubs(file_id, language) => {
@@ -230,17 +235,6 @@ impl App {
 
             Exit => {
                 self.exit = true;
-                Ok(vec![])
-            }
-
-            UpdateDownloadCount(rq, rm) => {
-                self.user_widget.requests = rq;
-                self.user_widget.remaining = rm;
-                Ok(vec![])
-            }
-
-            UpdateUsername(username) => {
-                self.user_widget.username = username;
                 Ok(vec![])
             }
 

@@ -21,8 +21,6 @@ pub enum Action {
     Init,
     DownloadSubs(i64, String),
     DownloadedSubs(Downloaded),
-    UpdateDownloadCount(i32, i32),
-    UpdateUsername(String),
     SwitchScreen(CurrentScreen),
     DownloadSubsFailed(String),
     EnabledLimitSubsToId(i64),

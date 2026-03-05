@@ -6,15 +6,16 @@ use osb::login::login;
 use crate::secret::{clear, retrieve, store};
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{Input, LoggedIn, LoggedOut, SwitchScreen, UpdateDownloadCount, UpdateUser, UpdateUsername};
+use crate::ui::actions::Action::{Input, LoggedIn, LoggedOut, SwitchScreen, UpdateUser};
 use crate::ui::login_widget::LoginWidget;
 use anyhow::Result;
-use osb::user_info::get_user_info;
+use osb::user_info::{get_user_info, UserInfo};
 use crate::ui::app::CurrentScreen::Main;
 
 pub struct AccountScreen {
     login_widget: LoginWidget,
     account_widget: AccountWidget,
+    pub user_info: Option<UserInfo>,
     logged_in: bool,
 }
 
@@ -24,6 +25,7 @@ impl AccountScreen {
         Self {
             login_widget: LoginWidget::from(),
             account_widget: AccountWidget::from(),
+            user_info: None,
             logged_in: false,
         }
     }
@@ -55,14 +57,17 @@ impl AccountScreen {
                 match result {
                     Ok(Some(user_info)) => {
                         self.logged_in = true;
+                        self.user_info = Some(user_info);
                         Ok(vec![LoggedIn])
                     }
                     Ok(None) => {
                         self.logged_in = false;
+                        self.user_info = None;
                         Ok(vec![LoggedOut])
                     }
                     Err(_) => {
                         self.logged_in = false;
+                        self.user_info = None;
                         Ok(vec![LoggedOut])
                     }
                 }
