@@ -4,7 +4,7 @@ use crate::ui::account_screen::AccountScreen;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
+    DisabledLimitSubsToId, DownloadSubs, EnabledLimitSubsToId,
     Exit, FetchSubs, Init, LanguagesUpdated, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner,
     StopSpinner, SwitchScreen,
 };

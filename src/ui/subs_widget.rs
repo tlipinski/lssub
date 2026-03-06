@@ -19,13 +19,14 @@ pub struct SubsWidget {
     pub state: TableState,
 }
 
+// todo reduce pubs
 #[derive(Debug, Default)]
 pub struct Sub {
     id: i64,
-    file_id: i64,
+    pub file_id: i64,
     title: String,
     year: String,
-    language: String,
+    pub language: String,
     upload_date: String,
     downloads: String,
     ai_translated: String,
