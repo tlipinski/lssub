@@ -15,7 +15,7 @@ pub enum Action {
     LoggedIn,
     LoggedOut,
     RequestedSubs,
-    QueryUpdated(String),
+    SearchQueryUpdated,
     FetchSubs(String, Vec<String>),
     StartSpinner,
     StopSpinner,

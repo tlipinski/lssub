@@ -5,7 +5,7 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
-    Exit, FetchSubs, Init, LanguagesUpdated, LoggedOut, QueryUpdated, SpinnerUpdate, StartSpinner,
+    Exit, FetchSubs, Init, LanguagesUpdated, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner,
     StopSpinner, SwitchScreen,
 };
 use crate::ui::app::Action::{Input, SubsFetched};
@@ -51,6 +51,7 @@ pub struct App {
     languages_screen: LanguagesScreen,
     account_screen: AccountScreen,
     ui_tx: Sender<Action>,
+    features_tx: Sender<SubtitlesQuery>,
     exit: bool,
 }
 
@@ -70,7 +71,7 @@ impl App {
         tokio::spawn(spinner_task(ui_tx.clone()));
 
         let provider = ConfigProvider::default();
-        let search_screen = SearchScreen::from(base_path, file_name, features_tx)?;
+        let search_screen = SearchScreen::from(base_path, file_name)?;
 
         let mut app = App {
             search_screen,
@@ -78,6 +79,7 @@ impl App {
             languages_screen: LanguagesScreen::new(provider)?,
             account_screen: AccountScreen::new(),
             ui_tx: ui_tx.clone(),
+            features_tx,
             exit: false,
         };
 
@@ -123,12 +125,12 @@ impl App {
             // self.status_widget.spin(chr);
             // Ok(vec![])
             // }
-
-            // LanguagesUpdated => {
-            // let languages = self.languages_screen.languages();
-            // let query: String = self.search_widget.input.value().into();
-            // Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
-            // }
+            
+            LanguagesUpdated => {
+                let languages = self.languages_screen.languages();
+                let query: String = self.search_screen.search_widget.input.value().into();
+                Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
+            }
 
             // Action::LoggedIn => {
             //     match self.account_screen.user_info() {
@@ -151,21 +153,23 @@ impl App {
             //
             //     Ok(vec![])
             // }
-            QueryUpdated(query) => {
+            
+            SearchQueryUpdated => {
                 let languages = self.languages_screen.languages();
+                let query = self.search_screen.search_widget.input.value().to_string();
                 Ok(vec![FetchSubs(query, languages)])
             }
 
-            // FetchSubs(query, languages) => {
-            //     self.features_tx
-            //         .send(SubtitlesQuery {
-            //             query,
-            //             languages,
-            //             id: None,
-            //         })
-            //         .await?;
-            //     Ok(vec![StartSpinner])
-            // }
+            FetchSubs(query, languages) => {
+                self.features_tx
+                    .send(SubtitlesQuery {
+                        query,
+                        languages,
+                        id: None,
+                    })
+                    .await?;
+                Ok(vec![StartSpinner])
+            }
 
             // StartSpinner => {
             //     self.search_screen.status_widget.spinning = true;

@@ -2,7 +2,7 @@ use crate::secret::retrieve;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     DisabledLimitSubsToId, DownloadSubs, DownloadSubsFailed, DownloadedSubs, EnabledLimitSubsToId,
-    Exit, FetchSubs, Init, LanguagesUpdated, LoggedOut, QueryUpdated, SpinnerUpdate, StartSpinner,
+    Exit, FetchSubs, Init, LanguagesUpdated, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner,
     StopSpinner, SwitchScreen,
 };
 use crate::ui::app::CurrentScreen::Main;
@@ -35,10 +35,9 @@ impl SearchScreen {
     pub fn from(
         base_path: &Path,
         file_name: Option<&str>,
-        features_tx: Sender<SubtitlesQuery>,
     ) -> Result<SearchScreen> {
         Ok(Self {
-            search_widget: SearchWidget::from(file_name.unwrap_or("").into(), features_tx),
+            search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
             subs_widget: SubsWidget::default(),
             status_widget: StatusWidget::from("".into()),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),

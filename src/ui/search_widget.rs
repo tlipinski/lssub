@@ -14,21 +14,17 @@ use std::sync::mpsc::Sender;
 use std::thread::sleep;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::actions::Action::RequestedSubs;
+use crate::ui::actions::Action::{SearchQueryUpdated, RequestedSubs};
 
 #[derive(Debug)]
 pub struct SearchWidget {
     pub input: Input,
-    languages: Vec<String>,
-    features_tx: tokio::sync::mpsc::Sender<SubtitlesQuery>,
 }
 
 impl SearchWidget {
-    pub fn from(search_text: String, features_tx: tokio::sync::mpsc::Sender<SubtitlesQuery>) -> Self {
+    pub fn from(search_text: String) -> Self {
         SearchWidget {
             input: Input::from(search_text),
-            languages: Vec::new(),
-            features_tx,
         }
     }
 
@@ -52,15 +48,7 @@ impl SearchWidget {
         if let Some(state_changed) = self.input.handle_event(&event)
             && state_changed.value
         {
-            let query = self.input.value().into();
-            self.features_tx
-                .send(SubtitlesQuery {
-                    query,
-                    languages: self.languages.clone(),
-                    id: None,
-                })
-                .await?;
-            return Ok(Some(RequestedSubs));
+            return Ok(Some(SearchQueryUpdated));
         }
         Ok(None)
     }
