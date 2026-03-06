@@ -27,7 +27,6 @@ use tokio::sync::mpsc::Sender;
 pub struct SearchScreen {
     pub search_widget: SearchWidget,
     pub subs_widget: SubsWidget,
-    pub status_widget: StatusWidget,
     downloader: Downloader,
 }
 
@@ -36,7 +35,6 @@ impl SearchScreen {
         Ok(Self {
             search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
             subs_widget: SubsWidget::default(),
-            status_widget: StatusWidget::from("".into()),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
         })
     }
@@ -52,14 +50,12 @@ impl SearchScreen {
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Length(3),
-                Constraint::Min(10),
-                Constraint::Length(3),
+                Constraint::Min(10)
             ])
             .split(area);
 
         self.search_widget.render(frame, layout[0]);
         self.subs_widget.render(frame, layout[1]);
-        self.status_widget.render(frame, layout[2]);
     }
 
     pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
@@ -95,7 +91,6 @@ impl SearchScreen {
 
     pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
         self.subs_widget.update_subtitles(subtitles_response);
-        self.status_widget.info = format!("{} results", subtitles_response.data.len());
     }
 
     async fn download(&self, file_id: i64, language: &str) -> Result<Downloaded> {

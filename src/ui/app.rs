@@ -50,6 +50,7 @@ pub struct App {
     search_screen: SearchScreen,
     languages_screen: LanguagesScreen,
     account_screen: AccountScreen,
+    status_widget: StatusWidget,
     ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
     exit: bool,
@@ -78,6 +79,7 @@ impl App {
             current_screen: CurrentScreen::default(),
             languages_screen: LanguagesScreen::new(provider)?,
             account_screen: AccountScreen::new(),
+            status_widget: StatusWidget::from("".into()),
             ui_tx: ui_tx.clone(),
             features_tx,
             exit: false,
@@ -118,11 +120,12 @@ impl App {
 
             SubsFetched(subtitles) => {
                 self.search_screen.update_subtitles(&subtitles);
+                self.status_widget.info = format!("{} results", subtitles.data.len());
                 Ok(vec![StopSpinner])
             }
 
             SpinnerUpdate(chr) => {
-                self.search_screen.status_widget.spin(chr);
+                self.status_widget.spin(chr);
                 Ok(vec![])
             }
 
@@ -171,12 +174,12 @@ impl App {
             }
 
             StartSpinner => {
-                self.search_screen.status_widget.spinning = true;
+                self.status_widget.spinning = true;
                 Ok(vec![])
             }
 
             StopSpinner => {
-                self.search_screen.status_widget.spinning = false;
+                self.status_widget.spinning = false;
                 Ok(vec![])
             }
 
@@ -193,8 +196,7 @@ impl App {
             }
 
             DownloadedSubs(downloaded) => {
-                self.search_screen.status_widget.info =
-                    format!("Downloaded: {:?}", downloaded.path);
+                self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
                 // self.user_widget.requests = downloaded.requests;
                 // self.user_widget.remaining = downloaded.remaining;
                 Ok(vec![StopSpinner])
@@ -259,10 +261,15 @@ impl App {
 
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Fill(1), Constraint::Length(3)])
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(3),
+                Constraint::Length(3),
+            ])
             .split(area);
 
-        frame.render_widget(main_nav, layout[1]);
+        self.status_widget.render(frame, layout[1]);
+        frame.render_widget(main_nav, layout[2]);
 
         match &self.current_screen {
             Main => {
