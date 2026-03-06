@@ -4,8 +4,8 @@ use crate::ui::account_screen::AccountScreen;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    DisabledLimitSubsToId, DownloadSubs, EnabledLimitSubsToId,
-    Exit, FetchSubs, Init, LanguagesUpdated, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner,
+    DisabledLimitSubsToId, DownloadSubs, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs,
+    Init, LanguagesUpdated, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner,
     StopSpinner, SwitchScreen,
 };
 use crate::ui::app::Action::{Input, SubsFetched};
@@ -121,11 +121,11 @@ impl App {
                 Ok(vec![StopSpinner])
             }
 
-            // SpinnerUpdate(chr) => {
-            // self.status_widget.spin(chr);
-            // Ok(vec![])
-            // }
-            
+            SpinnerUpdate(chr) => {
+                self.search_screen.status_widget.spin(chr);
+                Ok(vec![])
+            }
+
             LanguagesUpdated => {
                 let languages = self.languages_screen.languages();
                 let query: String = self.search_screen.search_widget.input.value().into();
@@ -153,7 +153,6 @@ impl App {
             //
             //     Ok(vec![])
             // }
-            
             SearchQueryUpdated => {
                 let languages = self.languages_screen.languages();
                 let query = self.search_screen.search_widget.input.value().to_string();
@@ -171,15 +170,16 @@ impl App {
                 Ok(vec![StartSpinner])
             }
 
-            // StartSpinner => {
-            //     self.search_screen.status_widget.spinning = true;
-            //     Ok(vec![])
-            // }
-            //
-            // StopSpinner => {
-            //     self.search_screen.status_widget.spinning = false;
-            //     Ok(vec![])
-            // }
+            StartSpinner => {
+                self.search_screen.status_widget.spinning = true;
+                Ok(vec![])
+            }
+
+            StopSpinner => {
+                self.search_screen.status_widget.spinning = false;
+                Ok(vec![])
+            }
+
             Init => {
                 let mut actions = self.account_screen.update(Init).await?;
 
@@ -192,47 +192,19 @@ impl App {
                 Ok(actions)
             }
 
-            // DownloadSubs(file_id, language) => {
-            //     self.status_widget.info = "Downloading...".into();
-            //
-            //     let downloader = self.downloader.clone();
-            //     let ui_tx = self.ui_tx.clone();
-            //     tokio::spawn(async move {
-            //         let token_result = retrieve().await;
-            //         match token_result {
-            //             Ok(token_opt) => {
-            //                 let msg = match downloader.download(token_opt, file_id, &language).await
-            //                 {
-            //                     Ok(downloaded) => DownloadedSubs(downloaded),
-            //                     Err(e) => DownloadSubsFailed(e.to_string()),
-            //                 };
-            //                 ui_tx.send(msg).await;
-            //             }
-            //             Err(e) => {
-            //                 let msg = DownloadSubsFailed(e.to_string());
-            //                 ui_tx.send(msg).await;
-            //             }
-            //         }
-            //     });
-            //
-            //     Ok(vec![StartSpinner])
-            // }
+            DownloadedSubs(downloaded) => {
+                self.search_screen.status_widget.info =
+                    format!("Downloaded: {:?}", downloaded.path);
+                // self.user_widget.requests = downloaded.requests;
+                // self.user_widget.remaining = downloaded.remaining;
+                Ok(vec![StopSpinner])
+            }
 
-            // DownloadedSubs(downloaded) => {
-            //     self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
-            //     self.user_widget.requests = downloaded.requests;
-            //     self.user_widget.remaining = downloaded.remaining;
-            //     Ok(vec![StopSpinner])
-            // }
             SwitchScreen(screen) => {
                 self.current_screen = screen;
                 Ok(vec![])
             }
 
-            // DownloadSubsFailed(error) => {
-            //     self.status_widget.info = format!("Error: {:?}", error);
-            //     Ok(vec![StopSpinner])
-            // }
             Exit => {
                 self.exit = true;
                 Ok(vec![])

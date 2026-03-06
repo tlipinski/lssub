@@ -11,6 +11,6 @@ pub async fn spinner_task(tx: Sender<Action>) -> anyhow::Result<()> {
         pos += 1;
         pos %= spinner.len();
         let ch = spinner[pos];
-        // tx.send(Action::SpinnerUpdate(ch)).await?
+        tx.send(Action::SpinnerUpdate(ch)).await?
     }
 }
