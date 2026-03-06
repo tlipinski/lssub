@@ -51,6 +51,7 @@ pub struct App {
     languages_screen: LanguagesScreen,
     account_screen: AccountScreen,
     status_widget: StatusWidget,
+    user_widget: UserWidget,
     ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
     exit: bool,
@@ -80,6 +81,7 @@ impl App {
             languages_screen: LanguagesScreen::new(provider)?,
             account_screen: AccountScreen::new(),
             status_widget: StatusWidget::from("".into()),
+            user_widget: UserWidget::from(),
             ui_tx: ui_tx.clone(),
             features_tx,
             exit: false,
@@ -135,27 +137,28 @@ impl App {
                 Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
             }
 
-            // Action::LoggedIn => {
-            //     match self.account_screen.user_info() {
-            //         Some(user_info) => {
-            //             self.search_screen.user_widget.requests = user_info.data.downloads_count;
-            //             self.search_screen.user_widget.remaining = user_info.data.remaining_downloads;
-            //             self.search_screen.user_widget.username = user_info.data.username.clone();
-            //         }
-            //
-            //         None => {}
-            //     }
-            //
-            //     Ok(vec![SwitchScreen(Main)])
-            // }
+            Action::LoggedIn => {
+                match self.account_screen.user_info() {
+                    Some(user_info) => {
+                        self.user_widget.requests = user_info.data.downloads_count;
+                        self.user_widget.remaining = user_info.data.remaining_downloads;
+                        self.user_widget.username = user_info.data.username.clone();
+                    }
 
-            // LoggedOut => {
-            //     self.search_screen.user_widget.requests = 0;
-            //     self.search_screen.user_widget.remaining = 0;
-            //     self.search_screen.user_widget.username = "".into();
-            //
-            //     Ok(vec![])
-            // }
+                    None => {}
+                }
+
+                Ok(vec![SwitchScreen(Main)])
+            }
+
+            LoggedOut => {
+                self.user_widget.requests = 0;
+                self.user_widget.remaining = 0;
+                self.user_widget.username = "".into();
+
+                Ok(vec![])
+            }
+
             SearchQueryUpdated => {
                 let languages = self.languages_screen.languages();
                 let query = self.search_screen.search_widget.input.value().to_string();
@@ -170,6 +173,7 @@ impl App {
                         id: None,
                     })
                     .await?;
+
                 Ok(vec![StartSpinner])
             }
 
@@ -186,19 +190,19 @@ impl App {
             Init => {
                 let mut actions = self.account_screen.update(Init).await?;
 
-                // let query: String = self.search_widget.input.value().into();
-                // if !query.is_empty() {
-                //     let languages = self.languages_screen.languages();
-                //     actions.push(FetchSubs(query, languages));
-                // }
+                let query: String = self.search_screen.search_widget.input.value().into();
+                if !query.is_empty() {
+                    let languages = self.languages_screen.languages();
+                    actions.push(FetchSubs(query, languages));
+                }
 
                 Ok(actions)
             }
 
             DownloadedSubs(downloaded) => {
                 self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
-                // self.user_widget.requests = downloaded.requests;
-                // self.user_widget.remaining = downloaded.remaining;
+                self.user_widget.requests = downloaded.requests;
+                self.user_widget.remaining = downloaded.remaining;
                 Ok(vec![StopSpinner])
             }
 
@@ -268,7 +272,18 @@ impl App {
             ])
             .split(area);
 
-        self.status_widget.render(frame, layout[1]);
+        let status = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(
+                [
+                    Constraint::Fill(1),
+                    Constraint::Length(60),
+                ]
+            ).split(layout[1]);
+
+        self.status_widget.render(frame, status[0]);
+        self.user_widget.render(frame, status[1]);
+
         frame.render_widget(main_nav, layout[2]);
 
         match &self.current_screen {

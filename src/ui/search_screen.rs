@@ -26,7 +26,7 @@ use tokio::sync::mpsc::Sender;
 
 pub struct SearchScreen {
     pub search_widget: SearchWidget,
-    pub subs_widget: SubsWidget,
+    subs_widget: SubsWidget,
     downloader: Downloader,
 }
 
