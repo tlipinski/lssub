@@ -215,31 +215,31 @@ impl App {
                 Ok(vec![])
             }
 
-            // EnabledLimitSubsToId(id) => {
-            //     let languages = self.languages_screen.languages();
-            //     let query = self.search_widget.input.value().into();
-            //     self.features_tx
-            //         .send(SubtitlesQuery {
-            //             query,
-            //             languages,
-            //             id: Some(id),
-            //         })
-            //         .await?;
-            //     Ok(vec![StartSpinner])
-            // }
+            EnabledLimitSubsToId(id) => {
+                let languages = self.languages_widget.languages();
+                let query = self.search_widget.query_widget.input.value().into();
+                self.features_tx
+                    .send(SubtitlesQuery {
+                        query,
+                        languages,
+                        id: Some(id),
+                    })
+                    .await?;
+                Ok(vec![StartSpinner])
+            }
 
-            // DisabledLimitSubsToId => {
-            //     let languages = self.languages_screen.languages();
-            //     let query = self.search_widget.input.value().into();
-            //     self.features_tx
-            //         .send(SubtitlesQuery {
-            //             query,
-            //             languages,
-            //             id: None,
-            //         })
-            //         .await?;
-            //     Ok(vec![StartSpinner])
-            // }
+            DisabledLimitSubsToId => {
+                let languages = self.languages_widget.languages();
+                let query = self.search_widget.query_widget.input.value().into();
+                self.features_tx
+                    .send(SubtitlesQuery {
+                        query,
+                        languages,
+                        id: None,
+                    })
+                    .await?;
+                Ok(vec![StartSpinner])
+            }
             _ => Ok(vec![]),
         }
     }
