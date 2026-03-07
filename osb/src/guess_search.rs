@@ -1,5 +1,5 @@
 use crate::guess::GuessResponse;
-use crate::values::{API_URL, KEY, USER_AGENT};
+use crate::values::{API_URL, AK, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use std::collections::HashMap;
@@ -23,7 +23,7 @@ pub async fn guess_search(guess_response: GuessResponse) -> Result<()> {
 
     let req = reqwest::Client::new()
         .get(url)
-        .header("Api-Key", KEY.clone())
+        .header("Api-Key", AK)
         .header("User-Agent", USER_AGENT)
         .query(&params);
 

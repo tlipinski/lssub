@@ -1,5 +1,5 @@
 use crate::login::JwtToken;
-use crate::values::{API_URL, VIP_API_URL, KEY, USER_AGENT};
+use crate::values::{API_URL, VIP_API_URL, AK, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{error, info, trace};
 use secrecy::ExposeSecret;
@@ -20,14 +20,14 @@ pub async fn get_download_link(
     let req = if let Some(token) = token_opt {
         reqwest::Client::new()
             .post(url)
-            .header("Api-Key", KEY.clone())
+            .header("Api-Key", AK)
             .header("User-Agent", USER_AGENT)
             .bearer_auth(token.0.expose_secret())
             .json(&req)
     } else {
         reqwest::Client::new()
             .post(url)
-            .header("Api-Key", KEY.clone())
+            .header("Api-Key", AK)
             .header("User-Agent", USER_AGENT)
             .json(&req)
     };

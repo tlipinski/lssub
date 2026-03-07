@@ -1,4 +1,4 @@
-use crate::values::{KEY, USER_AGENT};
+use crate::values::{AK, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use secrecy::SecretBox;
@@ -20,7 +20,7 @@ pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
 
     let req = reqwest::Client::new()
         .post(url)
-        .header("Api-Key", KEY.clone())
+        .header("Api-Key", AK)
         .header("User-Agent", USER_AGENT)
         .json(&login);
 

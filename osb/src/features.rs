@@ -1,4 +1,4 @@
-use crate::values::{API_URL, KEY, USER_AGENT};
+use crate::values::{API_URL, AK, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info, trace};
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,7 @@ pub async fn features(query: &str) -> Result<FeaturesResponse> {
 
     let req = reqwest::Client::new()
         .get(url)
-        .header("Api-Key", KEY.clone())
+        .header("Api-Key", AK)
         .header("User-Agent", USER_AGENT)
         .query(&params);
 

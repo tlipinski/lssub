@@ -1,4 +1,4 @@
-use crate::values::{API_URL, KEY, USER_AGENT};
+use crate::values::{API_URL, AK, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info, trace};
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,7 @@ pub async fn subtitles(
     let req = reqwest::Client::new()
         .get(url)
         .timeout(std::time::Duration::from_secs(5))
-        .header("Api-Key", KEY.clone())
+        .header("Api-Key", AK)
         .header("User-Agent", USER_AGENT)
         .query(&params);
 

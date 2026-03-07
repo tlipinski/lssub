@@ -1,4 +1,4 @@
-use crate::values::{API_URL, KEY, USER_AGENT};
+use crate::values::{API_URL, AK, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use serde::Deserialize;
@@ -13,7 +13,7 @@ pub async fn guess(title: &str) -> Result<GuessResponse> {
 
     let req = reqwest::Client::new()
         .get(url)
-        .header("Api-Key", KEY.clone())
+        .header("Api-Key", AK)
         .header("User-Agent", USER_AGENT)
         .query(&query_params);
 

@@ -12,17 +12,14 @@ What it does:
 ## Requirements
 - Rust toolchain (rustup, cargo)
 - Network access to OpenSubtitles
-- Build-time OpenSubtitles API key in `OSBK` (required; see below)
 - Secret Service + libsecret (for login/logout and user info)
   - Linux: e.g., GNOME Keyring or KeePassXC Secret Service, plus libsecret development headers to compile
   - Other OSes: unverified
 
 
 ## Build And Run
-`OSBK` is read by [`build.rs`](build.rs) at build time and embedded as a compile-time env var.
 
 ```sh
-export OSBK=YOUR_OPENSUBTITLES_API_KEY
 cargo build
 
 # Run the TUI
