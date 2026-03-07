@@ -22,5 +22,6 @@ pub enum Action {
     DownloadedSubs(Downloaded),
     SwitchScreen(CurrentScreen),
     EnabledLimitSubsToId(i64),
+    ChangeStatus(String),
     Exit,
 }

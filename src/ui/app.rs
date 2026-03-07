@@ -2,11 +2,7 @@ use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{
-    DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
-    SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UserLoggedIn,
-    UserLoggedOut,
-};
+use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UserLoggedIn, UserLoggedOut};
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
 use crate::ui::downloader::Downloader;
@@ -226,6 +222,11 @@ impl App {
                     })
                     .await?;
                 Ok(vec![StartSpinner])
+            }
+
+            ChangeStatus(status) => {
+                self.status_widget.info = status;
+                Ok(vec![])
             }
         }
     }

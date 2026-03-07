@@ -1,8 +1,8 @@
 use crate::secret::store;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::UserLoggedIn;
+use crate::ui::actions::Action::{ChangeStatus, UserLoggedIn};
 use anyhow::Result;
-use log::error;
+use log::{error, warn};
 use osb::login::{Credentials, login};
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
@@ -14,15 +14,12 @@ use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 
-#[derive(Debug)]
 pub struct LoginWidget {
-    pub username: Input,
-    pub password: Input,
-    failed: String,
+    username: Input,
+    password: Input,
     editing: Editing,
 }
 
-#[derive(Debug)]
 enum Editing {
     Username,
     Password,
@@ -34,7 +31,6 @@ impl LoginWidget {
         LoginWidget {
             username: Input::new("".into()),
             password: Input::new("".into()),
-            failed: String::new(),
             editing: Editing::Username,
         }
     }
@@ -99,12 +95,6 @@ impl LoginWidget {
         frame.render_widget(pass_par, layout[1]);
         frame.render_widget(buttons_block, layout[2]);
 
-        if (!self.failed.is_empty()) {
-            let failure_par =
-                Paragraph::new(self.failed.clone()).block(Block::bordered().title("Failed"));
-            frame.render_widget(failure_par, layout[3]);
-        }
-
         match self.editing {
             Editing::Username => frame.set_cursor_position((
                 layout[0].x + (self.username.visual_cursor() + 1) as u16,
@@ -144,9 +134,7 @@ impl LoginWidget {
                     match result {
                         Ok(msg) => Ok(Some(UserLoggedIn)),
                         Err(e) => {
-                            error!("Error logging in: {}", e);
-                            self.failed = e.to_string();
-                            Err(e.into())
+                            Ok(Some(ChangeStatus(e.to_string())))
                         }
                     }
                 }

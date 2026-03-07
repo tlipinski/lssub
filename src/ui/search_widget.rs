@@ -1,8 +1,9 @@
 use crate::secret::retrieve;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, UserLoggedOut,
+    DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
     SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SubsFetched, SwitchScreen,
+    UserLoggedOut,
 };
 use crate::ui::app::CurrentScreen::Main;
 use crate::ui::downloader::{Downloaded, Downloader};
@@ -13,6 +14,7 @@ use crate::ui::subs_list_widget::{Sub, SubsListWidget};
 use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use crate::ui::user_widget::UserWidget;
 use anyhow::Result;
+use crossterm::event::{KeyEvent, KeyModifiers};
 use osb::subtitles::SubtitlesResponse;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode};
@@ -60,8 +62,11 @@ impl SearchWidget {
 
     pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Event::Key(key_event) = event {
-            match key_event.code {
-                KeyCode::Enter => {
+            match key_event {
+                KeyEvent {
+                    code: KeyCode::Enter,
+                    ..
+                } => {
                     let selected_sub = self.subs_list_widget.selected();
 
                     match selected_sub {
@@ -73,11 +78,26 @@ impl SearchWidget {
                     }
                 }
 
-                KeyCode::PageUp
-                | KeyCode::PageDown
-                | KeyCode::Up
-                | KeyCode::Down
-                | KeyCode::F(5) => Ok(self.subs_list_widget.handle_key_event(key_event)),
+                KeyEvent {
+                    code: KeyCode::PageUp,
+                    ..
+                }
+                | KeyEvent {
+                    code: KeyCode::PageDown,
+                    ..
+                }
+                | KeyEvent {
+                    code: KeyCode::Up, ..
+                }
+                | KeyEvent {
+                    code: KeyCode::Down,
+                    ..
+                }
+                | KeyEvent {
+                    code: KeyCode::Char('l'),
+                    modifiers: KeyModifiers::CONTROL,
+                    ..
+                } => Ok(self.subs_list_widget.handle_key_event(key_event)),
                 _ => self.query_widget.handle_key_event(event).await,
             }
         } else {
