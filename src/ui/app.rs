@@ -1,18 +1,22 @@
-use crate::ui::nav_widget::NavWidget;
 use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::account_widget::AccountWidget;
-use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, UserLoggedIn, UserLoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
+use crate::ui::actions::Action::{
+    DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
+    SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UserLoggedIn,
+    UserLoggedOut,
+};
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::languages_widget::LanguagesWidget;
+use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
-use crate::ui::search_widget::SearchWidget;
+use crate::ui::nav_widget::NavWidget;
 use crate::ui::query_widget::QueryWidget;
+use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::spinner_task;
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::SubsListWidget;
@@ -137,14 +141,10 @@ impl App {
             }
 
             UserLoggedIn => {
-                match self.account_widget.user_info() {
-                    Some(user_info) => {
-                        self.user_widget.requests = user_info.data.downloads_count;
-                        self.user_widget.remaining = user_info.data.remaining_downloads;
-                        self.nav_widget.username = Some(user_info.data.username);
-                    }
-
-                    None => {}
+                if let Some(user_info) = self.account_widget.user_info() {
+                    self.user_widget.requests = user_info.data.downloads_count;
+                    self.user_widget.remaining = user_info.data.remaining_downloads;
+                    self.nav_widget.username = Some(user_info.data.username);
                 }
 
                 Ok(vec![SwitchScreen(Main)])
@@ -227,7 +227,6 @@ impl App {
                     .await?;
                 Ok(vec![StartSpinner])
             }
-
         }
     }
 
@@ -245,12 +244,8 @@ impl App {
 
         let status = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(
-                [
-                    Constraint::Fill(1),
-                    Constraint::Length(23),
-                ]
-            ).split(layout[1]);
+            .constraints([Constraint::Fill(1), Constraint::Length(23)])
+            .split(layout[1]);
 
         self.status_widget.render(frame, status[0]);
         self.user_widget.render(frame, status[1]);

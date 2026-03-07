@@ -9,7 +9,7 @@ pub async fn get_download_link(
     token_opt: Option<JwtToken>,
     file_id: i64,
 ) -> Result<DownloadLinkResponse> {
-    let url = if let Some(_) = token_opt {
+    let url = if token_opt.is_some() {
         format!("{}/download", VIP_API_URL)
     } else {
         format!("{}/download", API_URL)
