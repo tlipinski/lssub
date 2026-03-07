@@ -18,7 +18,7 @@ use crate::ui::actions::Action::{SearchQueryUpdated, RequestedSubs};
 
 #[derive(Debug)]
 pub struct QueryWidget {
-    pub input: Input,
+    input: Input,
 }
 
 impl QueryWidget {
@@ -26,6 +26,10 @@ impl QueryWidget {
         QueryWidget {
             input: Input::from(search_text),
         }
+    }
+    
+    pub fn query(&self) -> String {
+        self.input.value().into()
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {

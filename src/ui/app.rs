@@ -132,7 +132,7 @@ impl App {
 
             LanguagesUpdated => {
                 let languages = self.languages_widget.languages();
-                let query: String = self.search_widget.query_widget.input.value().into();
+                let query: String = self.search_widget.query();
                 Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
             }
 
@@ -160,7 +160,7 @@ impl App {
 
             SearchQueryUpdated => {
                 let languages = self.languages_widget.languages();
-                let query = self.search_widget.query_widget.input.value().to_string();
+                let query = self.search_widget.query();
                 Ok(vec![FetchSubs(query, languages)])
             }
 
@@ -189,7 +189,7 @@ impl App {
             Init => {
                 let mut actions = self.account_widget.update(Init).await?;
 
-                let query: String = self.search_widget.query_widget.input.value().into();
+                let query: String = self.search_widget.query();
                 if !query.is_empty() {
                     let languages = self.languages_widget.languages();
                     actions.push(FetchSubs(query, languages));
@@ -217,7 +217,7 @@ impl App {
 
             EnabledLimitSubsToId(id) => {
                 let languages = self.languages_widget.languages();
-                let query = self.search_widget.query_widget.input.value().into();
+                let query = self.search_widget.query();
                 self.features_tx
                     .send(SubtitlesQuery {
                         query,
@@ -230,7 +230,7 @@ impl App {
 
             DisabledLimitSubsToId => {
                 let languages = self.languages_widget.languages();
-                let query = self.search_widget.query_widget.input.value().into();
+                let query = self.search_widget.query();
                 self.features_tx
                     .send(SubtitlesQuery {
                         query,

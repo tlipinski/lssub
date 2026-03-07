@@ -25,7 +25,7 @@ use std::path::Path;
 use tokio::sync::mpsc::Sender;
 
 pub struct SearchWidget {
-    pub query_widget: QueryWidget,
+    query_widget: QueryWidget,
     subs_list_widget: SubsListWidget,
     downloader: Downloader,
 }
@@ -37,6 +37,10 @@ impl SearchWidget {
             subs_list_widget: SubsListWidget::default(),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
         })
+    }
+
+    pub fn query(&self) -> String {
+        self.query_widget.query()
     }
 
     async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
