@@ -1,7 +1,7 @@
 use crate::secret::retrieve;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    DisabledLimitSubsToId, DownloadSubs, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs,
+    DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs,
     Init, LanguagesUpdated, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner,
     StopSpinner, SubsFetched, SwitchScreen,
 };

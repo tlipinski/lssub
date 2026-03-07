@@ -1,5 +1,5 @@
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{DownloadSubs, EnabledLimitSubsToId, DisabledLimitSubsToId};
+use crate::ui::actions::Action::{EnabledLimitSubsToId};
 use crossterm::event::KeyModifiers;
 use log::info;
 use osb::subtitles::SubtitlesResponse;
@@ -15,7 +15,6 @@ use ratatui::widgets::{Block, Cell, Row, StatefulWidget, Table, TableState};
 #[derive(Debug, Default)]
 pub struct SubsListWidget {
     pub subs: Vec<Sub>,
-    pub limiting_to_id: bool,
     pub state: TableState,
 }
 
@@ -70,29 +69,14 @@ impl SubsListWidget {
             }
 
             KeyEvent {
-                code: KeyCode::Enter,
-                ..
-            } => self
-                .state
-                .selected()
-                .and_then(|selection| self.subs.get(selection))
-                .map(|s| DownloadSubs(s.file_id, s.language.clone())),
-
-            KeyEvent {
                 code: KeyCode::F(5),
                 ..
             } => {
-                self.limiting_to_id = !self.limiting_to_id;
-
                 self.state
                     .selected()
                     .and_then(|selection| self.subs.get(selection))
                     .map(|s| {
-                        if (self.limiting_to_id) {
-                            EnabledLimitSubsToId(s.id)
-                        } else {
-                            DisabledLimitSubsToId
-                        }
+                        EnabledLimitSubsToId(s.id)
                     })
             }
 

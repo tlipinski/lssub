@@ -14,7 +14,7 @@ use std::sync::mpsc::Sender;
 use std::thread::sleep;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::actions::Action::{SearchQueryUpdated, RequestedSubs};
+use crate::ui::actions::Action::{SearchQueryUpdated};
 
 #[derive(Debug)]
 pub struct QueryWidget {
@@ -27,7 +27,7 @@ impl QueryWidget {
             input: Input::from(search_text),
         }
     }
-    
+
     pub fn query(&self) -> String {
         self.input.value().into()
     }

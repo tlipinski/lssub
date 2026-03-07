@@ -4,7 +4,7 @@ use crate::secret::{clear, retrieve, store};
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{DisabledLimitSubsToId, DownloadSubs, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, LoggedIn, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
+use crate::ui::actions::Action::{DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, LoggedIn, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
 use crate::ui::app::Action::{Input, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
 use crate::ui::downloader::Downloader;
@@ -228,19 +228,6 @@ impl App {
                 Ok(vec![StartSpinner])
             }
 
-            DisabledLimitSubsToId => {
-                let languages = self.languages_widget.languages();
-                let query = self.search_widget.query();
-                self.features_tx
-                    .send(SubtitlesQuery {
-                        query,
-                        languages,
-                        id: None,
-                    })
-                    .await?;
-                Ok(vec![StartSpinner])
-            }
-            _ => Ok(vec![]),
         }
     }
 
