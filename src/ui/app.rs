@@ -1,3 +1,4 @@
+use crate::ui::nav_widget::NavWidget;
 use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::account_screen::AccountScreen;
@@ -48,6 +49,7 @@ pub struct App {
     account_screen: AccountScreen,
     status_widget: StatusWidget,
     user_widget: UserWidget,
+    nav_widget: NavWidget,
     ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
     exit: bool,
@@ -78,6 +80,7 @@ impl App {
             account_screen: AccountScreen::new(),
             status_widget: StatusWidget::from("".into()),
             user_widget: UserWidget::from(),
+            nav_widget: NavWidget::new(),
             ui_tx: ui_tx.clone(),
             features_tx,
             exit: false,
@@ -138,7 +141,7 @@ impl App {
                     Some(user_info) => {
                         self.user_widget.requests = user_info.data.downloads_count;
                         self.user_widget.remaining = user_info.data.remaining_downloads;
-                        self.user_widget.username = user_info.data.username.clone();
+                        self.nav_widget.username = Some(user_info.data.username);
                     }
 
                     None => {}
@@ -150,7 +153,7 @@ impl App {
             LoggedOut => {
                 self.user_widget.requests = 0;
                 self.user_widget.remaining = 0;
-                self.user_widget.username = "".into();
+                self.nav_widget.username = None;
 
                 Ok(vec![])
             }
@@ -242,21 +245,6 @@ impl App {
     }
 
     fn draw(&mut self, frame: &mut Frame) {
-        let main_nav = {
-            Paragraph::new(Line::from(vec![
-                Span::from("F2:").bold(),
-                Span::from(" Search | "),
-                Span::from("F3:").bold(),
-                Span::from(" Account | "),
-                Span::from("F4:").bold(),
-                Span::from(" Languages | "),
-                Span::from("F10:").bold(),
-                Span::from(" Exit"),
-            ]))
-            .centered()
-            .block(Block::default().borders(Borders::ALL))
-        };
-
         let area = frame.area();
 
         let layout = Layout::default()
@@ -273,14 +261,13 @@ impl App {
             .constraints(
                 [
                     Constraint::Fill(1),
-                    Constraint::Length(60),
+                    Constraint::Length(23),
                 ]
             ).split(layout[1]);
 
         self.status_widget.render(frame, status[0]);
         self.user_widget.render(frame, status[1]);
-
-        frame.render_widget(main_nav, layout[2]);
+        self.nav_widget.render(frame, layout[2]);
 
         match &self.current_screen {
             Main => {
