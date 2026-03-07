@@ -1,8 +1,3 @@
 target
 .*
-*.srt
 !.gitignore
-!.run
-src/bin/*
-logs.txt
-http-client.private.env.json
