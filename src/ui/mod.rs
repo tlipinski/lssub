@@ -1,9 +1,9 @@
 pub mod app;
 mod downloader;
 mod input_handler;
-mod search_widget;
+mod query_widget;
 mod spinner;
-mod subs_widget;
+mod subs_list_widget;
 mod subtitles_fetcher;
 mod actions;
 mod status_widget;

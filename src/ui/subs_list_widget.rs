@@ -13,7 +13,7 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Cell, Row, StatefulWidget, Table, TableState};
 
 #[derive(Debug, Default)]
-pub struct SubsWidget {
+pub struct SubsListWidget {
     pub subs: Vec<Sub>,
     pub limiting_to_id: bool,
     pub state: TableState,
@@ -33,7 +33,7 @@ pub struct Sub {
     votes: String,
 }
 
-impl SubsWidget {
+impl SubsListWidget {
     pub fn handle_key_event(&mut self, key_event: KeyEvent) -> Option<Action> {
         match key_event {
             KeyEvent {

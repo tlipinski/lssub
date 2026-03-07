@@ -11,11 +11,11 @@ use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::languages_screen::LanguagesScreen;
 use crate::ui::login_widget::LoginWidget;
-use crate::ui::search_screen::SearchScreen;
-use crate::ui::search_widget::SearchWidget;
+use crate::ui::search_screen::SearchWidget;
+use crate::ui::query_widget::QueryWidget;
 use crate::ui::spinner::spinner_task;
 use crate::ui::status_widget::StatusWidget;
-use crate::ui::subs_widget::SubsWidget;
+use crate::ui::subs_list_widget::SubsListWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
@@ -44,7 +44,7 @@ pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 
 pub struct App {
     current_screen: CurrentScreen,
-    search_screen: SearchScreen,
+    search_widget: SearchWidget,
     languages_screen: LanguagesScreen,
     account_screen: AccountScreen,
     status_widget: StatusWidget,
@@ -71,10 +71,10 @@ impl App {
         tokio::spawn(spinner_task(ui_tx.clone()));
 
         let provider = ConfigProvider::default();
-        let search_screen = SearchScreen::from(base_path, file_name)?;
+        let search_screen = SearchWidget::from(base_path, file_name)?;
 
         let mut app = App {
-            search_screen,
+            search_widget: search_screen,
             current_screen: CurrentScreen::default(),
             languages_screen: LanguagesScreen::new(provider)?,
             account_screen: AccountScreen::new(),
@@ -120,7 +120,7 @@ impl App {
             }
 
             SubsFetched(subtitles) => {
-                self.search_screen.update_subtitles(&subtitles);
+                self.search_widget.update_subtitles(&subtitles);
                 self.status_widget.info = format!("{} results", subtitles.data.len());
                 Ok(vec![StopSpinner])
             }
@@ -132,7 +132,7 @@ impl App {
 
             LanguagesUpdated => {
                 let languages = self.languages_screen.languages();
-                let query: String = self.search_screen.search_widget.input.value().into();
+                let query: String = self.search_widget.query_widget.input.value().into();
                 Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
             }
 
@@ -160,7 +160,7 @@ impl App {
 
             SearchQueryUpdated => {
                 let languages = self.languages_screen.languages();
-                let query = self.search_screen.search_widget.input.value().to_string();
+                let query = self.search_widget.query_widget.input.value().to_string();
                 Ok(vec![FetchSubs(query, languages)])
             }
 
@@ -189,7 +189,7 @@ impl App {
             Init => {
                 let mut actions = self.account_screen.update(Init).await?;
 
-                let query: String = self.search_screen.search_widget.input.value().into();
+                let query: String = self.search_widget.query_widget.input.value().into();
                 if !query.is_empty() {
                     let languages = self.languages_screen.languages();
                     actions.push(FetchSubs(query, languages));
@@ -271,7 +271,7 @@ impl App {
 
         match &self.current_screen {
             Main => {
-                self.search_screen.render(frame, layout[0]);
+                self.search_widget.render(frame, layout[0]);
             }
             Language => {
                 self.languages_screen.render(frame, layout[0]);
@@ -293,7 +293,7 @@ impl App {
 
                 _ => match self.current_screen {
                     Main => match key_event.code {
-                        _ => self.search_screen.handle_key_event(event).await,
+                        _ => self.search_widget.handle_key_event(event).await,
                     },
 
                     Language => match key_event.code {

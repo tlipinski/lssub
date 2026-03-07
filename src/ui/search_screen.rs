@@ -8,9 +8,9 @@ use crate::ui::actions::Action::{
 use crate::ui::app::CurrentScreen::Main;
 use crate::ui::downloader::{Downloaded, Downloader};
 use crate::ui::languages_screen::LanguagesScreen;
-use crate::ui::search_widget::SearchWidget;
+use crate::ui::query_widget::QueryWidget;
 use crate::ui::status_widget::StatusWidget;
-use crate::ui::subs_widget::{Sub, SubsWidget};
+use crate::ui::subs_list_widget::{Sub, SubsListWidget};
 use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use crate::ui::user_widget::UserWidget;
 use anyhow::Result;
@@ -24,17 +24,17 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use std::path::Path;
 use tokio::sync::mpsc::Sender;
 
-pub struct SearchScreen {
-    pub search_widget: SearchWidget,
-    subs_widget: SubsWidget,
+pub struct SearchWidget {
+    pub query_widget: QueryWidget,
+    subs_list_widget: SubsListWidget,
     downloader: Downloader,
 }
 
-impl SearchScreen {
-    pub fn from(base_path: &Path, file_name: Option<&str>) -> Result<SearchScreen> {
+impl SearchWidget {
+    pub fn from(base_path: &Path, file_name: Option<&str>) -> Result<SearchWidget> {
         Ok(Self {
-            search_widget: SearchWidget::from(file_name.unwrap_or("").into()),
-            subs_widget: SubsWidget::default(),
+            query_widget: QueryWidget::from(file_name.unwrap_or("").into()),
+            subs_list_widget: SubsListWidget::default(),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
         })
     }
@@ -54,8 +54,8 @@ impl SearchScreen {
             ])
             .split(area);
 
-        self.search_widget.render(frame, layout[0]);
-        self.subs_widget.render(frame, layout[1]);
+        self.query_widget.render(frame, layout[0]);
+        self.subs_list_widget.render(frame, layout[1]);
     }
 
     pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
@@ -63,10 +63,10 @@ impl SearchScreen {
             match key_event.code {
                 KeyCode::Enter => {
                     let selected_sub = self
-                        .subs_widget
+                        .subs_list_widget
                         .state
                         .selected()
-                        .and_then(|selection| self.subs_widget.subs.get(selection));
+                        .and_then(|selection| self.subs_list_widget.subs.get(selection));
 
                     match selected_sub {
                         Some(s) => {
@@ -81,8 +81,8 @@ impl SearchScreen {
                 | KeyCode::PageDown
                 | KeyCode::Up
                 | KeyCode::Down
-                | KeyCode::F(5) => Ok(self.subs_widget.handle_key_event(key_event)),
-                _ => self.search_widget.handle_key_event(event).await,
+                | KeyCode::F(5) => Ok(self.subs_list_widget.handle_key_event(key_event)),
+                _ => self.query_widget.handle_key_event(event).await,
             }
         } else {
             Ok(None)
@@ -90,7 +90,7 @@ impl SearchScreen {
     }
 
     pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
-        self.subs_widget.update_subtitles(subtitles_response);
+        self.subs_list_widget.update_subtitles(subtitles_response);
     }
 
     async fn download(&self, file_id: i64, language: &str) -> Result<Downloaded> {

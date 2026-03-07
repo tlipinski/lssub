@@ -17,13 +17,13 @@ use tui_input::backend::crossterm::EventHandler;
 use crate::ui::actions::Action::{SearchQueryUpdated, RequestedSubs};
 
 #[derive(Debug)]
-pub struct SearchWidget {
+pub struct QueryWidget {
     pub input: Input,
 }
 
-impl SearchWidget {
+impl QueryWidget {
     pub fn from(search_text: String) -> Self {
-        SearchWidget {
+        QueryWidget {
             input: Input::from(search_text),
         }
     }
