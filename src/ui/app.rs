@@ -1,17 +1,17 @@
 use crate::ui::nav_widget::NavWidget;
 use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
-use crate::ui::account_screen::AccountScreen;
 use crate::ui::account_widget::AccountWidget;
+use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{DisabledLimitSubsToId, DownloadSubs, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, LoggedIn, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
 use crate::ui::app::Action::{Input, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
-use crate::ui::languages_screen::LanguagesScreen;
+use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::login_widget::LoginWidget;
-use crate::ui::search_screen::SearchWidget;
+use crate::ui::search_widget::SearchWidget;
 use crate::ui::query_widget::QueryWidget;
 use crate::ui::spinner::spinner_task;
 use crate::ui::status_widget::StatusWidget;
@@ -45,8 +45,8 @@ pub const QUIT_KEY: KeyCode = KeyCode::Esc;
 pub struct App {
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
-    languages_screen: LanguagesScreen,
-    account_screen: AccountScreen,
+    languages_widget: LanguagesWidget,
+    account_widget: AccountWidget,
     status_widget: StatusWidget,
     user_widget: UserWidget,
     nav_widget: NavWidget,
@@ -76,8 +76,8 @@ impl App {
         let mut app = App {
             search_widget: search_screen,
             current_screen: CurrentScreen::default(),
-            languages_screen: LanguagesScreen::new(provider)?,
-            account_screen: AccountScreen::new(),
+            languages_widget: LanguagesWidget::new(provider)?,
+            account_widget: AccountWidget::new(),
             status_widget: StatusWidget::from("".into()),
             user_widget: UserWidget::from(),
             nav_widget: NavWidget::new(),
@@ -131,13 +131,13 @@ impl App {
             }
 
             LanguagesUpdated => {
-                let languages = self.languages_screen.languages();
+                let languages = self.languages_widget.languages();
                 let query: String = self.search_widget.query_widget.input.value().into();
                 Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
             }
 
             LoggedIn => {
-                match self.account_screen.user_info() {
+                match self.account_widget.user_info() {
                     Some(user_info) => {
                         self.user_widget.requests = user_info.data.downloads_count;
                         self.user_widget.remaining = user_info.data.remaining_downloads;
@@ -159,7 +159,7 @@ impl App {
             }
 
             SearchQueryUpdated => {
-                let languages = self.languages_screen.languages();
+                let languages = self.languages_widget.languages();
                 let query = self.search_widget.query_widget.input.value().to_string();
                 Ok(vec![FetchSubs(query, languages)])
             }
@@ -187,11 +187,11 @@ impl App {
             }
 
             Init => {
-                let mut actions = self.account_screen.update(Init).await?;
+                let mut actions = self.account_widget.update(Init).await?;
 
                 let query: String = self.search_widget.query_widget.input.value().into();
                 if !query.is_empty() {
-                    let languages = self.languages_screen.languages();
+                    let languages = self.languages_widget.languages();
                     actions.push(FetchSubs(query, languages));
                 }
 
@@ -274,10 +274,10 @@ impl App {
                 self.search_widget.render(frame, layout[0]);
             }
             Language => {
-                self.languages_screen.render(frame, layout[0]);
+                self.languages_widget.render(frame, layout[0]);
             }
             Account => {
-                self.account_screen.render(frame, layout[0]);
+                self.account_widget.render(frame, layout[0]);
             }
         }
     }
@@ -297,11 +297,11 @@ impl App {
                     },
 
                     Language => match key_event.code {
-                        _ => self.languages_screen.handle_key_event(event),
+                        _ => self.languages_widget.handle_key_event(event),
                     },
 
                     Account => match key_event.code {
-                        _ => self.account_screen.handle_key_event(event).await,
+                        _ => self.account_widget.handle_key_event(event).await,
                     },
                 },
             }

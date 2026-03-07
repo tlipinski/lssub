@@ -7,7 +7,7 @@ use crate::ui::actions::Action::{
 };
 use crate::ui::app::CurrentScreen::Main;
 use crate::ui::downloader::{Downloaded, Downloader};
-use crate::ui::languages_screen::LanguagesScreen;
+use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::{Sub, SubsListWidget};

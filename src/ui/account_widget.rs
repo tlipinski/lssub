@@ -1,84 +1,110 @@
-use crate::secret::clear;
+use crate::secret::{clear, retrieve, store};
+use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::actions::Action;
+use crate::ui::actions::Action::{Input, LoggedIn, LoggedOut, SwitchScreen};
+use crate::ui::app::CurrentScreen::Main;
+use crate::ui::login_widget::LoginWidget;
 use anyhow::Result;
-use crossterm::event::KeyModifiers;
-use log::info;
-use osb::login::Credentials;
-use osb::user_info::UserInfo;
+use crossterm::event::Event;
+use log::{error, info};
+use osb::login::login;
+use osb::user_info::{UserInfo, get_user_info};
 use ratatui::Frame;
-use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::prelude::{Line, Stylize};
-use ratatui::symbols::border;
-use ratatui::text::Span;
-use ratatui::widgets::{Block, Paragraph};
-use tui_input::Input;
-use tui_input::backend::crossterm::EventHandler;
+use ratatui::layout::Rect;
 
-#[derive(Debug)]
 pub struct AccountWidget {
-    pub user_info: UserInfo,
+    login_widget: LoginWidget,
+    logged_in_widget: LoggedInWidget,
+    logged_in: bool,
 }
 
 impl AccountWidget {
-    pub fn from(user_info: UserInfo) -> Self {
-        AccountWidget { user_info }
+    pub fn new() -> Self {
+        Self {
+            login_widget: LoginWidget::from(),
+            logged_in_widget: LoggedInWidget::from(UserInfo {
+                data: Default::default(),
+            }),
+            logged_in: false,
+        }
+    }
+
+    pub fn user_info(&self) -> Option<UserInfo> {
+        if self.logged_in {
+            Some(self.logged_in_widget.user_info.clone())
+        } else {
+            None
+        }
+    }
+
+    pub async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
+        match action {
+            Action::Init => {
+                let result = tokio::spawn(async move {
+                    match retrieve().await {
+                        Ok(Some(jwt)) => match get_user_info(&jwt).await {
+                            Ok(user_info) => Ok(Some(user_info)),
+                            Err(e) => {
+                                error!("Error getting user info: {e}");
+                                Err(e)
+                            }
+                        },
+                        Ok(None) => Ok(None),
+                        Err(e) => {
+                            error!("Error retrieving jwt: {e}");
+                            Ok(None)
+                        }
+                    }
+                })
+                .await?;
+
+                match result {
+                    Ok(Some(user_info)) => {
+                        self.logged_in = true;
+                        self.logged_in_widget.user_info = user_info;
+                        Ok(vec![LoggedIn])
+                    }
+                    Ok(None) => {
+                        self.logged_in = false;
+                        Ok(vec![LoggedOut])
+                    }
+                    Err(_) => {
+                        self.logged_in = false;
+                        Ok(vec![LoggedOut])
+                    }
+                }
+            }
+
+            _ => Ok(vec![]),
+        }
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::bordered()
-            .title("Login".to_string().bold())
-            .border_set(border::THICK);
-
-        let outer_layout = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints(vec![
-                Constraint::Fill(1),
-                Constraint::Fill(1),
-                Constraint::Fill(1),
-            ])
-            .split(area);
-
-        let layout = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints(vec![Constraint::Length(3), Constraint::Length(3)])
-            .split(block.inner(outer_layout[1]));
-
-        let buttons_block = Block::default().title(
-            Line::from(vec![
-                Span::from("Logout").bold(),
-                Span::from(" [F12]  "),
-                Span::from("Cancel").bold(),
-                Span::from(" [Esc]"),
-            ])
-            .right_aligned(),
-        );
-
-        let already_logged =
-            Paragraph::new(format!("Logged in as: {}", self.user_info.data.username))
-                .block(Block::bordered());
-
-        frame.render_widget(block, area);
-        frame.render_widget(already_logged, layout[0]);
-        frame.render_widget(buttons_block, layout[1]);
+        if (self.logged_in) {
+            self.logged_in_widget.render(frame, area);
+        } else {
+            self.login_widget.render(frame, area);
+        }
     }
 
     pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
-        info!("key event: {:?}", event);
-        if let Event::Key(key_event) = event {
-            match key_event {
-                KeyEvent {
-                    code: KeyCode::F(12),
-                    ..
-                } => {
-                    clear().await;
-                    self.user_info = UserInfo::default();
-                    Ok(Some(Action::LoggedOut))
+        if (self.logged_in) {
+            match self.logged_in_widget.handle_key_event(event).await? {
+                Some(LoggedOut) => {
+                    self.logged_in = false;
+                    Ok(Some(LoggedOut))
                 }
-                _ => Ok(None),
+                other => Ok(other),
             }
         } else {
-            Ok(None)
+            match self.login_widget.handle_key_event(event).await? {
+                Some(LoggedIn) => {
+                    self.logged_in = true;
+                    self.update(Action::Init).await?; // todo
+                    Ok(Some(LoggedIn))
+                }
+                other => Ok(other),
+            }
         }
     }
 }

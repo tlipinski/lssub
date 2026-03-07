@@ -12,13 +12,13 @@ use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 
-pub struct LanguagesScreen {
+pub struct LanguagesWidget {
     config_provider: ConfigProvider,
     input: Input,
 }
 
-impl LanguagesScreen {
-    pub fn new(config_provider: ConfigProvider) -> anyhow::Result<LanguagesScreen> {
+impl LanguagesWidget {
+    pub fn new(config_provider: ConfigProvider) -> anyhow::Result<LanguagesWidget> {
         let languages = config_provider.get_config()?.languages;
         Ok(Self {
             config_provider,
