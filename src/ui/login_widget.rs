@@ -1,6 +1,6 @@
 use crate::secret::store;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::LoggedIn;
+use crate::ui::actions::Action::UserLoggedIn;
 use anyhow::Result;
 use log::error;
 use osb::login::{Credentials, login};
@@ -142,7 +142,7 @@ impl LoginWidget {
                     .await?;
 
                     match result {
-                        Ok(msg) => Ok(Some(LoggedIn)),
+                        Ok(msg) => Ok(Some(UserLoggedIn)),
                         Err(e) => {
                             error!("Error logging in: {}", e);
                             self.failed = e.to_string();

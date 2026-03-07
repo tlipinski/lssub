@@ -4,7 +4,7 @@ use crate::secret::{clear, retrieve, store};
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, LoggedIn, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
+use crate::ui::actions::Action::{DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, UserLoggedIn, UserLoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
 use crate::ui::downloader::Downloader;
@@ -136,7 +136,7 @@ impl App {
                 Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
             }
 
-            LoggedIn => {
+            UserLoggedIn => {
                 match self.account_widget.user_info() {
                     Some(user_info) => {
                         self.user_widget.requests = user_info.data.downloads_count;
@@ -150,7 +150,7 @@ impl App {
                 Ok(vec![SwitchScreen(Main)])
             }
 
-            LoggedOut => {
+            UserLoggedOut => {
                 self.user_widget.requests = 0;
                 self.user_widget.remaining = 0;
                 self.nav_widget.username = None;

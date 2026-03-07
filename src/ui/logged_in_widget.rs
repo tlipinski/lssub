@@ -73,7 +73,7 @@ impl LoggedInWidget {
                 } => {
                     clear().await;
                     self.user_info = UserInfo::default();
-                    Ok(Some(Action::LoggedOut))
+                    Ok(Some(Action::UserLoggedOut))
                 }
                 _ => Ok(None),
             }

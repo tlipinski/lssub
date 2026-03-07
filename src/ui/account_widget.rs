@@ -1,7 +1,7 @@
 use crate::secret::{clear, retrieve, store};
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ReceivedInput, LoggedIn, LoggedOut, SwitchScreen};
+use crate::ui::actions::Action::{ReceivedInput, UserLoggedIn, UserLoggedOut, SwitchScreen};
 use crate::ui::app::CurrentScreen::Main;
 use crate::ui::login_widget::LoginWidget;
 use anyhow::Result;
@@ -62,15 +62,15 @@ impl AccountWidget {
                     Ok(Some(user_info)) => {
                         self.logged_in = true;
                         self.logged_in_widget.user_info = user_info;
-                        Ok(vec![LoggedIn])
+                        Ok(vec![UserLoggedIn])
                     }
                     Ok(None) => {
                         self.logged_in = false;
-                        Ok(vec![LoggedOut])
+                        Ok(vec![UserLoggedOut])
                     }
                     Err(_) => {
                         self.logged_in = false;
-                        Ok(vec![LoggedOut])
+                        Ok(vec![UserLoggedOut])
                     }
                 }
             }
@@ -90,18 +90,18 @@ impl AccountWidget {
     pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if (self.logged_in) {
             match self.logged_in_widget.handle_key_event(event).await? {
-                Some(LoggedOut) => {
+                Some(UserLoggedOut) => {
                     self.logged_in = false;
-                    Ok(Some(LoggedOut))
+                    Ok(Some(UserLoggedOut))
                 }
                 other => Ok(other),
             }
         } else {
             match self.login_widget.handle_key_event(event).await? {
-                Some(LoggedIn) => {
+                Some(UserLoggedIn) => {
                     self.logged_in = true;
                     self.update(Action::Init).await?; // todo
-                    Ok(Some(LoggedIn))
+                    Ok(Some(UserLoggedIn))
                 }
                 other => Ok(other),
             }
