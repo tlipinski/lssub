@@ -1307,7 +1307,7 @@ dependencies = [
 
 [[package]]
 name = "lssub"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -1517,7 +1517,7 @@ dependencies = [
 
 [[package]]
 name = "osb"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "lazy_static",
