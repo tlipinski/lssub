@@ -1,7 +1,7 @@
 use crate::secret::{clear, retrieve, store};
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{Input, LoggedIn, LoggedOut, SwitchScreen};
+use crate::ui::actions::Action::{ReceivedInput, LoggedIn, LoggedOut, SwitchScreen};
 use crate::ui::app::CurrentScreen::Main;
 use crate::ui::login_widget::LoginWidget;
 use anyhow::Result;

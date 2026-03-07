@@ -8,7 +8,7 @@ use crate::ui::subtitles_fetcher::SubtitlesQuery;
 
 #[derive(Debug)]
 pub enum Action {
-    Input(Event),
+    ReceivedInput(Event),
     SubsFetched(SubtitlesResponse),
     SpinnerUpdate(char),
     LanguagesUpdated,

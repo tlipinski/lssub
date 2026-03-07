@@ -5,7 +5,7 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, LoggedIn, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen};
-use crate::ui::app::Action::{Input, SubsFetched};
+use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
@@ -111,7 +111,7 @@ impl App {
     async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
         debug!("action: {:?}", action);
         match action {
-            Input(event) => {
+            ReceivedInput(event) => {
                 if let Ok(Some(m)) = self.handle_key_event(event).await {
                     Ok(vec![m])
                 } else {

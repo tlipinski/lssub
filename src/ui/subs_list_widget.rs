@@ -14,8 +14,8 @@ use ratatui::widgets::{Block, Cell, Row, StatefulWidget, Table, TableState};
 
 #[derive(Debug, Default)]
 pub struct SubsListWidget {
-    pub subs: Vec<Sub>,
-    pub state: TableState,
+    subs: Vec<Sub>,
+    state: TableState,
 }
 
 // todo reduce pubs
@@ -33,6 +33,13 @@ pub struct Sub {
 }
 
 impl SubsListWidget {
+    pub fn selected(&self) -> Option<&Sub> {
+        self
+            .state
+            .selected()
+            .and_then(|selection| self.subs.get(selection))
+    }
+    
     pub fn handle_key_event(&mut self, key_event: KeyEvent) -> Option<Action> {
         match key_event {
             KeyEvent {
@@ -69,7 +76,8 @@ impl SubsListWidget {
             }
 
             KeyEvent {
-                code: KeyCode::F(5),
+                code: KeyCode::Char('l'),
+                modifiers: KeyModifiers::CONTROL,
                 ..
             } => {
                 self.state

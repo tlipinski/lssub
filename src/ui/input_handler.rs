@@ -1,6 +1,6 @@
 use crate::ui::app::{App, QUIT_KEY};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::Input;
+use crate::ui::actions::Action::ReceivedInput;
 use anyhow::Result;
 use log::info;
 use ratatui::crossterm::event;
@@ -17,7 +17,7 @@ pub async fn handle_input_task(tx: Sender<Action>, mut shutdown_rx: Receiver<()>
     loop {
         if poll(Duration::from_millis(100))? {
             match event::read()? {
-                key_event @ Key(_) => tx.send(Input(key_event)).await,
+                key_event @ Key(_) => tx.send(ReceivedInput(key_event)).await,
 
                 _ => Ok(()),
             };

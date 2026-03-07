@@ -1,9 +1,8 @@
 use crate::secret::retrieve;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs,
-    Init, LanguagesUpdated, LoggedOut, SearchQueryUpdated, SpinnerUpdate, StartSpinner,
-    StopSpinner, SubsFetched, SwitchScreen,
+    DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, LoggedOut,
+    SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SubsFetched, SwitchScreen,
 };
 use crate::ui::app::CurrentScreen::Main;
 use crate::ui::downloader::{Downloaded, Downloader};
@@ -52,10 +51,7 @@ impl SearchWidget {
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Length(3),
-                Constraint::Min(10)
-            ])
+            .constraints([Constraint::Length(3), Constraint::Min(10)])
             .split(area);
 
         self.query_widget.render(frame, layout[0]);
@@ -66,11 +62,7 @@ impl SearchWidget {
         if let Event::Key(key_event) = event {
             match key_event.code {
                 KeyCode::Enter => {
-                    let selected_sub = self
-                        .subs_list_widget
-                        .state
-                        .selected()
-                        .and_then(|selection| self.subs_list_widget.subs.get(selection));
+                    let selected_sub = self.subs_list_widget.selected();
 
                     match selected_sub {
                         Some(s) => {
