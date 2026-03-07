@@ -12,7 +12,6 @@ use ratatui::Frame;
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
-#[derive(Debug)]
 pub struct StatusWidget {
     pub info: String,
     pub spinner: char,

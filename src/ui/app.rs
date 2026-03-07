@@ -2,7 +2,11 @@ use crate::config::{Config, ConfigProvider};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated, SearchQueryUpdated, SpinnerUpdate, StartSpinner, StopSpinner, SwitchScreen, UserLoggedIn, UserLoggedOut};
+use crate::ui::actions::Action::{
+    ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
+    SearchQueryUpdated, SwitchScreen, UserLoggedIn,
+    UserLoggedOut,
+};
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
 use crate::ui::downloader::Downloader;
@@ -16,16 +20,16 @@ use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::spinner_task;
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::SubsListWidget;
-use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
+use crate::ui::subtitles_fetcher::{subtitles_fetch_task, SubtitlesQuery};
 use crate::ui::user_widget::UserWidget;
-use anyhow::{Error, Result, bail};
+use anyhow::{bail, Error, Result};
 use clap::builder::TypedValueParser;
 use gio::prelude::DBusInterfaceSkeletonExt;
 use log::{debug, error, info};
 use osb::get_download_link::get_download_link;
 use osb::login::login;
 use osb::user_info;
-use osb::user_info::{UserInfo, get_user_info};
+use osb::user_info::{get_user_info, UserInfo};
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::prelude::{StatefulWidget, Stylize};
@@ -122,11 +126,6 @@ impl App {
             SubsFetched(subtitles) => {
                 self.search_widget.update_subtitles(&subtitles);
                 self.status_widget.info = format!("{} results", subtitles.data.len());
-                Ok(vec![StopSpinner])
-            }
-
-            SpinnerUpdate(chr) => {
-                self.status_widget.spin(chr);
                 Ok(vec![])
             }
 
@@ -169,16 +168,6 @@ impl App {
                     })
                     .await?;
 
-                Ok(vec![StartSpinner])
-            }
-
-            StartSpinner => {
-                self.status_widget.spinning = true;
-                Ok(vec![])
-            }
-
-            StopSpinner => {
-                self.status_widget.spinning = false;
                 Ok(vec![])
             }
 
@@ -198,7 +187,7 @@ impl App {
                 self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
                 self.user_widget.requests = downloaded.requests;
                 self.user_widget.remaining = downloaded.remaining;
-                Ok(vec![StopSpinner])
+                Ok(vec![])
             }
 
             SwitchScreen(screen) => {
@@ -221,7 +210,7 @@ impl App {
                         id: Some(id),
                     })
                     .await?;
-                Ok(vec![StartSpinner])
+                Ok(vec![])
             }
 
             ChangeStatus(status) => {
