@@ -88,20 +88,20 @@ fn output_file(
     if let Some(ext) = default_ext_opt {
         if let Some(file_name) = file_name_opt {
             output_file = OsString::from(file_name);
-            output_file.push("_");
+            output_file.push(".");
             output_file.push(language);
             output_file.push(".");
             output_file.push(ext)
         } else {
             output_file = OsString::from(&default_stem);
-            output_file.push("_");
+            output_file.push(".");
             output_file.push(language);
             output_file.push(".");
             output_file.push(ext)
         }
     } else {
         output_file = OsString::from(file_name_opt.as_deref().unwrap_or(&default_stem));
-        output_file.push("_");
+        output_file.push(".");
         output_file.push(language);
         output_file.push(".srt")
     };
