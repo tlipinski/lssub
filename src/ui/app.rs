@@ -7,7 +7,7 @@ use crate::ui::actions::Action::{
     SearchQueryUpdated, SwitchScreen, UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
-use crate::ui::app::CurrentScreen::{Account, Language, Main};
+use crate::ui::app::CurrentScreen::{About, Account, Language, Main};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::languages_widget::LanguagesWidget;
@@ -42,6 +42,7 @@ use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
+use crate::ui::about_widget::AboutWidget;
 
 pub struct App {
     current_screen: CurrentScreen,
@@ -51,6 +52,7 @@ pub struct App {
     status_widget: StatusWidget,
     user_widget: UserWidget,
     nav_widget: NavWidget,
+    about_widget: AboutWidget,
     ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
 }
@@ -84,6 +86,7 @@ impl App {
             status_widget: StatusWidget::from(spinner.clone()),
             user_widget: UserWidget::from(),
             nav_widget: NavWidget::new(),
+            about_widget: AboutWidget::new(),
             ui_tx: ui_tx.clone(),
             features_tx,
         };
@@ -262,6 +265,9 @@ impl App {
             Account => {
                 self.account_widget.render(frame, content[0]);
             }
+            About => {
+                self.about_widget.render(frame, content[0]);
+            }
         }
     }
 
@@ -273,6 +279,7 @@ impl App {
                 KeyCode::F(3) => Ok(Some(SwitchScreen(Account))),
                 KeyCode::F(4) => Ok(Some(SwitchScreen(Language))),
                 KeyCode::F(10) => Ok(Some(Exit)),
+                KeyCode::F(12) => Ok(Some(SwitchScreen(About))),
 
                 _ => match self.current_screen {
                     Main => match key_event.code {
@@ -285,6 +292,10 @@ impl App {
 
                     Account => match key_event.code {
                         _ => self.account_widget.handle_key_event(event).await,
+                    },
+
+                    About => match key_event.code {
+                        _ => Ok(self.about_widget.handle_key_event(event))
                     },
                 },
             }
@@ -300,4 +311,5 @@ pub enum CurrentScreen {
     Main,
     Account,
     Language,
+    About
 }

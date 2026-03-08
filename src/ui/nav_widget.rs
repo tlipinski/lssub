@@ -30,7 +30,9 @@ impl NavWidget {
                 Span::from("F4:").bold(),
                 Span::from(" Languages | "),
                 Span::from("F10:").bold(),
-                Span::from(" Exit"),
+                Span::from(" Exit | "),
+                Span::from("F12:").bold(),
+                Span::from(" About"),
             ]))
             .centered()
             .block(Block::default().borders(Borders::ALL))

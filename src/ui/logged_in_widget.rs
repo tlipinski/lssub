@@ -34,7 +34,7 @@ impl LoggedInWidget {
             .direction(Direction::Horizontal)
             .constraints(vec![
                 Constraint::Fill(1),
-                Constraint::Fill(1),
+                Constraint::Fill(2),
                 Constraint::Fill(1),
             ])
             .split(area);
@@ -47,7 +47,7 @@ impl LoggedInWidget {
         let buttons_block = Block::default().title(
             Line::from(vec![
                 Span::from("Logout").bold(),
-                Span::from(" [F12]  "),
+                Span::from(" [SHIFT + F3]  "),
                 Span::from("Cancel").bold(),
                 Span::from(" [Esc]"),
             ])
@@ -68,7 +68,8 @@ impl LoggedInWidget {
         if let Event::Key(key_event) = event {
             match key_event {
                 KeyEvent {
-                    code: KeyCode::F(12),
+                    code: KeyCode::F(13),
+                    // modifiers: KeyModifiers::SHIFT,
                     ..
                 } => {
                     clear().await;
