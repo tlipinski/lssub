@@ -5,6 +5,7 @@ use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
+use crate::osb::values::{APP_NAME, VERSION};
 
 pub struct AboutWidget {}
 
@@ -26,7 +27,7 @@ impl AboutWidget {
                 "".into(),
                 "".into(),
                 "".into(),
-                Line::from("lssub v0.0.1").bold(),
+                Line::from(format!("{APP_NAME} v{VERSION}")).bold(),
                 "".into(),
                 Line::from("github: https://github.com/tlipinski/lssub"),
             ])

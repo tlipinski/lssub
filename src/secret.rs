@@ -1,3 +1,4 @@
+use crate::APP_NAME;
 use crate::osb::login::JwtToken;
 use anyhow::Result;
 use libsecret::{Schema, SchemaAttributeType, SchemaFlags};
@@ -20,7 +21,7 @@ pub async fn store(api_token: &JwtToken, username: &str) -> Result<()> {
             Some(&schema),
             attributes,
             Some(libsecret::COLLECTION_DEFAULT),
-            "lssub",
+            APP_NAME,
             token.as_str(),
             None::<&gio::Cancellable>,
         ) {
@@ -77,5 +78,5 @@ fn create_schema() -> Schema {
     let mut attributes = HashMap::new();
     attributes.insert("username", SchemaAttributeType::String);
 
-    Schema::new("com.lssub", SchemaFlags::NONE, attributes)
+    Schema::new(format!("com.{APP_NAME}").as_str(), SchemaFlags::NONE, attributes)
 }

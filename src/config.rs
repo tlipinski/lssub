@@ -3,6 +3,7 @@ use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
+use crate::osb::values::APP_NAME;
 
 #[derive(Debug)]
 pub struct ConfigProvider {
@@ -55,7 +56,7 @@ impl ConfigProvider {
 impl Default for ConfigProvider {
     fn default() -> Self {
         ConfigProvider {
-            prefix: "lssub".to_string(),
+            prefix: APP_NAME.to_string(),
             path: "config.toml".into(),
         }
     }

@@ -16,6 +16,7 @@ use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::process::exit;
 use ui::app::App;
+use crate::osb::values::APP_NAME;
 
 #[tokio::main]
 async fn main() {
@@ -23,7 +24,7 @@ async fn main() {
         .create(true)
         .write(true)
         .truncate(true)
-        .open("/tmp/lssub.log")
+        .open(format!("/tmp/{APP_NAME}.log"))
         .expect("Failed to open log file");
 
     // Configure env_logger to write logs to the file
