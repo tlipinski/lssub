@@ -44,8 +44,6 @@ use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 
-pub const QUIT_KEY: KeyCode = KeyCode::Esc;
-
 pub struct App {
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
@@ -257,7 +255,7 @@ impl App {
     async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                QUIT_KEY => Ok(Some(SwitchScreen(Main))),
+                KeyCode::Esc => Ok(Some(SwitchScreen(Main))),
                 KeyCode::F(2) => Ok(Some(SwitchScreen(Main))),
                 KeyCode::F(3) => Ok(Some(SwitchScreen(Account))),
                 KeyCode::F(4) => Ok(Some(SwitchScreen(Language))),

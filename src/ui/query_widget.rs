@@ -1,5 +1,4 @@
 use crate::ui::actions::Action;
-use crate::ui::app::QUIT_KEY;
 use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use anyhow::Result;
 use gio::glib::random_int_range;

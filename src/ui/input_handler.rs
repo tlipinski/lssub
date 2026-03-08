@@ -1,6 +1,6 @@
-use crate::ui::app::{App, QUIT_KEY};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::ReceivedInput;
+use crate::ui::app::App;
 use anyhow::Result;
 use log::info;
 use ratatui::crossterm::event;

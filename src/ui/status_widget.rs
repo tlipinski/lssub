@@ -1,4 +1,3 @@
-use crate::ui::app::QUIT_KEY;
 use crate::ui::actions::Action;
 use anyhow::Result;
 use gio::glib::random_int_range;
