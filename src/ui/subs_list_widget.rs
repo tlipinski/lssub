@@ -10,12 +10,16 @@ use ratatui::layout::Rect;
 use ratatui::prelude::{Style, Stylize, Text, Widget};
 use ratatui::style::Color;
 use ratatui::symbols::border;
-use ratatui::widgets::{Block, Cell, Row, StatefulWidget, Table, TableState};
+use ratatui::widgets::{
+    Block, Cell, Row, ScrollDirection, Scrollbar, ScrollbarOrientation, ScrollbarState,
+    StatefulWidget, Table, TableState,
+};
 
 #[derive(Debug, Default)]
 pub struct SubsListWidget {
     subs: Vec<Sub>,
     state: TableState,
+    scroll_state: ScrollbarState,
 }
 
 // todo reduce pubs
@@ -45,6 +49,7 @@ impl SubsListWidget {
                 code: KeyCode::Up, ..
             } => {
                 self.state.select_previous();
+                self.scroll_state.prev();
                 None
             }
 
@@ -53,6 +58,7 @@ impl SubsListWidget {
                 ..
             } => {
                 self.state.select_next();
+                self.scroll_state.next();
                 None
             }
 
@@ -62,6 +68,9 @@ impl SubsListWidget {
             } => {
                 let next = self.state.selected().map_or(0, |i| i.saturating_sub(10));
                 self.state.select(Some(next));
+                for i in 1..10 {
+                    self.scroll_state.scroll(ScrollDirection::Backward)
+                }
                 None
             }
 
@@ -71,6 +80,9 @@ impl SubsListWidget {
             } => {
                 let next = self.state.selected().map_or(0, |i| i.saturating_add(10));
                 self.state.select(Some(next));
+                for i in 1..10 {
+                    self.scroll_state.scroll(ScrollDirection::Forward)
+                }
                 None
             }
 
@@ -89,6 +101,10 @@ impl SubsListWidget {
     }
 
     pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
+        self.scroll_state = self
+            .scroll_state
+            .content_length(subtitles_response.data.len());
+
         let subs = subtitles_response
             .data
             .iter()
@@ -151,5 +167,12 @@ impl SubsListWidget {
             .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
 
         frame.render_stateful_widget(table, area, &mut self.state);
+        frame.render_stateful_widget(
+            Scrollbar::new(ScrollbarOrientation::VerticalRight)
+                .begin_symbol(Some("↑"))
+                .end_symbol(Some("↓")),
+            area,
+            &mut self.scroll_state,
+        );
     }
 }
