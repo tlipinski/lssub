@@ -53,7 +53,7 @@ impl SearchWidget {
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Min(10)])
+            .constraints([Constraint::Length(3), Constraint::Fill(1)])
             .split(area);
 
         self.query_widget.render(frame, layout[0]);
