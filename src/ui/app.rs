@@ -4,8 +4,7 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
-    SearchQueryUpdated, SwitchScreen, UserLoggedIn,
-    UserLoggedOut,
+    SearchQueryUpdated, SwitchScreen, UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::CurrentScreen::{Account, Language, Main};
@@ -17,19 +16,19 @@ use crate::ui::login_widget::LoginWidget;
 use crate::ui::nav_widget::NavWidget;
 use crate::ui::query_widget::QueryWidget;
 use crate::ui::search_widget::SearchWidget;
-use crate::ui::spinner::{spinner_task, Spinner};
+use crate::ui::spinner::{Spinner, spinner_task};
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::SubsListWidget;
-use crate::ui::subtitles_fetcher::{subtitles_fetch_task, SubtitlesQuery};
+use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
 use crate::ui::user_widget::UserWidget;
-use anyhow::{bail, Error, Result};
+use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
 use gio::prelude::DBusInterfaceSkeletonExt;
 use log::{debug, error, info};
 use osb::get_download_link::get_download_link;
 use osb::login::login;
 use osb::user_info;
-use osb::user_info::{get_user_info, UserInfo};
+use osb::user_info::{UserInfo, get_user_info};
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{StatefulWidget, Stylize};
@@ -39,7 +38,7 @@ use ratatui::{DefaultTerminal, Frame};
 use std::collections::VecDeque;
 use std::ops::Deref;
 use std::path::Path;
-use std::sync::{mpsc, Arc, RwLock};
+use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -54,7 +53,6 @@ pub struct App {
     nav_widget: NavWidget,
     ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
-    exit: bool,
 }
 
 impl App {
@@ -88,27 +86,33 @@ impl App {
             nav_widget: NavWidget::new(),
             ui_tx: ui_tx.clone(),
             features_tx,
-            exit: false,
         };
 
         let mut messages = VecDeque::from([Init]);
 
-        while !app.exit {
+        'main_loop: loop {
             while let Some(msg) = messages.pop_front() {
-                match app.update(msg).await {
-                    Ok(next) => messages.extend(next),
-                    Err(e) => {
-                        error!("Error while updating UI: {e}");
+                match msg {
+                    Exit => {
+                        info!("Exiting application");
+                        shutdown_tx.send(())?;
+                        break 'main_loop;
                     }
-                };
+                    _ => {
+                        match app.update(msg).await {
+                            Ok(next) => messages.extend(next),
+                            Err(e) => {
+                                error!("Error while updating UI: {e}");
+                            }
+                        };
+                    }
+                }
             }
 
             terminal.draw(|frame| app.draw(frame))?;
 
             messages.extend(ui_rx.recv().await);
         }
-
-        shutdown_tx.send(())?;
 
         Ok(())
     }
@@ -204,7 +208,6 @@ impl App {
             }
 
             Exit => {
-                self.exit = true;
                 Ok(vec![])
             }
 
