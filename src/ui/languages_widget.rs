@@ -5,7 +5,7 @@ use crate::ui::app::CurrentScreen::Main;
 use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
 use ratatui::Frame;
-use ratatui::layout::Rect;
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
@@ -61,17 +61,21 @@ impl LanguagesWidget {
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let mut title = "Language".to_string().bold();
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(3), Constraint::Fill(1)])
+            .split(area);
 
-        let block = Block::bordered().title(title).border_set(border::THICK);
-
-        let par = Line::from(self.input.value().bold());
-
-        let view = Paragraph::new(par).block(block);
+        let view = {
+            let mut title = "Languages (comma separated)".to_string().bold();
+            let block = Block::bordered().title(title).border_set(border::THICK);
+            let value = Line::from(self.input.value().bold());
+            Paragraph::new(value).block(block)
+        };
 
         let x = self.input.visual_cursor();
         frame.set_cursor_position((area.x + (x + 1) as u16, area.y + 1));
 
-        frame.render_widget(view, area);
+        frame.render_widget(view, layout[0]);
     }
 }

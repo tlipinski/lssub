@@ -234,7 +234,7 @@ impl App {
     fn draw(&mut self, frame: &mut Frame) {
         let area = frame.area();
 
-        let layout = Layout::default()
+        let content = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Fill(1),
@@ -246,21 +246,21 @@ impl App {
         let status = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Fill(1), Constraint::Length(23)])
-            .split(layout[1]);
+            .split(content[1]);
 
         self.status_widget.render(frame, status[0]);
         self.user_widget.render(frame, status[1]);
-        self.nav_widget.render(frame, layout[2]);
+        self.nav_widget.render(frame, content[2]);
 
         match &self.current_screen {
             Main => {
-                self.search_widget.render(frame, layout[0]);
+                self.search_widget.render(frame, content[0]);
             }
             Language => {
-                self.languages_widget.render(frame, layout[0]);
+                self.languages_widget.render(frame, content[0]);
             }
             Account => {
-                self.account_widget.render(frame, layout[0]);
+                self.account_widget.render(frame, content[0]);
             }
         }
     }
