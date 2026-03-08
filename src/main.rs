@@ -41,7 +41,6 @@ async fn main() {
     match run(args).await {
         Ok(_) => {}
         Err(e) => {
-            // error!("{e:?}");
             error!("{e}");
         }
     };
@@ -54,16 +53,13 @@ struct Args {
 }
 
 async fn run(args: Args) -> Result<()> {
-    handle_gui_cmd(args.name.as_deref()).await
-}
-
-async fn handle_gui_cmd(path_opt: Option<&str>) -> Result<()> {
+    let path_opt = args.name.as_deref();
     let p = if let Some(path) = path_opt {
         let canon_res = PathBuf::from(&path).canonicalize();
 
         match canon_res {
             Ok(canon) => {
-                if (canon.is_absolute()) {
+                if canon.is_absolute() {
                     canon
                 } else {
                     let current_dir = std::env::current_dir()?;
