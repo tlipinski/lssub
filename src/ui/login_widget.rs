@@ -3,7 +3,7 @@ use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, UserLoggedIn};
 use anyhow::Result;
 use log::{error, warn};
-use osb::login::{Credentials, login};
+use crate::osb::login::{Credentials, login};
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};

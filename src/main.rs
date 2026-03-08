@@ -3,6 +3,7 @@
 mod config;
 mod secret;
 mod ui;
+mod osb;
 
 use crate::config::{Config, ConfigProvider};
 use crate::secret::retrieve;
@@ -10,7 +11,7 @@ use anyhow::{Error, Result};
 use clap::Parser;
 use env_logger::{Builder, Target};
 use log::{LevelFilter, error, info, warn};
-use osb::user_info::get_user_info;
+use crate::osb::user_info::get_user_info;
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::process::exit;

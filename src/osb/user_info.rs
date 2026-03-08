@@ -1,6 +1,6 @@
-use crate::login::JwtToken;
-use crate::values::API_URL;
-use crate::values::{AK, USER_AGENT};
+use crate::osb::login::JwtToken;
+use crate::osb::values::API_URL;
+use crate::osb::values::{AK, USER_AGENT};
 use anyhow::Result;
 use log::{debug, error};
 use secrecy::ExposeSecret;

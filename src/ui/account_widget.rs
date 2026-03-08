@@ -7,8 +7,8 @@ use crate::ui::login_widget::LoginWidget;
 use anyhow::Result;
 use crossterm::event::Event;
 use log::{error, info};
-use osb::login::login;
-use osb::user_info::{UserInfo, get_user_info};
+use crate::osb::login::login;
+use crate::osb::user_info::{UserInfo, get_user_info};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 

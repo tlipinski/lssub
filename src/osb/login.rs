@@ -1,9 +1,9 @@
-use crate::values::{AK, USER_AGENT};
+use crate::osb::values::{AK, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
-use crate::values::API_URL;
+use crate::osb::values::API_URL;
 
 pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
     info!("Loggin in");

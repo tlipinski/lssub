@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 use crate::ui::app::CurrentScreen;
-use osb::subtitles::SubtitlesResponse;
+use crate::osb::subtitles::SubtitlesResponse;
 use ratatui::crossterm::event::Event;
-use osb::login::Credentials;
+use crate::osb::login::Credentials;
 use crate::ui::downloader::Downloaded;
 use crate::ui::subtitles_fetcher::SubtitlesQuery;
 

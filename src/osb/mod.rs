@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 pub mod get_download_link;
 pub mod download;
 pub mod features;

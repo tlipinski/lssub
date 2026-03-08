@@ -1,7 +1,7 @@
 use anyhow::Result;
 use libsecret::{Schema, SchemaAttributeType, SchemaFlags};
 use log::{debug, error};
-use osb::login::JwtToken;
+use crate::osb::login::JwtToken;
 use secrecy::{ExposeSecret, SecretBox};
 use std::collections::HashMap;
 use tokio::task;

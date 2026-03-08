@@ -2,7 +2,7 @@ use crate::ui::actions::Action;
 use crate::ui::actions::Action::{EnabledLimitSubsToId};
 use crossterm::event::KeyModifiers;
 use log::info;
-use osb::subtitles::SubtitlesResponse;
+use crate::osb::subtitles::SubtitlesResponse;
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};

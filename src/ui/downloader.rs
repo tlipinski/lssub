@@ -1,8 +1,8 @@
 use anyhow::Result;
 use log::{debug, error, info};
-use osb::download::download;
-use osb::get_download_link::get_download_link;
-use osb::login::JwtToken;
+use crate::osb::download::download;
+use crate::osb::get_download_link::get_download_link;
+use crate::osb::login::JwtToken;
 use secrecy::ExposeSecret;
 use std::ffi::{OsStr, OsString};
 use std::fs;
