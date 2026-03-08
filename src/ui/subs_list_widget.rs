@@ -1,6 +1,8 @@
 use crate::osb::subtitles::SubtitlesResponse;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::EnabledLimitSubsToId;
+use crate::ui::actions::Action::{EnabledLimitSubsToId, FetchSubs, SearchQueryUpdated};
+use crate::ui::subs_list_widget::SingleFeature::Triggered;
+use SingleFeature::{Disabled, Enabled};
 use crossterm::event::KeyModifiers;
 use log::{debug, info};
 use ratatui::Frame;
@@ -15,11 +17,20 @@ use ratatui::widgets::{
     StatefulWidget, Table, TableState,
 };
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct SubsListWidget {
     subs: Vec<Sub>,
     state: TableState,
     scroll_state: ScrollbarState,
+    single_feature: SingleFeature,
+}
+
+#[derive(Debug, Default, PartialEq)]
+enum SingleFeature {
+    #[default]
+    Disabled,
+    Triggered,
+    Enabled,
 }
 
 // todo reduce pubs
@@ -90,17 +101,33 @@ impl SubsListWidget {
                 code: KeyCode::Char('l'),
                 modifiers: KeyModifiers::CONTROL,
                 ..
-            } => self
-                .state
-                .selected()
-                .and_then(|selection| self.subs.get(selection))
-                .map(|s| EnabledLimitSubsToId(s.id)),
+            } => {
+                if (self.single_feature != Disabled) {
+                    self.single_feature = Disabled;
+                    Some(SearchQueryUpdated) // trigger refreshing subs
+                } else {
+                    self.single_feature = Triggered;
+                    self.state
+                        .selected()
+                        .and_then(|selection| self.subs.get(selection))
+                        .map(|s| EnabledLimitSubsToId(s.id))
+                }
+
+            }
 
             _ => None,
         }
     }
 
     pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
+        // SingleFeature option is enabled only for *single* subs update
+        // after another update it gets disabled again
+        if (self.single_feature == Triggered) {
+            self.single_feature = Enabled;
+        } else {
+            self.single_feature = Disabled;
+        }
+
         self.scroll_state = self
             .scroll_state
             .content_length(subtitles_response.data.len());
@@ -160,7 +187,11 @@ impl SubsListWidget {
             ])
         });
 
-        let title = format!("Results: {}", self.subs.len()).bold();
+        let title = if (self.single_feature == Enabled) {
+            format!("Results: {} (single feature)", self.subs.len()).bold()
+        } else {
+            format!("Results: {}", self.subs.len()).bold()
+        };
 
         let block_bot = Block::bordered().title(title).border_set(border::THICK);
 
