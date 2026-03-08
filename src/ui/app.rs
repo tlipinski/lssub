@@ -1,5 +1,10 @@
 use crate::config::{Config, ConfigProvider};
+use crate::osb::get_download_link::get_download_link;
+use crate::osb::login::login;
+use crate::osb::user_info;
+use crate::osb::user_info::{UserInfo, get_user_info};
 use crate::secret::{clear, retrieve, store};
+use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
@@ -25,10 +30,6 @@ use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
 use gio::prelude::DBusInterfaceSkeletonExt;
 use log::{debug, error, info};
-use crate::osb::get_download_link::get_download_link;
-use crate::osb::login::login;
-use crate::osb::user_info;
-use crate::osb::user_info::{UserInfo, get_user_info};
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{StatefulWidget, Stylize};
@@ -39,10 +40,10 @@ use std::collections::VecDeque;
 use std::ops::Deref;
 use std::path::Path;
 use std::sync::{Arc, RwLock, mpsc};
+use crossterm::event::KeyEvent;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use crate::ui::about_widget::AboutWidget;
 
 pub struct App {
     current_screen: CurrentScreen,
@@ -210,9 +211,7 @@ impl App {
                 Ok(vec![])
             }
 
-            Exit => {
-                Ok(vec![])
-            }
+            Exit => Ok(vec![]),
 
             EnabledLimitSubsToId(id) => {
                 let languages = self.languages_widget.languages();
@@ -295,7 +294,7 @@ impl App {
                     },
 
                     About => match key_event.code {
-                        _ => Ok(self.about_widget.handle_key_event(event))
+                        _ => Ok(self.about_widget.handle_key_event(event)),
                     },
                 },
             }
@@ -311,5 +310,5 @@ pub enum CurrentScreen {
     Main,
     Account,
     Language,
-    About
+    About,
 }
