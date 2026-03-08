@@ -78,5 +78,9 @@ fn create_schema() -> Schema {
     let mut attributes = HashMap::new();
     attributes.insert("username", SchemaAttributeType::String);
 
-    Schema::new(format!("com.{APP_NAME}").as_str(), SchemaFlags::NONE, attributes)
+    Schema::new(
+        format!("com.{APP_NAME}").as_str(),
+        SchemaFlags::NONE,
+        attributes,
+    )
 }

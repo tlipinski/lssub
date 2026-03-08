@@ -102,14 +102,7 @@ impl App {
                         shutdown_tx.send(())?;
                         break 'main_loop;
                     }
-                    _ => {
-                        match app.update(msg).await {
-                            Ok(next) => messages.extend(next),
-                            Err(e) => {
-                                error!("Error while updating UI: {e}");
-                            }
-                        };
-                    }
+                    _ => messages.extend(app.update(msg).await),
                 }
             }
 
@@ -121,16 +114,21 @@ impl App {
         Ok(())
     }
 
-    async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
+    async fn update(&mut self, action: Action) -> Vec<Action> {
         debug!("action: {:?}", action);
         match action {
-            ReceivedInput(event) => {
-                if let Ok(Some(m)) = self.handle_key_event(event).await {
-                    Ok(vec![m])
-                } else {
-                    Ok(vec![])
+            ReceivedInput(event) => match self.handle_key_event(event).await {
+                Ok(Some(m)) => {
+                    vec![m]
                 }
-            }
+                Ok(None) => {
+                    vec![]
+                }
+                Err(e) => {
+                    self.status_widget.info = e.to_string();
+                    vec![]
+                }
+            },
 
             SubsFetched(subtitles) => {
                 self.search_widget.update_subtitles(&subtitles);
@@ -138,13 +136,13 @@ impl App {
 
                 self.status_widget.in_progress = false;
 
-                Ok(vec![])
+                vec![]
             }
 
             LanguagesUpdated => {
                 let languages = self.languages_widget.languages();
                 let query: String = self.search_widget.query();
-                Ok(vec![SwitchScreen(Main), FetchSubs(query, languages)])
+                vec![SwitchScreen(Main), FetchSubs(query, languages)]
             }
 
             UserLoggedIn => {
@@ -154,7 +152,7 @@ impl App {
                     self.nav_widget.username = Some(user_info.data.username);
                 }
 
-                Ok(vec![SwitchScreen(Main)])
+                vec![SwitchScreen(Main)]
             }
 
             UserLoggedOut => {
@@ -162,7 +160,7 @@ impl App {
                 self.user_widget.remaining = 0;
                 self.nav_widget.username = None;
 
-                Ok(vec![])
+                vec![]
             }
 
             SearchQueryUpdated => {
@@ -170,7 +168,7 @@ impl App {
 
                 let languages = self.languages_widget.languages();
                 let query = self.search_widget.query();
-                Ok(vec![FetchSubs(query, languages)])
+                vec![FetchSubs(query, languages)]
             }
 
             FetchSubs(query, languages) => {
@@ -182,36 +180,46 @@ impl App {
                         languages,
                         id: None,
                     })
-                    .await?;
+                    .await;
 
-                Ok(vec![])
+                vec![]
             }
 
             Init => {
-                let mut actions = self.account_widget.update(Init).await?;
+                let mut actions_res = self.account_widget.update(Init).await;
 
-                let query: String = self.search_widget.query();
-                if !query.is_empty() {
-                    let languages = self.languages_widget.languages();
-                    actions.push(FetchSubs(query, languages));
+                match actions_res {
+                    Ok(mut actions) => {
+                        let query: String = self.search_widget.query();
+                        if !query.is_empty() {
+                            let languages = self.languages_widget.languages();
+                            actions.push(FetchSubs(query, languages));
+                        }
+
+                        actions
+                    }
+                    Err(_) => {
+                        self.status_widget.info = "Init error, check logs".to_string();
+                        vec![]
+                    }
                 }
-
-                Ok(actions)
             }
 
             DownloadedSubs(downloaded) => {
                 self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
                 self.user_widget.requests = downloaded.requests;
                 self.user_widget.remaining = downloaded.remaining;
-                Ok(vec![])
+
+                vec![]
             }
 
             SwitchScreen(screen) => {
                 self.current_screen = screen;
-                Ok(vec![])
+
+                vec![]
             }
 
-            Exit => Ok(vec![]),
+            Exit => vec![],
 
             EnabledLimitSubsToId(id) => {
                 let languages = self.languages_widget.languages();
@@ -222,13 +230,16 @@ impl App {
                         languages,
                         id: Some(id),
                     })
-                    .await?;
-                Ok(vec![])
+                    .await
+                    .unwrap(); // todo
+
+                vec![]
             }
 
             ChangeStatus(status) => {
                 self.status_widget.info = status;
-                Ok(vec![])
+
+                vec![]
             }
         }
     }

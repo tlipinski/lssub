@@ -1,3 +1,4 @@
+use crate::osb::values::{APP_NAME, VERSION};
 use crate::ui::actions::Action;
 use crossterm::event::Event;
 use ratatui::Frame;
@@ -5,7 +6,6 @@ use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
-use crate::osb::values::{APP_NAME, VERSION};
 
 pub struct AboutWidget {}
 

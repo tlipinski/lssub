@@ -1,7 +1,7 @@
 use crate::osb::features::{FeaturesResponse, features};
 use crate::osb::subtitles::{SubtitlesResponse, subtitles};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::SubsFetched;
+use crate::ui::actions::Action::{ChangeStatus, SubsFetched};
 use anyhow::{Context, Result, bail};
 use log::{debug, error, info};
 use std::sync::{Arc, Mutex, mpsc};
@@ -48,7 +48,13 @@ pub async fn subtitles_fetch_task(
                 let result = subtitles(&text.query, text.languages, text.id).await;
                 match result {
                     Ok(subtitles) => tx.send(SubsFetched(subtitles)).await?,
-                    Err(_) => break 'outer Ok(()),
+                    Err(e) => {
+                        error!("Error fetching subtitles {e}");
+                        tx.send(ChangeStatus(
+                            "Error fetching subtitles list, check logs".into(),
+                        ))
+                        .await?;
+                    }
                 }
             }
         }

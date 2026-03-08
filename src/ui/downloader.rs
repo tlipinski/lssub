@@ -1,7 +1,7 @@
 use crate::osb::download::download;
 use crate::osb::get_download_link::get_download_link;
 use crate::osb::login::JwtToken;
-use anyhow::Result;
+use anyhow::{Error, Result};
 use log::{debug, error, info};
 use secrecy::ExposeSecret;
 use std::ffi::{OsStr, OsString};

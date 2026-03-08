@@ -7,6 +7,7 @@ mod ui;
 
 use crate::config::{Config, ConfigProvider};
 use crate::osb::user_info::get_user_info;
+use crate::osb::values::APP_NAME;
 use crate::secret::retrieve;
 use anyhow::{Error, Result};
 use clap::Parser;
@@ -16,7 +17,6 @@ use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::process::exit;
 use ui::app::App;
-use crate::osb::values::APP_NAME;
 
 #[tokio::main]
 async fn main() {

@@ -15,6 +15,7 @@ use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use crate::ui::user_widget::UserWidget;
 use anyhow::Result;
 use crossterm::event::{KeyEvent, KeyModifiers};
+use log::error;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
