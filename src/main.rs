@@ -49,11 +49,11 @@ async fn main() {
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    name: Option<String>,
+    path: Option<String>,
 }
 
 async fn run(args: Args) -> Result<()> {
-    let path_opt = args.name.as_deref();
+    let path_opt = args.path.as_deref();
     let p = if let Some(path) = path_opt {
         let canon_res = PathBuf::from(&path).canonicalize();
 
