@@ -169,6 +169,7 @@ impl SubsListWidget {
         frame.render_stateful_widget(table, area, &mut self.state);
         frame.render_stateful_widget(
             Scrollbar::new(ScrollbarOrientation::VerticalRight)
+                .style(Style::default().fg(Color::DarkGray))
                 .begin_symbol(Some("↑"))
                 .end_symbol(Some("↓")),
             area,
