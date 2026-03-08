@@ -1,9 +1,9 @@
+use crate::osb::login::{Credentials, login};
 use crate::secret::store;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, UserLoggedIn};
 use anyhow::Result;
 use log::{error, warn};
-use crate::osb::login::{Credentials, login};
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -133,9 +133,7 @@ impl LoginWidget {
 
                     match result {
                         Ok(msg) => Ok(Some(UserLoggedIn)),
-                        Err(e) => {
-                            Ok(Some(ChangeStatus(e.to_string())))
-                        }
+                        Err(e) => Ok(Some(ChangeStatus(e.to_string()))),
                     }
                 }
                 KeyCode::Up => {

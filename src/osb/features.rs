@@ -1,4 +1,4 @@
-use crate::osb::values::{API_URL, AK, USER_AGENT};
+use crate::osb::values::{AK, API_URL, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info, trace};
 use serde::{Deserialize, Serialize};
@@ -40,7 +40,8 @@ pub async fn features(query: &str) -> Result<FeaturesResponse> {
             }
         }
         s if s.is_client_error() => {
-            let error_response: crate::osb::login::ErrorResponse = serde_json::from_str(&text_body)?;
+            let error_response: crate::osb::login::ErrorResponse =
+                serde_json::from_str(&text_body)?;
             info!("Client error {:?}", error_response);
             Err(Error::msg("Error calling OSB"))
         }
@@ -60,12 +61,12 @@ pub struct FeaturesResponse {
 pub struct Data {
     pub id: String,
     pub r#type: String,
-    pub attributes: Attributes
+    pub attributes: Attributes,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Attributes {
     pub title: String,
     pub year: String,
-    pub subtitles_count: i32
+    pub subtitles_count: i32,
 }

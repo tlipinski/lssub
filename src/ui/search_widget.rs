@@ -1,9 +1,9 @@
+use crate::osb::subtitles::SubtitlesResponse;
 use crate::secret::retrieve;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
-    SearchQueryUpdated,  SubsFetched, SwitchScreen,
-    UserLoggedOut,
+    SearchQueryUpdated, SubsFetched, SwitchScreen, UserLoggedOut,
 };
 use crate::ui::app::CurrentScreen::Main;
 use crate::ui::downloader::{Downloaded, Downloader};
@@ -15,7 +15,6 @@ use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use crate::ui::user_widget::UserWidget;
 use anyhow::Result;
 use crossterm::event::{KeyEvent, KeyModifiers};
-use crate::osb::subtitles::SubtitlesResponse;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};

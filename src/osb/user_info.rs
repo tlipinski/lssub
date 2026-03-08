@@ -30,7 +30,6 @@ pub async fn get_user_info(token: &JwtToken) -> Result<UserInfo> {
             Err(e.into())
         }
     }
-
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]

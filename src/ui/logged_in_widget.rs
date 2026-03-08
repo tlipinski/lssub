@@ -1,10 +1,10 @@
+use crate::osb::login::Credentials;
+use crate::osb::user_info::UserInfo;
 use crate::secret::clear;
 use crate::ui::actions::Action;
 use anyhow::Result;
 use crossterm::event::KeyModifiers;
 use log::info;
-use crate::osb::login::Credentials;
-use crate::osb::user_info::UserInfo;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};

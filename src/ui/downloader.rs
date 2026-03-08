@@ -1,8 +1,8 @@
-use anyhow::Result;
-use log::{debug, error, info};
 use crate::osb::download::download;
 use crate::osb::get_download_link::get_download_link;
 use crate::osb::login::JwtToken;
+use anyhow::Result;
+use log::{debug, error, info};
 use secrecy::ExposeSecret;
 use std::ffi::{OsStr, OsString};
 use std::fs;
@@ -23,7 +23,12 @@ impl Downloader {
         }
     }
 
-    pub async fn download(&self, token_opt: Option<JwtToken>, file_id: i64, language: &str) -> Result<Downloaded> {
+    pub async fn download(
+        &self,
+        token_opt: Option<JwtToken>,
+        file_id: i64,
+        language: &str,
+    ) -> Result<Downloaded> {
         // todo
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
@@ -45,7 +50,7 @@ impl Downloader {
                             &self.base_path,
                             &self.file_name_opt,
                             download_link_response.file_name.as_str(),
-                            language
+                            language,
                         );
 
                         debug!("out: {:?}", output_file);
@@ -76,10 +81,11 @@ fn output_file(
     base_path: &Path,
     file_name_opt: &Option<String>,
     default_file_name: &str,
-    language: &str
+    language: &str,
 ) -> PathBuf {
     let default_path = Path::new(default_file_name);
-    let default_stem = default_path.file_stem()
+    let default_stem = default_path
+        .file_stem()
         .map(|s| s.to_string_lossy().to_string())
         .unwrap_or_else(|| default_file_name.to_string());
     let default_ext_opt = default_path.extension();

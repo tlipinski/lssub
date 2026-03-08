@@ -1,8 +1,8 @@
+use crate::osb::subtitles::SubtitlesResponse;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{EnabledLimitSubsToId};
+use crate::ui::actions::Action::EnabledLimitSubsToId;
 use crossterm::event::KeyModifiers;
 use log::info;
-use crate::osb::subtitles::SubtitlesResponse;
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
@@ -34,12 +34,11 @@ pub struct Sub {
 
 impl SubsListWidget {
     pub fn selected(&self) -> Option<&Sub> {
-        self
-            .state
+        self.state
             .selected()
             .and_then(|selection| self.subs.get(selection))
     }
-    
+
     pub fn handle_key_event(&mut self, key_event: KeyEvent) -> Option<Action> {
         match key_event {
             KeyEvent {
@@ -79,14 +78,11 @@ impl SubsListWidget {
                 code: KeyCode::Char('l'),
                 modifiers: KeyModifiers::CONTROL,
                 ..
-            } => {
-                self.state
-                    .selected()
-                    .and_then(|selection| self.subs.get(selection))
-                    .map(|s| {
-                        EnabledLimitSubsToId(s.id)
-                    })
-            }
+            } => self
+                .state
+                .selected()
+                .and_then(|selection| self.subs.get(selection))
+                .map(|s| EnabledLimitSubsToId(s.id)),
 
             _ => None,
         }

@@ -1,10 +1,10 @@
-use std::path::PathBuf;
-use crate::ui::app::CurrentScreen;
-use crate::osb::subtitles::SubtitlesResponse;
-use ratatui::crossterm::event::Event;
 use crate::osb::login::Credentials;
+use crate::osb::subtitles::SubtitlesResponse;
+use crate::ui::app::CurrentScreen;
 use crate::ui::downloader::Downloaded;
 use crate::ui::subtitles_fetcher::SubtitlesQuery;
+use ratatui::crossterm::event::Event;
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub enum Action {

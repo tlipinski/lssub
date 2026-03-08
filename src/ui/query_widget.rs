@@ -1,4 +1,5 @@
 use crate::ui::actions::Action;
+use crate::ui::actions::Action::SearchQueryUpdated;
 use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use anyhow::Result;
 use gio::glib::random_int_range;
@@ -13,7 +14,6 @@ use std::sync::mpsc::Sender;
 use std::thread::sleep;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::actions::Action::{SearchQueryUpdated};
 
 #[derive(Debug)]
 pub struct QueryWidget {
@@ -32,9 +32,7 @@ impl QueryWidget {
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::bordered()
-            .title("Search")
-            .border_set(border::THICK);
+        let block = Block::bordered().title("Search").border_set(border::THICK);
 
         let par = Line::from(self.input.value().bold());
 

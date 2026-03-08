@@ -1,9 +1,9 @@
+use crate::osb::features::{FeaturesResponse, features};
+use crate::osb::subtitles::{SubtitlesResponse, subtitles};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::SubsFetched;
 use anyhow::{Context, Result, bail};
 use log::{debug, error, info};
-use crate::osb::features::{FeaturesResponse, features};
-use crate::osb::subtitles::{SubtitlesResponse, subtitles};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
 use tokio::join;
@@ -29,9 +29,7 @@ pub async fn subtitles_fetch_task(
         // Receive as much as possible within outer loop cycle to reduce OSB calls.
         'debouncing: loop {
             match rx.try_recv() {
-                Ok(ev) => {
-                    last = Some(ev)
-                }
+                Ok(ev) => last = Some(ev),
 
                 Err(TryRecvError::Empty) => break 'debouncing,
 

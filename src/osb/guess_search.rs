@@ -1,5 +1,5 @@
 use crate::osb::guess::GuessResponse;
-use crate::osb::values::{API_URL, AK, USER_AGENT};
+use crate::osb::values::{AK, API_URL, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use std::collections::HashMap;
@@ -51,7 +51,8 @@ pub async fn guess_search(guess_response: GuessResponse) -> Result<()> {
             }
         }
         s if s.is_client_error() => {
-            let error_response: crate::osb::login::ErrorResponse = serde_json::from_str(&text_body)?;
+            let error_response: crate::osb::login::ErrorResponse =
+                serde_json::from_str(&text_body)?;
             info!("Client error {:?}", error_response);
             if error_response.message.contains("invalid username/password") {
                 Err(Error::msg("Invalid username or password"))

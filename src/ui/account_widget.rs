@@ -1,14 +1,14 @@
+use crate::osb::login::login;
+use crate::osb::user_info::{UserInfo, get_user_info};
 use crate::secret::{clear, retrieve, store};
-use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ReceivedInput, UserLoggedIn, UserLoggedOut, SwitchScreen};
+use crate::ui::actions::Action::{ReceivedInput, SwitchScreen, UserLoggedIn, UserLoggedOut};
 use crate::ui::app::CurrentScreen::Main;
+use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
 use anyhow::Result;
 use crossterm::event::Event;
 use log::{error, info};
-use crate::osb::login::login;
-use crate::osb::user_info::{UserInfo, get_user_info};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 

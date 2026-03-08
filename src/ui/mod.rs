@@ -1,3 +1,4 @@
+mod about_widget;
 mod account_widget;
 mod actions;
 pub mod app;
@@ -14,4 +15,3 @@ mod status_widget;
 mod subs_list_widget;
 mod subtitles_fetcher;
 mod user_widget;
-mod about_widget;
