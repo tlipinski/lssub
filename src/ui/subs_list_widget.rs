@@ -2,7 +2,7 @@ use crate::osb::subtitles::SubtitlesResponse;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::EnabledLimitSubsToId;
 use crossterm::event::KeyModifiers;
-use log::info;
+use log::{debug, info};
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
@@ -31,7 +31,7 @@ pub struct Sub {
     year: String,
     pub language: String,
     upload_date: String,
-    downloads: String,
+    downloads: i32,
     ai_translated: String,
     votes: String,
 }
@@ -121,8 +121,7 @@ impl SubsListWidget {
                     .next()
                     .unwrap_or(&resp.attributes.upload_date)
                     .to_string(),
-                downloads: (resp.attributes.download_count + resp.attributes.new_download_count)
-                    .to_string(),
+                downloads: (resp.attributes.download_count + resp.attributes.new_download_count),
                 ai_translated: match resp.attributes.ai_translated {
                     true => "✓".to_string(),
                     false => "".to_string(),
@@ -138,31 +137,55 @@ impl SubsListWidget {
     }
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
+        let wide = area.width > 90;
         let rows = self.subs.iter().map(|item| {
             Row::from_iter(vec![
                 Cell::from(Text::from(item.title.as_str())),
                 Cell::from(Text::from(item.language.as_str())),
                 Cell::from(Text::from(item.year.as_str())),
                 Cell::from(Text::from(item.upload_date.as_str())),
-                Cell::from(Text::from(item.downloads.as_str())),
+                if (wide) {
+                    Cell::from(Text::from(item.downloads.to_string()).right_aligned())
+                } else {
+                    if (item.downloads >= 1000) {
+                        Cell::from(
+                            Text::from((item.downloads / 1000).to_string() + "k").right_aligned(),
+                        )
+                    } else {
+                        Cell::from(Text::from(item.downloads.to_string()).right_aligned())
+                    }
+                },
                 Cell::from(Text::from(item.ai_translated.as_str())),
-                Cell::from(Text::from(item.votes.as_str())),
+                Cell::from(Text::from(item.votes.as_str()).right_aligned()),
             ])
         });
+
         let title = format!("Results: {}", self.subs.len()).bold();
 
         let block_bot = Block::bordered().title(title).border_set(border::THICK);
 
-        let table = Table::new(rows, [70, 10, 10, 12, 10, 10, 10])
-            .header(Row::from_iter(vec![
-                "Title",
-                "Language",
-                "Year",
-                "Uploaded",
-                "Downloads",
-                "AI",
-                "Votes",
-            ]))
+        let (widths, headers) = if (wide) {
+            (
+                [95, 10, 10, 12, 12, 10, 10],
+                vec![
+                    "Title",
+                    "Language",
+                    "Year",
+                    "Uploaded",
+                    "Downloads",
+                    "AI",
+                    "Votes",
+                ],
+            )
+        } else {
+            (
+                [50, 4, 4, 10, 10, 3, 3],
+                vec!["Title", "Lng", "Yr", "Upl", "Downs", "AI", "Vt"],
+            )
+        };
+
+        let table = Table::new(rows, widths)
+            .header(Row::from_iter(headers))
             .block(block_bot)
             .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
 
