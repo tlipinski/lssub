@@ -1,9 +1,14 @@
+use std::sync::{Arc, RwLock};
 use crate::ui::actions::Action;
 use tokio::sync::broadcast::Receiver;
 use tokio::sync::mpsc::Sender;
 use tokio::time::{Duration, sleep};
 
-pub async fn spinner_task(tx: Sender<Action>) -> anyhow::Result<()> {
+pub struct Spinner {
+    pub c: char
+}
+
+pub async fn spinner_task(s: Arc<RwLock<Spinner>>) -> anyhow::Result<()> {
     let spinner = ['|', '/', '-', '\\'];
     let mut pos = 0;
     loop {
@@ -11,6 +16,6 @@ pub async fn spinner_task(tx: Sender<Action>) -> anyhow::Result<()> {
         pos += 1;
         pos %= spinner.len();
         let ch = spinner[pos];
-        // tx.send(Action::SpinnerUpdate(ch)).await?
+        s.write().unwrap().c = ch;
     }
 }

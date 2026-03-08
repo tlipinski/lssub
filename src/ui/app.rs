@@ -17,7 +17,7 @@ use crate::ui::login_widget::LoginWidget;
 use crate::ui::nav_widget::NavWidget;
 use crate::ui::query_widget::QueryWidget;
 use crate::ui::search_widget::SearchWidget;
-use crate::ui::spinner::spinner_task;
+use crate::ui::spinner::{spinner_task, Spinner};
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::SubsListWidget;
 use crate::ui::subtitles_fetcher::{subtitles_fetch_task, SubtitlesQuery};
@@ -31,7 +31,7 @@ use osb::login::login;
 use osb::user_info;
 use osb::user_info::{get_user_info, UserInfo};
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
-use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{StatefulWidget, Stylize};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
@@ -39,7 +39,7 @@ use ratatui::{DefaultTerminal, Frame};
 use std::collections::VecDeque;
 use std::ops::Deref;
 use std::path::Path;
-use std::sync::mpsc;
+use std::sync::{mpsc, Arc, RwLock};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -68,9 +68,12 @@ impl App {
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
 
+        let spinner = Arc::new(RwLock::new(Spinner { c: ' ' }));
+        let spinner_clone = spinner.clone();
+
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
         tokio::spawn(subtitles_fetch_task(features_rx, ui_tx.clone()));
-        tokio::spawn(spinner_task(ui_tx.clone()));
+        tokio::spawn(spinner_task(spinner_clone));
 
         let provider = ConfigProvider::default();
         let search_screen = SearchWidget::from(base_path, file_name)?;
@@ -80,7 +83,7 @@ impl App {
             current_screen: CurrentScreen::default(),
             languages_widget: LanguagesWidget::new(provider)?,
             account_widget: AccountWidget::new(),
-            status_widget: StatusWidget::from("".into()),
+            status_widget: StatusWidget::from(spinner.clone()),
             user_widget: UserWidget::from(),
             nav_widget: NavWidget::new(),
             ui_tx: ui_tx.clone(),
@@ -124,6 +127,9 @@ impl App {
             SubsFetched(subtitles) => {
                 self.search_widget.update_subtitles(&subtitles);
                 self.status_widget.info = format!("{} results", subtitles.data.len());
+
+                self.status_widget.in_progress = false;
+
                 Ok(vec![])
             }
 
@@ -152,12 +158,16 @@ impl App {
             }
 
             SearchQueryUpdated => {
+                self.status_widget.in_progress = true;
+
                 let languages = self.languages_widget.languages();
                 let query = self.search_widget.query();
                 Ok(vec![FetchSubs(query, languages)])
             }
 
             FetchSubs(query, languages) => {
+                self.status_widget.in_progress = true;
+
                 self.features_tx
                     .send(SubtitlesQuery {
                         query,

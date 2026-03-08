@@ -1,46 +1,42 @@
 use crate::ui::actions::Action;
+use crate::ui::spinner::Spinner;
 use anyhow::Result;
 use gio::glib::random_int_range;
+use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::Rect;
 use ratatui::prelude::{Line, Stylize, Widget};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
-use ratatui::Frame;
-use tui_input::backend::crossterm::EventHandler;
+use std::sync::{Arc, RwLock};
 use tui_input::Input;
+use tui_input::backend::crossterm::EventHandler;
 
 pub struct StatusWidget {
     pub info: String,
-    pub spinner: char,
-    pub spinning: bool,
+    spinner: Arc<RwLock<Spinner>>,
+    pub in_progress: bool,
 }
 
 impl StatusWidget {
-    pub fn from(info: String) -> Self {
+    pub fn from(spinner: Arc<RwLock<Spinner>>) -> Self {
         Self {
-            info,
-            spinner: ' ',
-            spinning: false,
+            info: "".to_string(),
+            spinner,
+            in_progress: false,
         }
     }
 
-    pub fn spin(&mut self, chr: char) {
-        self.spinner = chr;
-    }
-
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let mut title = if (self.spinning) {
-            ("Status ".to_string() + &self.spinner.to_string()).bold()
+        let c = self.spinner.read().unwrap().c;
+        let mut title = if (self.in_progress) {
+            ("Status ".to_string() + &c.to_string()).bold()
         } else {
             ("Status".to_string()).bold()
         };
 
-        let block = Block::bordered()
-            .title(title)
-            // .title_bottom(instructions.centered())
-            .border_set(border::THICK);
+        let block = Block::bordered().title(title).border_set(border::THICK);
 
         let par = Line::from(self.info.clone());
 
@@ -48,5 +44,4 @@ impl StatusWidget {
 
         frame.render_widget(view, area);
     }
-
 }
