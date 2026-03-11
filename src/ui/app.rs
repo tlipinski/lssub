@@ -283,13 +283,30 @@ impl App {
 
     async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Event::Key(key_event) = event {
-            match key_event.code {
-                KeyCode::Esc => Ok(Some(SwitchScreen(Main))),
-                KeyCode::F(2) => Ok(Some(SwitchScreen(Main))),
-                KeyCode::F(3) => Ok(Some(SwitchScreen(Account))),
-                KeyCode::F(4) => Ok(Some(SwitchScreen(Language))),
-                KeyCode::F(10) => Ok(Some(Exit)),
-                KeyCode::F(12) => Ok(Some(SwitchScreen(About))),
+            match key_event {
+                KeyEvent {
+                    code: KeyCode::Esc, ..
+                } => Ok(Some(SwitchScreen(Main))),
+                KeyEvent {
+                    code: KeyCode::F(2),
+                    ..
+                } => Ok(Some(SwitchScreen(Main))),
+                KeyEvent {
+                    code: KeyCode::F(3),
+                    ..
+                } => Ok(Some(SwitchScreen(Account))),
+                KeyEvent {
+                    code: KeyCode::F(4),
+                    ..
+                } => Ok(Some(SwitchScreen(Language))),
+                KeyEvent {
+                    code: KeyCode::F(10),
+                    ..
+                } => Ok(Some(Exit)),
+                KeyEvent {
+                    code: KeyCode::F(12),
+                    ..
+                } => Ok(Some(SwitchScreen(About))),
 
                 _ => match self.current_screen {
                     Main => match key_event.code {
