@@ -1,8 +1,9 @@
 use crate::ui::actions::Action;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
+use ratatui::style::Style;
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
@@ -24,12 +25,12 @@ impl UserWidget {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let downloads = {
-            let title = "Downloads remaining"
-                .to_string()
-                .bold()
-                .into_centered_line();
+            let title = "Downloads remaining";
 
-            let block = Block::bordered().title(title).border_set(border::THICK);
+            let block = Block::bordered()
+                .title(title)
+                .title_alignment(Alignment::Center)
+                .border_set(border::PLAIN);
 
             let line = Line::from(format!(
                 "{} of {}",

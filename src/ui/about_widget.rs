@@ -21,15 +21,15 @@ impl AboutWidget {
             .split(area);
 
         let about = {
-            let title = "About".to_string().bold();
-            let block = Block::bordered().title(title).border_set(border::THICK);
+            let title = "About".to_string();
+            let block = Block::bordered().title(title).border_set(border::PLAIN);
             Paragraph::new(vec![
                 "".into(),
                 "".into(),
                 "".into(),
                 Line::from(format!("{APP_NAME} {VERSION}")).bold(),
                 "".into(),
-                Line::from("github: https://github.com/tlipinski/lssub"),
+                Line::from("https://github.com/tlipinski/lssub"),
             ])
             .block(block)
             .centered()

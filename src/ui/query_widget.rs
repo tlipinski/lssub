@@ -32,7 +32,7 @@ impl QueryWidget {
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::bordered().title("Search").border_set(border::THICK);
+        let block = Block::bordered().title("Search").border_set(border::PLAIN);
 
         let par = Line::from(self.input.value().bold());
 

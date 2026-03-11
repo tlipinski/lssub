@@ -67,9 +67,9 @@ impl LanguagesWidget {
             .split(area);
 
         let view = {
-            let mut title = "Languages (comma separated)".to_string().bold();
-            let block = Block::bordered().title(title).border_set(border::THICK);
-            let value = Line::from(self.input.value().bold());
+            let mut title = "Languages (comma separated)".to_string();
+            let block = Block::bordered().title(title).border_set(border::PLAIN);
+            let value = Line::from(self.input.value());
             Paragraph::new(value).block(block)
         };
 

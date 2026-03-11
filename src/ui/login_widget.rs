@@ -37,8 +37,8 @@ impl LoginWidget {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let block = Block::bordered()
-            .title("Login".to_string().bold())
-            .border_set(border::THICK);
+            .title("Login".to_string())
+            .border_set(border::PLAIN);
 
         let outer_layout = Layout::default()
             .direction(Direction::Horizontal)
@@ -65,10 +65,10 @@ impl LoginWidget {
 
         match self.editing {
             Editing::Username => {
-                user_block = user_block.border_set(border::THICK);
+                user_block = user_block.border_set(border::PLAIN);
             }
             Editing::Password => {
-                pass_block = pass_block.border_set(border::THICK);
+                pass_block = pass_block.border_set(border::PLAIN);
             }
             Editing::None => {}
         }

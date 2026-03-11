@@ -8,7 +8,7 @@ use log::{debug, info};
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
-use ratatui::layout::Rect;
+use ratatui::layout::{Alignment, Rect};
 use ratatui::prelude::{Style, Stylize, Text, Widget};
 use ratatui::style::Color;
 use ratatui::symbols::border;
@@ -112,7 +112,6 @@ impl SubsListWidget {
                         .and_then(|selection| self.subs.get(selection))
                         .map(|s| EnabledLimitSubsToId(s.id))
                 }
-
             }
 
             _ => None,
@@ -188,12 +187,12 @@ impl SubsListWidget {
         });
 
         let title = if (self.single_feature == Enabled) {
-            format!("Results: {} (single feature)", self.subs.len()).bold()
+            format!("Results: {} (single feature)", self.subs.len())
         } else {
-            format!("Results: {}", self.subs.len()).bold()
+            format!("Results: {}", self.subs.len())
         };
 
-        let block_bot = Block::bordered().title(title).border_set(border::THICK);
+        let block_bot = Block::bordered().title(title).border_set(border::PLAIN);
 
         let (widths, headers) = if (wide) {
             (

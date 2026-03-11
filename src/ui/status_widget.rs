@@ -31,12 +31,12 @@ impl StatusWidget {
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let c = self.spinner.read().unwrap().c;
         let mut title = if (self.in_progress) {
-            ("Status ".to_string() + &c.to_string()).bold()
+            ("Status ".to_string() + &c.to_string())
         } else {
-            ("Status".to_string()).bold()
+            ("Status".to_string())
         };
 
-        let block = Block::bordered().title(title).border_set(border::THICK);
+        let block = Block::bordered().title(title).border_set(border::PLAIN);
 
         let par = Line::from(self.info.clone());
 
