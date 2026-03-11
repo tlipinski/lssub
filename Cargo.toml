@@ -2,6 +2,7 @@
 name = "lssub"
 version = "0.0.1"
 edition = "2024"
+build = "build.rs"
 license-file = "LICENSE"
 description = "Teminal UI app for searching and downloading subtitles via the OpenSubtitles API."
 repository = "https://github.com/tlipinski/lssub"

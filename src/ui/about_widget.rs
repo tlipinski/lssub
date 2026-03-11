@@ -27,7 +27,7 @@ impl AboutWidget {
                 "".into(),
                 "".into(),
                 "".into(),
-                Line::from(format!("{APP_NAME} v{VERSION}")).bold(),
+                Line::from(format!("{APP_NAME} {VERSION}")).bold(),
                 "".into(),
                 Line::from("github: https://github.com/tlipinski/lssub"),
             ])
