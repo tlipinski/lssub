@@ -16,6 +16,7 @@ use ratatui::widgets::{
     Block, Cell, Row, ScrollDirection, Scrollbar, ScrollbarOrientation, ScrollbarState,
     StatefulWidget, Table, TableState,
 };
+use crate::ui::pad::Pad;
 
 #[derive(Default)]
 pub struct SubsListWidget {
@@ -192,7 +193,7 @@ impl SubsListWidget {
             format!("Results: {}", self.subs.len())
         };
 
-        let block_bot = Block::bordered().title(title).border_set(border::PLAIN);
+        let block_bot = Block::bordered().title(Pad(&title)).border_set(border::PLAIN);
 
         let (widths, headers) = if (wide) {
             (

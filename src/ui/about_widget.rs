@@ -1,5 +1,6 @@
 use crate::osb::values::{APP_NAME, VERSION};
 use crate::ui::actions::Action;
+use crate::ui::pad::Pad;
 use crossterm::event::Event;
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -21,8 +22,9 @@ impl AboutWidget {
             .split(area);
 
         let about = {
-            let title = "About".to_string();
-            let block = Block::bordered().title(title).border_set(border::PLAIN);
+            let block = Block::bordered()
+                .title(Pad("About"))
+                .border_set(border::PLAIN);
             Paragraph::new(vec![
                 "".into(),
                 "".into(),

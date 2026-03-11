@@ -14,6 +14,7 @@ use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use crate::ui::pad::Pad;
 
 #[derive(Debug)]
 pub struct LoggedInWidget {
@@ -27,7 +28,7 @@ impl LoggedInWidget {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let block = Block::bordered()
-            .title("Login".to_string())
+            .title(Pad("Login"))
             .border_set(border::PLAIN);
 
         let outer_layout = Layout::default()

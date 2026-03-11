@@ -1,4 +1,5 @@
 use crate::ui::actions::Action;
+use crate::ui::pad::Pad;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
@@ -25,10 +26,8 @@ impl UserWidget {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let downloads = {
-            let title = "Downloads remaining";
-
             let block = Block::bordered()
-                .title(title)
+                .title(Pad("Downloads remaining"))
                 .title_alignment(Alignment::Center)
                 .border_set(border::PLAIN);
 

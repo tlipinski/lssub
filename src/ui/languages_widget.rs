@@ -2,6 +2,7 @@ use crate::config::{Config, ConfigProvider};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{FetchSubs, LanguagesUpdated};
 use crate::ui::app::CurrentScreen::Main;
+use crate::ui::pad::Pad;
 use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
 use ratatui::Frame;
@@ -67,8 +68,9 @@ impl LanguagesWidget {
             .split(area);
 
         let view = {
-            let mut title = "Languages (comma separated)".to_string();
-            let block = Block::bordered().title(title).border_set(border::PLAIN);
+            let block = Block::bordered()
+                .title(Pad("Languages (comma separated)"))
+                .border_set(border::PLAIN);
             let value = Line::from(self.input.value());
             Paragraph::new(value).block(block)
         };
