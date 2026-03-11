@@ -35,7 +35,6 @@ impl NavWidget {
                 Span::from(" About"),
             ]))
             .centered()
-            .block(Block::default().borders(Borders::ALL))
         };
 
         frame.render_widget(main_nav, area);

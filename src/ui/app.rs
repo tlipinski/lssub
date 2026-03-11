@@ -252,7 +252,7 @@ impl App {
             .constraints([
                 Constraint::Fill(1),
                 Constraint::Length(3),
-                Constraint::Length(3),
+                Constraint::Length(1),
             ])
             .split(area);
 
