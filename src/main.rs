@@ -48,7 +48,7 @@ async fn main() {
 }
 
 #[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
+#[command(version = crate::osb::values::VERSION, about, long_about = None)]
 struct Args {
     path: Option<String>,
 }
