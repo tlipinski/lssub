@@ -21,14 +21,13 @@ use crate::osb::user_info::get_user_info;
 pub struct LoginWidget {
     username: Input,
     password: Input,
-    editing: Editing,
+    focus: Focus,
     task_runner: TaskRunner,
 }
 
-enum Editing {
+enum Focus {
     Username,
-    Password,
-    None,
+    Password
 }
 
 impl LoginWidget {
@@ -36,7 +35,7 @@ impl LoginWidget {
         LoginWidget {
             username: Input::new("".into()),
             password: Input::new("".into()),
-            editing: Editing::Username,
+            focus: Focus::Username,
             task_runner,
         }
     }
@@ -69,17 +68,16 @@ impl LoginWidget {
 
         let mut pass_block = Block::bordered().title_pad("Password");
 
-        match self.editing {
-            Editing::Username => {
-                user_block = user_block.border_set(border::PLAIN);
+        match self.focus {
+            Focus::Username => {
+                user_block = user_block.border_set(border::THICK);
             }
-            Editing::Password => {
-                pass_block = pass_block.border_set(border::PLAIN);
+            Focus::Password => {
+                pass_block = pass_block.border_set(border::THICK);
             }
-            Editing::None => {}
         }
 
-        let buttons_block = Block::default().title(
+        let buttons = Block::default().title(
             Line::from(vec![
                 Span::from("OK").bold(),
                 Span::from(" [Enter]  "),
@@ -99,18 +97,17 @@ impl LoginWidget {
 
         frame.render_widget(user_par, layout[0]);
         frame.render_widget(pass_par, layout[1]);
-        frame.render_widget(buttons_block, layout[2]);
+        frame.render_widget(buttons, layout[2]);
 
-        match self.editing {
-            Editing::Username => frame.set_cursor_position((
+        match self.focus {
+            Focus::Username => frame.set_cursor_position((
                 layout[0].x + (self.username.visual_cursor() + 1) as u16,
                 layout[0].y + 1,
             )),
-            Editing::Password => frame.set_cursor_position((
+            Focus::Password => frame.set_cursor_position((
                 layout[1].x + (self.password.visual_cursor() + 1) as u16,
                 layout[1].y + 1,
             )),
-            Editing::None => {}
         };
     }
 
@@ -129,30 +126,28 @@ impl LoginWidget {
                     Ok(Some(ChangeStatus("Logging in...".into())))
                 }
                 KeyCode::Up => {
-                    self.editing = Editing::Username;
+                    self.focus = Focus::Username;
                     Ok(None)
                 }
                 KeyCode::Down => {
-                    self.editing = Editing::Password;
+                    self.focus = Focus::Password;
                     Ok(None)
                 }
                 KeyCode::Tab => {
-                    match self.editing {
-                        Editing::Username => self.editing = Editing::Password,
-                        Editing::Password => self.editing = Editing::Username,
-                        Editing::None => self.editing = Editing::None,
+                    match self.focus {
+                        Focus::Username => self.focus = Focus::Password,
+                        Focus::Password => self.focus = Focus::Username,
                     }
                     Ok(None)
                 }
                 _ => {
-                    match self.editing {
-                        Editing::Username => {
+                    match self.focus {
+                        Focus::Username => {
                             self.username.handle_event(&event);
                         }
-                        Editing::Password => {
+                        Focus::Password => {
                             self.password.handle_event(&event);
                         }
-                        Editing::None => {}
                     }
                     Ok(None)
                 }
