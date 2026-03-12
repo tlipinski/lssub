@@ -11,7 +11,7 @@ impl TaskRunner {
         Self { ui_tx }
     }
 
-    pub async fn run(&self, f: impl Future<Output = anyhow::Result<Action>> + 'static + std::marker::Send) {
+    pub fn run(&self, f: impl Future<Output = anyhow::Result<Action>> + 'static + std::marker::Send) {
         let ui_tx = self.ui_tx.clone();
         tokio::spawn(async move {
             match f.await {
