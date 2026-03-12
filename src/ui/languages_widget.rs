@@ -2,7 +2,6 @@ use crate::config::{Config, ConfigProvider};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{FetchSubs, LanguagesUpdated};
 use crate::ui::app::CurrentScreen::Main;
-use crate::ui::pad::Pad;
 use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
 use ratatui::Frame;
@@ -12,6 +11,7 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use crate::ui::pad::BlockTitlePadExt;
 
 pub struct LanguagesWidget {
     config_provider: ConfigProvider,
@@ -69,7 +69,7 @@ impl LanguagesWidget {
 
         let view = {
             let block = Block::bordered()
-                .title(Pad("Languages (comma separated)"))
+                .title_pad("Languages (comma separated)")
                 .border_set(border::PLAIN);
             let value = Line::from(self.input.value());
             Paragraph::new(value).block(block)

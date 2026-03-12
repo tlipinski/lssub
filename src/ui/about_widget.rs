@@ -1,12 +1,12 @@
 use crate::osb::values::{APP_NAME, VERSION};
 use crate::ui::actions::Action;
-use crate::ui::pad::Pad;
 use crossterm::event::Event;
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
+use crate::ui::pad::BlockTitlePadExt;
 
 pub struct AboutWidget {}
 
@@ -23,7 +23,7 @@ impl AboutWidget {
 
         let about = {
             let block = Block::bordered()
-                .title(Pad("About"))
+                .title_pad("About")
                 .border_set(border::PLAIN);
             Paragraph::new(vec![
                 "".into(),

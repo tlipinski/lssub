@@ -1,5 +1,4 @@
 use crate::ui::actions::Action;
-use crate::ui::pad::Pad;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
@@ -9,6 +8,7 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use crate::ui::pad::BlockTitlePadExt;
 
 #[derive(Debug)]
 pub struct UserWidget {
@@ -27,7 +27,7 @@ impl UserWidget {
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let downloads = {
             let block = Block::bordered()
-                .title(Pad("Downloads remaining"))
+                .title_pad("Downloads remaining")
                 .title_alignment(Alignment::Center)
                 .border_set(border::PLAIN);
 

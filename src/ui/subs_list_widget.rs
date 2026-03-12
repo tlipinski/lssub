@@ -1,6 +1,7 @@
 use crate::osb::subtitles::SubtitlesResponse;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{EnabledLimitSubsToId, FetchSubs, SearchQueryUpdated};
+use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::subs_list_widget::SingleFeature::Triggered;
 use SingleFeature::{Disabled, Enabled};
 use crossterm::event::KeyModifiers;
@@ -16,7 +17,6 @@ use ratatui::widgets::{
     Block, Cell, Row, ScrollDirection, Scrollbar, ScrollbarOrientation, ScrollbarState,
     StatefulWidget, Table, TableState,
 };
-use crate::ui::pad::Pad;
 
 #[derive(Default)]
 pub struct SubsListWidget {
@@ -193,7 +193,9 @@ impl SubsListWidget {
             format!("Results: {}", self.subs.len())
         };
 
-        let block_bot = Block::bordered().title(Pad(&title)).border_set(border::PLAIN);
+        let block_bot = Block::bordered()
+            .title_pad(&title)
+            .border_set(border::PLAIN);
 
         let (widths, headers) = if (wide) {
             (

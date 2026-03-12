@@ -2,6 +2,7 @@ use crate::osb::login::{Credentials, login};
 use crate::secret::store;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, UserLoggedIn};
+use crate::ui::pad::BlockTitlePadExt;
 use anyhow::Result;
 use log::{error, warn};
 use ratatui::Frame;
@@ -13,7 +14,6 @@ use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::pad::Pad;
 
 pub struct LoginWidget {
     username: Input,
@@ -38,7 +38,7 @@ impl LoginWidget {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let block = Block::bordered()
-            .title(Pad("Account"))
+            .title_pad("Account")
             .border_set(border::PLAIN);
 
         let outer_layout = Layout::default()
@@ -60,9 +60,9 @@ impl LoginWidget {
             ])
             .split(block.inner(outer_layout[1]));
 
-        let mut user_block = Block::bordered().title(Pad("Username"));
+        let mut user_block = Block::bordered().title_pad("Username");
 
-        let mut pass_block = Block::bordered().title(Pad("Password"));
+        let mut pass_block = Block::bordered().title_pad("Password");
 
         match self.editing {
             Editing::Username => {

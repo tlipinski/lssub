@@ -14,7 +14,7 @@ use std::sync::mpsc::Sender;
 use std::thread::sleep;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::pad::Pad;
+use crate::ui::pad::BlockTitlePadExt;
 
 #[derive(Debug)]
 pub struct QueryWidget {
@@ -33,7 +33,7 @@ impl QueryWidget {
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::bordered().title(Pad("Search")).border_set(border::PLAIN);
+        let block = Block::bordered().title_pad("Search").border_set(border::PLAIN);
 
         let par = Line::from(self.input.value().bold());
 

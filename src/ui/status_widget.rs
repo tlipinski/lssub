@@ -12,7 +12,7 @@ use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
 use std::sync::{Arc, RwLock};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::pad::Pad;
+use crate::ui::pad::BlockTitlePadExt;
 
 pub struct StatusWidget {
     pub info: String,
@@ -37,7 +37,7 @@ impl StatusWidget {
             ("Status".to_string())
         };
 
-        let block = Block::bordered().title(Pad(title.as_str())).border_set(border::PLAIN);
+        let block = Block::bordered().title_pad(title.as_str()).border_set(border::PLAIN);
 
         let par = Line::from(self.info.clone());
 

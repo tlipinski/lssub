@@ -1,9 +1,12 @@
 use ratatui::text::Line;
+use ratatui::widgets::Block;
 
-pub struct Pad<'a>(pub &'a str);
+pub trait BlockTitlePadExt<'a> {
+    fn title_pad(self, title: &'a str) -> Block<'a>;
+}
 
-impl <'a> Into<Line<'a>> for Pad<'a> {
-    fn into(self) -> Line<'a> {
-        Line::from(format!(" {} ", self.0))
+impl<'a> BlockTitlePadExt<'a> for Block<'a> {
+    fn title_pad(self, title: &'a str) -> Block<'a> {
+        self.title(format!(" {} ", title))
     }
 }
