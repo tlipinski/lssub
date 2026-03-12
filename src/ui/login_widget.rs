@@ -38,7 +38,7 @@ impl LoginWidget {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let block = Block::bordered()
-            .title(Pad("Login"))
+            .title(Pad("Account"))
             .border_set(border::PLAIN);
 
         let outer_layout = Layout::default()
