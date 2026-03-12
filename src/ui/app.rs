@@ -25,6 +25,7 @@ use crate::ui::spinner::{Spinner, spinner_task};
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::SubsListWidget;
 use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
+use crate::ui::task_runner::TaskRunner;
 use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
@@ -44,7 +45,6 @@ use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use crate::ui::task_runner::TaskRunner;
 
 pub struct App {
     current_screen: CurrentScreen,
@@ -80,13 +80,17 @@ impl App {
 
         let provider = ConfigProvider::default();
         let task_runner = TaskRunner::new(ui_tx.clone());
-        let search_screen = SearchWidget::from(base_path, file_name, task_runner)?;
+
+        let task_runner_1 = task_runner.clone();
+        let task_runner_2 = task_runner.clone();
+
+        let search_screen = SearchWidget::from(base_path, file_name, task_runner_1)?;
 
         let mut app = App {
             search_widget: search_screen,
             current_screen: CurrentScreen::default(),
             languages_widget: LanguagesWidget::new(provider)?,
-            account_widget: AccountWidget::new(),
+            account_widget: AccountWidget::new(task_runner_2),
             status_widget: StatusWidget::from(spinner.clone()),
             user_widget: UserWidget::from(),
             nav_widget: NavWidget::new(),
@@ -149,14 +153,15 @@ impl App {
                 vec![SwitchScreen(Search), FetchSubs(query, languages)]
             }
 
-            UserLoggedIn => {
-                if let Some(user_info) = self.account_widget.user_info() {
-                    self.user_widget.requests = user_info.data.downloads_count;
-                    self.user_widget.remaining = user_info.data.remaining_downloads;
-                    self.nav_widget.username = Some(user_info.data.username);
-                }
+            UserLoggedIn(user_info) => {
+                self.user_widget.requests = user_info.data.downloads_count;
+                self.user_widget.remaining = user_info.data.remaining_downloads;
+                self.nav_widget.username = Some(user_info.data.username.clone());
 
-                vec![SwitchScreen(Search)]
+                vec![
+                    SwitchScreen(Search),
+                    ChangeStatus(format!("Logged in as {}", user_info.data.username)),
+                ]
             }
 
             UserLoggedOut => {

@@ -5,13 +5,14 @@ use crate::ui::downloader::Downloaded;
 use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use ratatui::crossterm::event::Event;
 use std::path::PathBuf;
+use crate::osb::user_info::UserInfo;
 
 #[derive(Debug)]
 pub enum Action {
     ReceivedInput(Event),
     SubsFetched(SubtitlesResponse),
     LanguagesUpdated,
-    UserLoggedIn,
+    UserLoggedIn(UserInfo),
     UserLoggedOut,
     SearchQueryUpdated,
     FetchSubs(String, Vec<String>),

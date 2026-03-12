@@ -6,12 +6,9 @@ use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
 
 pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
-    info!("Loggin in");
-    let url = format!("{}/login", API_URL);
+    info!("Logging in");
 
-    // let mut body = HashMap::new();
-    // body.insert("username", &credentials.username);
-    // body.insert("password", &credentials.password);
+    let url = format!("{}/login", API_URL);
 
     let login = LoginRequest {
         username: &credentials.username,

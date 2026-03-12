@@ -11,6 +11,7 @@ use crossterm::event::Event;
 use log::{error, info};
 use ratatui::Frame;
 use ratatui::layout::Rect;
+use crate::ui::task_runner::TaskRunner;
 
 pub struct AccountWidget {
     login_widget: LoginWidget,
@@ -19,9 +20,9 @@ pub struct AccountWidget {
 }
 
 impl AccountWidget {
-    pub fn new() -> Self {
+    pub fn new(task_runner: TaskRunner) -> Self {
         Self {
-            login_widget: LoginWidget::from(),
+            login_widget: LoginWidget::from(task_runner),
             logged_in_widget: LoggedInWidget::from(UserInfo {
                 data: Default::default(),
             }),
@@ -39,6 +40,7 @@ impl AccountWidget {
 
     pub async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
         match action {
+            // todo
             Action::Init => {
                 let result = tokio::spawn(async move {
                     match retrieve().await {
@@ -61,8 +63,8 @@ impl AccountWidget {
                 match result {
                     Ok(Some(user_info)) => {
                         self.logged_in = true;
-                        self.logged_in_widget.user_info = user_info;
-                        Ok(vec![UserLoggedIn])
+                        self.logged_in_widget.user_info = user_info.clone();
+                        Ok(vec![UserLoggedIn(user_info)])
                     }
                     Ok(None) => {
                         self.logged_in = false;
@@ -98,11 +100,6 @@ impl AccountWidget {
             }
         } else {
             match self.login_widget.handle_key_event(event).await? {
-                Some(UserLoggedIn) => {
-                    self.logged_in = true;
-                    self.update(Action::Init).await?; // todo
-                    Ok(Some(UserLoggedIn))
-                }
                 other => Ok(other),
             }
         }

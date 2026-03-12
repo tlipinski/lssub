@@ -3,8 +3,9 @@ use crate::secret::store;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, UserLoggedIn};
 use crate::ui::pad::BlockTitlePadExt;
-use anyhow::Result;
-use log::{error, warn};
+use crate::ui::task_runner::TaskRunner;
+use anyhow::{Error, Result};
+use log::{error, info, warn};
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -14,11 +15,14 @@ use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use crate::osb::user_info;
+use crate::osb::user_info::get_user_info;
 
 pub struct LoginWidget {
     username: Input,
     password: Input,
     editing: Editing,
+    task_runner: TaskRunner,
 }
 
 enum Editing {
@@ -28,11 +32,12 @@ enum Editing {
 }
 
 impl LoginWidget {
-    pub fn from() -> Self {
+    pub fn from(task_runner: TaskRunner) -> Self {
         LoginWidget {
             username: Input::new("".into()),
             password: Input::new("".into()),
             editing: Editing::Username,
+            task_runner,
         }
     }
 
@@ -118,24 +123,10 @@ impl LoginWidget {
                         password: self.password.value().to_owned(),
                     };
 
-                    let result = tokio::spawn(async move {
-                        match login(&credentials).await {
-                            Ok(api_token) => {
-                                store(&api_token, &credentials.username).await;
-                                Ok(())
-                            }
-                            Err(e) => {
-                                error!("Error logging in: {}", e);
-                                Err(e)
-                            }
-                        }
-                    })
-                    .await?;
+                    self.task_runner
+                        .run(async move { LoginWidget::login_user(credentials) }.await);
 
-                    match result {
-                        Ok(msg) => Ok(Some(UserLoggedIn)),
-                        Err(e) => Ok(Some(ChangeStatus(e.to_string()))),
-                    }
+                    Ok(Some(ChangeStatus("Logging in...".into())))
                 }
                 KeyCode::Up => {
                     self.editing = Editing::Username;
@@ -168,6 +159,20 @@ impl LoginWidget {
             }
         } else {
             Ok(None)
+        }
+    }
+
+    async fn login_user(credentials: Credentials) -> Result<Action> {
+        match login(&credentials).await {
+            Ok(jwt) => {
+                store(&jwt, &credentials.username).await?;
+                let user_info = get_user_info(&jwt).await?;
+                Ok(UserLoggedIn(user_info))
+            }
+            Err(e) => {
+                warn!("Error logging in: {}", e);
+                Err(Error::msg(format!("Error logging in: {}", e.to_string())))
+            }
         }
     }
 }
