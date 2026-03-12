@@ -2,6 +2,7 @@ use crate::osb::login::Credentials;
 use crate::osb::user_info::UserInfo;
 use crate::secret::clear;
 use crate::ui::actions::Action;
+use crate::ui::pad::BlockTitlePadExt;
 use anyhow::Result;
 use crossterm::event::KeyModifiers;
 use log::info;
@@ -14,7 +15,6 @@ use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::pad::BlockTitlePadExt;
 
 #[derive(Debug)]
 pub struct LoggedInWidget {
@@ -42,7 +42,7 @@ impl LoggedInWidget {
 
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(vec![Constraint::Length(3), Constraint::Length(3)])
+            .constraints(vec![Constraint::Length(10), Constraint::Length(3)])
             .split(block.inner(outer_layout[1]));
 
         let buttons_block = Block::default().title(
@@ -55,12 +55,17 @@ impl LoggedInWidget {
             .right_aligned(),
         );
 
-        let already_logged =
-            Paragraph::new(format!("Logged in as: {}", self.user_info.data.username))
-                .block(Block::bordered());
+        let already_logged = Paragraph::new(vec![
+            Line::from(format!("Username: {}", self.user_info.data.username)),
+            Line::from(format!("Level: {}", self.user_info.data.level)),
+            Line::from(format!("Allowed downloads: {}", self.user_info.data.allowed_downloads)),
+            Line::from(format!("Downloads count: {}", self.user_info.data.downloads_count)),
+            Line::from(format!("Remaining downloads: {}", self.user_info.data.remaining_downloads)),
+        ])
+        .block(Block::bordered());
 
         frame.render_widget(block, area);
-        frame.render_widget(already_logged, layout[0]);
+        frame.render_widget(already_logged.centered(), layout[0]);
         frame.render_widget(buttons_block, layout[1]);
     }
 
