@@ -39,7 +39,7 @@ enum SingleFeature {
 pub struct Sub {
     id: i64,
     pub file_id: i64,
-    title: String,
+    pub title: String,
     year: String,
     pub language: String,
     upload_date: String,

@@ -2,7 +2,7 @@ use crate::osb::subtitles::SubtitlesResponse;
 use crate::secret::retrieve;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
+    ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
     SearchQueryUpdated, SubsFetched, SwitchScreen, UserLoggedOut,
 };
 use crate::ui::app::CurrentScreen::Main;
@@ -32,11 +32,11 @@ pub struct SearchWidget {
 }
 
 impl SearchWidget {
-    pub fn from(base_path: &Path, file_name: Option<&str>) -> Result<SearchWidget> {
+    pub fn from(base_path: &Path, file_name: Option<&str>, ui_tx: Sender<Action>) -> Result<SearchWidget> {
         Ok(Self {
             query_widget: QueryWidget::from(file_name.unwrap_or("").into()),
             subs_list_widget: SubsListWidget::default(),
-            downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
+            downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from), ui_tx),
         })
     }
 
@@ -71,8 +71,14 @@ impl SearchWidget {
 
                     match selected_sub {
                         Some(s) => {
-                            let downloaded = self.download(s.file_id, &s.language.clone()).await?;
-                            Ok(Some(DownloadedSubs(downloaded)))
+                            let dn = self.downloader.clone();
+                            let file_id = s.file_id;
+                            let language = s.language.clone();
+                            tokio::spawn(async move {
+                                dn.download(file_id, &language).await
+                            });
+                            let status = format!("Downloading {}", s.title);
+                            Ok(Some(ChangeStatus(status.into())))
                         }
                         None => Ok(None),
                     }
@@ -107,24 +113,5 @@ impl SearchWidget {
 
     pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
         self.subs_list_widget.update_subtitles(subtitles_response);
-    }
-
-    async fn download(&self, file_id: i64, language: &str) -> Result<Downloaded> {
-        let downloader = self.downloader.clone();
-
-        let l = language.to_owned();
-
-        // todo simplify
-        tokio::spawn(async move {
-            let token_result = retrieve().await;
-            match token_result {
-                Ok(token_opt) => match downloader.download(token_opt, file_id, &l).await {
-                    Ok(downloaded) => Ok(downloaded),
-                    Err(e) => Err(e),
-                },
-                Err(e) => Err(e),
-            }
-        })
-        .await?
     }
 }

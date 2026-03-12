@@ -1,6 +1,7 @@
 use crate::osb::download::download;
 use crate::osb::get_download_link::get_download_link;
 use crate::osb::login::JwtToken;
+use crate::ui::actions::Action;
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use secrecy::ExposeSecret;
@@ -8,31 +9,33 @@ use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::{Path, PathBuf};
 use tokio::sync::mpsc::{Receiver, Sender};
+use crate::secret::retrieve;
+use crate::ui::actions::Action::DownloadedSubs;
 
 #[derive(Clone)]
 pub struct Downloader {
     base_path: PathBuf,
     file_name_opt: Option<String>,
+    ui_tx: Sender<Action>,
 }
 
 impl Downloader {
-    pub fn new(base_path: PathBuf, file_name_opt: Option<String>) -> Self {
+    pub fn new(base_path: PathBuf, file_name_opt: Option<String>, ui_tx: Sender<Action>) -> Self {
         Downloader {
             base_path,
             file_name_opt,
+            ui_tx,
         }
     }
 
     pub async fn download(
         &self,
-        token_opt: Option<JwtToken>,
         file_id: i64,
         language: &str,
-    ) -> Result<Downloaded> {
-        // todo
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-
+    ) -> Result<()> {
         info!("Downloading: {file_id:?}");
+
+        let token_opt = retrieve().await?;
 
         let download_link_result = get_download_link(token_opt, file_id).await;
 
@@ -57,11 +60,17 @@ impl Downloader {
 
                         tokio::fs::write(output_file.clone(), content).await?;
 
-                        Ok(Downloaded {
-                            path: output_file,
-                            requests: download_link_response.requests,
-                            remaining: download_link_response.remaining,
-                        })
+                        self.ui_tx.send(
+                           DownloadedSubs(
+                               Downloaded {
+                                   path: output_file,
+                                   requests: download_link_response.requests,
+                                   remaining: download_link_response.remaining,
+                               }
+                           )
+                        ).await;
+
+                        Ok(())
                     }
                     Err(e) => {
                         error!("Error downloading subs: {e}");

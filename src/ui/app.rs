@@ -77,7 +77,7 @@ impl App {
         tokio::spawn(spinner_task(spinner_clone));
 
         let provider = ConfigProvider::default();
-        let search_screen = SearchWidget::from(base_path, file_name)?;
+        let search_screen = SearchWidget::from(base_path, file_name, ui_tx.clone())?;
 
         let mut app = App {
             search_widget: search_screen,
