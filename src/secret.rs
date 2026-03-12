@@ -1,6 +1,6 @@
 use crate::APP_NAME;
 use crate::osb::login::JwtToken;
-use anyhow::Result;
+use anyhow::{Error, Result};
 use libsecret::{Schema, SchemaAttributeType, SchemaFlags};
 use log::{debug, error};
 use secrecy::{ExposeSecret, SecretBox};
@@ -48,8 +48,8 @@ pub async fn retrieve() -> Result<Option<JwtToken>> {
             )))))),
             Ok(None) => Ok(None),
             Err(e) => {
-                error!("{}", e);
-                Err(anyhow::Error::new(e))
+                error!("Error retrieving token: {}", e);
+                Err(Error::msg("Error retrieving token"))
             }
         }
     })
@@ -67,7 +67,7 @@ pub async fn clear() -> Result<()> {
             Ok(_) => Ok(()),
             Err(e) => {
                 error!("{}", e);
-                Err(anyhow::Error::new(e))
+                Err(Error::new(e))
             }
         }
     })

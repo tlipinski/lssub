@@ -1,16 +1,14 @@
 use crate::osb::download::download;
 use crate::osb::get_download_link::get_download_link;
-use crate::osb::login::JwtToken;
+use crate::secret::retrieve;
 use crate::ui::actions::Action;
+use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use secrecy::ExposeSecret;
-use std::ffi::{OsStr, OsString};
-use std::fs;
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use tokio::sync::mpsc::{Receiver, Sender};
-use crate::secret::retrieve;
-use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs};
 
 #[derive(Clone)]
 pub struct Downloader {
@@ -27,11 +25,7 @@ impl Downloader {
             ui_tx,
         }
     }
-    pub async fn download(
-        &self,
-        file_id: i64,
-        language: &str,
-    ) -> () {
+    pub async fn download(&self, file_id: i64, language: &str) -> () {
         match self._download(file_id, language).await {
             Ok(action) => {
                 self.ui_tx.send(action).await;
@@ -42,60 +36,49 @@ impl Downloader {
         }
     }
 
-    async fn _download(
-        &self,
-        file_id: i64,
-        language: &str,
-    ) -> Result<Action> {
+    async fn _download(&self, file_id: i64, language: &str) -> Result<Action> {
         info!("Downloading subs file: {file_id:?}");
 
         let token_opt = retrieve().await?;
-        debug!("Successfully retrieved user token");
 
-        let download_link_result = get_download_link(token_opt, file_id).await;
+        let download_link_response = get_download_link(token_opt, file_id).await.map_err(|e| {
+            error!("Downloading subs failed: {e}");
+            e
+        })?;
 
-        match download_link_result {
-            Ok(download_link_response) => {
-                debug!("Download link response: {:?}", download_link_response);
-                debug!("Base path: {:?}", self.base_path);
-                debug!("File name: {:?}", self.file_name_opt);
+        debug!("Download link response: {:?}", download_link_response);
+        debug!("Base path: {:?}", self.base_path);
+        debug!("File name: {:?}", self.file_name_opt);
 
-                let content_result = download(download_link_response.link).await;
+        let content = download(download_link_response.link).await.map_err(|e| {
+            error!("Downloading subs failed: {e}");
+            e
+        })?;
 
-                match content_result {
-                    Ok(content) => {
-                        let output_file = output_file(
-                            &self.base_path,
-                            &self.file_name_opt,
-                            download_link_response.file_name.as_str(),
-                            language,
-                        );
+        let output_file = output_file(
+            &self.base_path,
+            &self.file_name_opt,
+            download_link_response.file_name.as_str(),
+            language,
+        );
 
-                        debug!("Output file: {:?}", output_file);
+        debug!("Output file: {:?}", output_file);
 
-                        tokio::fs::write(output_file.clone(), content).await?;
+        tokio::fs::write(output_file.clone(), content)
+            .await
+            .map_err(|e| {
+                Error::msg(format!(
+                    "Error saving subtitle file {}: {}",
+                    output_file.display(),
+                    e
+                ))
+            })?;
 
-                        Ok(
-                           DownloadedSubs(
-                               Downloaded {
-                                   path: output_file,
-                                   requests: download_link_response.requests,
-                                   remaining: download_link_response.remaining,
-                               }
-                           )
-                        )
-                    }
-                    Err(e) => {
-                        error!("Downloading subs failed: {e}");
-                        Err(e)
-                    }
-                }
-            }
-            Err(e) => {
-                error!("Downloading subs failed: {e}");
-                Err(e)
-            }
-        }
+        Ok(DownloadedSubs(Downloaded {
+            path: output_file,
+            requests: download_link_response.requests,
+            remaining: download_link_response.remaining,
+        }))
     }
 }
 
