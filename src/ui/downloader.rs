@@ -10,7 +10,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tokio::sync::mpsc::{Receiver, Sender};
 use crate::secret::retrieve;
-use crate::ui::actions::Action::DownloadedSubs;
+use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs};
 
 #[derive(Clone)]
 pub struct Downloader {
@@ -27,15 +27,30 @@ impl Downloader {
             ui_tx,
         }
     }
-
     pub async fn download(
         &self,
         file_id: i64,
         language: &str,
-    ) -> Result<()> {
-        info!("Downloading: {file_id:?}");
+    ) -> () {
+        match self._download(file_id, language).await {
+            Ok(action) => {
+                self.ui_tx.send(action).await;
+            }
+            Err(err) => {
+                self.ui_tx.send(ChangeStatus(err.to_string())).await;
+            }
+        }
+    }
+
+    async fn _download(
+        &self,
+        file_id: i64,
+        language: &str,
+    ) -> Result<Action> {
+        info!("Downloading subs file: {file_id:?}");
 
         let token_opt = retrieve().await?;
+        debug!("Successfully retrieved user token");
 
         let download_link_result = get_download_link(token_opt, file_id).await;
 
@@ -56,11 +71,11 @@ impl Downloader {
                             language,
                         );
 
-                        debug!("out: {:?}", output_file);
+                        debug!("Output file: {:?}", output_file);
 
                         tokio::fs::write(output_file.clone(), content).await?;
 
-                        self.ui_tx.send(
+                        Ok(
                            DownloadedSubs(
                                Downloaded {
                                    path: output_file,
@@ -68,18 +83,16 @@ impl Downloader {
                                    remaining: download_link_response.remaining,
                                }
                            )
-                        ).await;
-
-                        Ok(())
+                        )
                     }
                     Err(e) => {
-                        error!("Error downloading subs: {e}");
+                        error!("Downloading subs failed: {e}");
                         Err(e)
                     }
                 }
             }
             Err(e) => {
-                error!("Error downloading subs: {e}");
+                error!("Downloading subs failed: {e}");
                 Err(e)
             }
         }
