@@ -44,6 +44,7 @@ use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
+use crate::ui::task_runner::TaskRunner;
 
 pub struct App {
     current_screen: CurrentScreen,
@@ -78,7 +79,8 @@ impl App {
         tokio::spawn(spinner_task(spinner_clone));
 
         let provider = ConfigProvider::default();
-        let search_screen = SearchWidget::from(base_path, file_name, ui_tx.clone())?;
+        let task_runner = TaskRunner::new(ui_tx.clone());
+        let search_screen = SearchWidget::from(base_path, file_name, task_runner)?;
 
         let mut app = App {
             search_widget: search_screen,

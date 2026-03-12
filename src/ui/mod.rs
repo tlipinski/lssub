@@ -16,3 +16,4 @@ mod subs_list_widget;
 mod subtitles_fetcher;
 mod user_widget;
 mod pad;
+mod task_runner;

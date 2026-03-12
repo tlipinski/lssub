@@ -14,29 +14,17 @@ use tokio::sync::mpsc::{Receiver, Sender};
 pub struct Downloader {
     base_path: PathBuf,
     file_name_opt: Option<String>,
-    ui_tx: Sender<Action>,
 }
 
 impl Downloader {
-    pub fn new(base_path: PathBuf, file_name_opt: Option<String>, ui_tx: Sender<Action>) -> Self {
+    pub fn new(base_path: PathBuf, file_name_opt: Option<String>) -> Self {
         Downloader {
             base_path,
             file_name_opt,
-            ui_tx,
-        }
-    }
-    pub async fn download(&self, file_id: i64, language: &str) -> () {
-        match self._download(file_id, language).await {
-            Ok(action) => {
-                self.ui_tx.send(action).await;
-            }
-            Err(err) => {
-                self.ui_tx.send(ChangeStatus(err.to_string())).await;
-            }
         }
     }
 
-    async fn _download(&self, file_id: i64, language: &str) -> Result<Action> {
+    pub async fn download(&self, file_id: i64, language: &str) -> Result<Action> {
         info!("Downloading subs file: {file_id:?}");
 
         let token_opt = retrieve().await?;

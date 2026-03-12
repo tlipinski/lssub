@@ -12,6 +12,7 @@ use crate::ui::query_widget::QueryWidget;
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::{Sub, SubsListWidget};
 use crate::ui::subtitles_fetcher::SubtitlesQuery;
+use crate::ui::task_runner::TaskRunner;
 use crate::ui::user_widget::UserWidget;
 use anyhow::Result;
 use crossterm::event::{KeyEvent, KeyModifiers};
@@ -31,6 +32,7 @@ pub struct SearchWidget {
     query_widget: QueryWidget,
     subs_list_widget: SubsListWidget,
     downloader: Downloader,
+    task_runner: TaskRunner,
     pub help: bool,
 }
 
@@ -38,12 +40,13 @@ impl SearchWidget {
     pub fn from(
         base_path: &Path,
         file_name: Option<&str>,
-        ui_tx: Sender<Action>,
+        task_runner: TaskRunner
     ) -> Result<SearchWidget> {
         Ok(Self {
             query_widget: QueryWidget::from(file_name.unwrap_or("").into()),
             subs_list_widget: SubsListWidget::default(),
-            downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from), ui_tx),
+            downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
+            task_runner,
             help: false,
         })
     }
@@ -94,7 +97,9 @@ impl SearchWidget {
                             let dn = self.downloader.clone();
                             let file_id = s.file_id;
                             let language = s.language.clone();
-                            tokio::spawn(async move { dn.download(file_id, &language).await });
+
+                            self.task_runner.run(async move {dn.download(file_id, &language).await});
+
                             let status = format!("Downloading {}", s.title);
                             Ok(Some(ChangeStatus(status.into())))
                         }
