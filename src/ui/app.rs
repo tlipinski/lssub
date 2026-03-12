@@ -12,7 +12,7 @@ use crate::ui::actions::Action::{
     SearchQueryUpdated, SwitchScreen, UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
-use crate::ui::app::CurrentScreen::{About, Account, Language, Main};
+use crate::ui::app::CurrentScreen::{About, Account, Language, Search};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::languages_widget::LanguagesWidget;
@@ -35,7 +35,7 @@ use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{StatefulWidget, Stylize};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget};
 use ratatui::{DefaultTerminal, Frame};
 use std::collections::VecDeque;
 use std::ops::Deref;
@@ -56,6 +56,7 @@ pub struct App {
     about_widget: AboutWidget,
     ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
+    modal_visible: bool,
 }
 
 impl App {
@@ -90,6 +91,7 @@ impl App {
             about_widget: AboutWidget::new(),
             ui_tx: ui_tx.clone(),
             features_tx,
+            modal_visible: false,
         };
 
         let mut messages = VecDeque::from([Init]);
@@ -142,7 +144,7 @@ impl App {
             LanguagesUpdated => {
                 let languages = self.languages_widget.languages();
                 let query: String = self.search_widget.query();
-                vec![SwitchScreen(Main), FetchSubs(query, languages)]
+                vec![SwitchScreen(Search), FetchSubs(query, languages)]
             }
 
             UserLoggedIn => {
@@ -152,7 +154,7 @@ impl App {
                     self.nav_widget.username = Some(user_info.data.username);
                 }
 
-                vec![SwitchScreen(Main)]
+                vec![SwitchScreen(Search)]
             }
 
             UserLoggedOut => {
@@ -266,7 +268,7 @@ impl App {
         self.nav_widget.render(frame, content[2]);
 
         match &self.current_screen {
-            Main => {
+            Search => {
                 self.search_widget.render(frame, content[0]);
             }
             Language => {
@@ -282,15 +284,48 @@ impl App {
     }
 
     async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
-        if let Event::Key(key_event) = event {
+        if (self.modal_visible) {
+            if let Event::Key(key_event) = event {
+                match key_event {
+                    KeyEvent {
+                        code: KeyCode::F(1),
+                        ..
+                    }
+                    | KeyEvent {
+                        code: KeyCode::Esc, ..
+                    } => match self.current_screen {
+                        Search => {
+                            self.search_widget.help = false;
+                            self.modal_visible = false;
+                            Ok(None)
+                        }
+                        _ => Ok(None),
+                    },
+                    _ => Ok(None),
+                }
+            } else {
+                Ok(None)
+            }
+        } else if let Event::Key(key_event) = event {
             match key_event {
                 KeyEvent {
                     code: KeyCode::Esc, ..
-                } => Ok(Some(SwitchScreen(Main))),
+                } => Ok(Some(SwitchScreen(Search))),
+                KeyEvent {
+                    code: KeyCode::F(1),
+                    ..
+                } => match self.current_screen {
+                    Search => {
+                        self.search_widget.help = !self.search_widget.help;
+                        self.modal_visible = true;
+                        Ok(None)
+                    }
+                    _ => Ok(None),
+                },
                 KeyEvent {
                     code: KeyCode::F(2),
                     ..
-                } => Ok(Some(SwitchScreen(Main))),
+                } => Ok(Some(SwitchScreen(Search))),
                 KeyEvent {
                     code: KeyCode::F(3),
                     ..
@@ -309,7 +344,7 @@ impl App {
                 } => Ok(Some(SwitchScreen(About))),
 
                 _ => match self.current_screen {
-                    Main => match key_event.code {
+                    Search => match key_event.code {
                         _ => self.search_widget.handle_key_event(event).await,
                     },
 
@@ -335,7 +370,7 @@ impl App {
 #[derive(Debug, Default)]
 pub enum CurrentScreen {
     #[default]
-    Main,
+    Search,
     Account,
     Language,
     About,

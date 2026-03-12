@@ -1,7 +1,7 @@
 use crate::config::{Config, ConfigProvider};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{FetchSubs, LanguagesUpdated};
-use crate::ui::app::CurrentScreen::Main;
+use crate::ui::app::CurrentScreen::Search;
 use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
 use ratatui::Frame;

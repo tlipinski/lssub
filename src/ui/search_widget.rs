@@ -5,7 +5,7 @@ use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
     SearchQueryUpdated, SubsFetched, SwitchScreen, UserLoggedOut,
 };
-use crate::ui::app::CurrentScreen::Main;
+use crate::ui::app::CurrentScreen::Search;
 use crate::ui::downloader::{Downloaded, Downloader};
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;
@@ -20,23 +20,31 @@ use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{StatefulWidget, Stylize};
-use ratatui::text::{Line, Span};
+use ratatui::style::Style;
+use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use std::path::Path;
 use tokio::sync::mpsc::Sender;
+use tui_popup::Popup;
 
 pub struct SearchWidget {
     query_widget: QueryWidget,
     subs_list_widget: SubsListWidget,
     downloader: Downloader,
+    pub help: bool,
 }
 
 impl SearchWidget {
-    pub fn from(base_path: &Path, file_name: Option<&str>, ui_tx: Sender<Action>) -> Result<SearchWidget> {
+    pub fn from(
+        base_path: &Path,
+        file_name: Option<&str>,
+        ui_tx: Sender<Action>,
+    ) -> Result<SearchWidget> {
         Ok(Self {
             query_widget: QueryWidget::from(file_name.unwrap_or("").into()),
             subs_list_widget: SubsListWidget::default(),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from), ui_tx),
+            help: false,
         })
     }
 
@@ -58,6 +66,18 @@ impl SearchWidget {
 
         self.query_widget.render(frame, layout[0]);
         self.subs_list_widget.render(frame, layout[1]);
+
+        if (self.help) {
+            let body = Text::from(vec![
+                "".into(),
+                Line::from("Ctrl + L: Narrow results to single feature"),
+                "".into(),
+            ]);
+            let popup = Popup::new(body)
+                .title(" Help ")
+                .style(Style::new().black().on_gray());
+            frame.render_widget(popup, area);
+        }
     }
 
     pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
@@ -74,9 +94,7 @@ impl SearchWidget {
                             let dn = self.downloader.clone();
                             let file_id = s.file_id;
                             let language = s.language.clone();
-                            tokio::spawn(async move {
-                                dn.download(file_id, &language).await
-                            });
+                            tokio::spawn(async move { dn.download(file_id, &language).await });
                             let status = format!("Downloading {}", s.title);
                             Ok(Some(ChangeStatus(status.into())))
                         }

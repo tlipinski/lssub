@@ -23,6 +23,8 @@ impl NavWidget {
             };
 
             Paragraph::new(Line::from(vec![
+                Span::from("F1:").bold(),
+                Span::from(" Help | "),
                 Span::from("F2:").bold(),
                 Span::from(" Search | "),
                 Span::from("F3:").bold(),
