@@ -37,7 +37,7 @@ enum SingleFeature {
 // todo reduce pubs
 #[derive(Debug, Default)]
 pub struct Sub {
-    id: i64,
+    feature_id: i64,
     pub file_id: i64,
     pub title: String,
     year: String,
@@ -111,7 +111,7 @@ impl SubsListWidget {
                     self.state
                         .selected()
                         .and_then(|selection| self.subs.get(selection))
-                        .map(|s| EnabledLimitSubsToId(s.id))
+                        .map(|s| EnabledLimitSubsToId(s.feature_id))
                 }
             }
 
@@ -136,7 +136,7 @@ impl SubsListWidget {
             .data
             .iter()
             .map(|resp| Sub {
-                id: resp.attributes.feature_details.feature_id,
+                feature_id: resp.attributes.feature_details.feature_id,
                 file_id: resp.attributes.files.first().unwrap().file_id,
                 title: resp.attributes.release.clone(),
                 year: resp.attributes.feature_details.year.to_string(),
