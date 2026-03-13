@@ -81,16 +81,13 @@ impl App {
 
         let provider = ConfigProvider::default();
 
-        let task_runner_1 = task_runner.clone();
-        let task_runner_2 = task_runner.clone();
-
-        let search_screen = SearchWidget::from(base_path, file_name, task_runner_1)?;
+        let search_screen = SearchWidget::from(base_path, file_name, task_runner.clone())?;
 
         let mut app = App {
             search_widget: search_screen,
             current_screen: CurrentScreen::default(),
             languages_widget: LanguagesWidget::new(provider)?,
-            account_widget: AccountWidget::new(task_runner_2),
+            account_widget: AccountWidget::new(task_runner.clone()),
             status_widget: StatusWidget::from(spinner.clone()),
             user_widget: UserWidget::from(),
             nav_widget: NavWidget::new(),
