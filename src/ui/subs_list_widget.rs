@@ -1,6 +1,6 @@
 use crate::osb::subtitles::SubtitlesResponse;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{EnabledLimitSubsToId, FetchSubs, SearchQueryUpdated};
+use crate::ui::actions::Action::{EnabledLimitSubsToId, FeatureInfo, FetchSubs, SearchQueryUpdated};
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::subs_list_widget::SingleFeature::Triggered;
 use SingleFeature::{Disabled, Enabled};
@@ -113,6 +113,17 @@ impl SubsListWidget {
                         .and_then(|selection| self.subs.get(selection))
                         .map(|s| EnabledLimitSubsToId(s.feature_id))
                 }
+            }
+            
+            KeyEvent {
+                code: KeyCode::Char('i'),
+                modifiers: KeyModifiers::CONTROL,
+                ..
+            } => {
+                self.state
+                    .selected()
+                    .and_then(|selection| self.subs.get(selection))
+                    .map(|s| FeatureInfo(s.feature_id))
             }
 
             _ => None,

@@ -20,6 +20,7 @@ pub enum Action {
     DownloadedSubs(Downloaded),
     SwitchScreen(CurrentScreen),
     EnabledLimitSubsToId(i64),
+    FeatureInfo(i64),
     ChangeStatus(String),
     Exit,
 }

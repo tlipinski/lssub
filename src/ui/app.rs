@@ -8,8 +8,8 @@ use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
-    SearchQueryUpdated, SwitchScreen, UserLoggedIn, UserLoggedOut,
+    ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FeatureInfo, FetchSubs, Init,
+    LanguagesUpdated, SearchQueryUpdated, SwitchScreen, UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::CurrentScreen::{About, Account, Language, Search};
@@ -55,7 +55,7 @@ pub struct App {
     user_widget: UserWidget,
     nav_widget: NavWidget,
     about_widget: AboutWidget,
-    features_tx: Sender<SubtitlesQuery>,
+    subtitles_tx: Sender<SubtitlesQuery>,
     modal_visible: bool,
 }
 
@@ -66,19 +66,20 @@ impl App {
         file_name: Option<&str>,
     ) -> Result<()> {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
-        let (features_tx, features_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
+        let (subtitles_tx, features_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
+        let (featurex_tx, featurex_rx) = tokio::sync::mpsc::channel::<i32>(100);
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
+        let task_runner = TaskRunner::new(ui_tx.clone());
 
         let spinner = Arc::new(RwLock::new(Spinner { c: ' ' }));
         let spinner_clone = spinner.clone();
 
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
-        tokio::spawn(subtitles_fetch_task(features_rx, ui_tx.clone()));
+        tokio::spawn(subtitles_fetch_task(features_rx, task_runner.clone()));
         tokio::spawn(spinner_task(spinner_clone));
 
         let provider = ConfigProvider::default();
-        let task_runner = TaskRunner::new(ui_tx.clone());
 
         let task_runner_1 = task_runner.clone();
         let task_runner_2 = task_runner.clone();
@@ -94,7 +95,7 @@ impl App {
             user_widget: UserWidget::from(),
             nav_widget: NavWidget::new(),
             about_widget: AboutWidget::new(),
-            features_tx,
+            subtitles_tx,
             modal_visible: false,
         };
 
@@ -181,7 +182,7 @@ impl App {
             FetchSubs(query, languages) => {
                 self.status_widget.in_progress = true;
 
-                self.features_tx
+                self.subtitles_tx
                     .send(SubtitlesQuery {
                         query,
                         languages,
@@ -231,7 +232,7 @@ impl App {
             EnabledLimitSubsToId(id) => {
                 let languages = self.languages_widget.languages();
                 let query = self.search_widget.query();
-                self.features_tx
+                self.subtitles_tx
                     .send(SubtitlesQuery {
                         query,
                         languages,
@@ -248,6 +249,8 @@ impl App {
 
                 vec![]
             }
+
+            FeatureInfo(id) => vec![]
         }
     }
 

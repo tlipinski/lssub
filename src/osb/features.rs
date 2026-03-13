@@ -4,11 +4,11 @@ use log::{debug, error, info, trace};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub async fn features(query: &str) -> Result<FeaturesResponse> {
+pub async fn features(feature_id: i32) -> Result<FeaturesResponse> {
     let url = format!("{}/features", API_URL);
 
     let mut params = HashMap::new();
-    params.insert("query", query);
+    params.insert("id", feature_id);
 
     let req = reqwest::Client::new()
         .get(url)

@@ -1,8 +1,9 @@
-use crate::osb::features::{FeaturesResponse, features};
 use crate::osb::subtitles::{SubtitlesResponse, subtitles};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, SubsFetched};
-use anyhow::{Context, Result, bail};
+use crate::ui::task_runner::TaskRunner;
+use anyhow::{Context, Error, Result, bail};
+use gio::Task;
 use log::{debug, error, info};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
@@ -19,7 +20,7 @@ pub struct SubtitlesQuery {
 
 pub async fn subtitles_fetch_task(
     mut rx: Receiver<SubtitlesQuery>,
-    tx: Sender<Action>,
+    task_runner: TaskRunner,
 ) -> Result<()> {
     'outer: loop {
         sleep(Duration::from_millis(1000)).await;
@@ -41,22 +42,20 @@ pub async fn subtitles_fetch_task(
         }
 
         if let Some(text) = last {
-            if text.query.len() < 3 {
-                tx.send(SubsFetched(SubtitlesResponse { data: vec![] }))
-                    .await?
-            } else {
-                let result = subtitles(&text.query, text.languages, text.id).await;
-                match result {
-                    Ok(subtitles) => tx.send(SubsFetched(subtitles)).await?,
-                    Err(e) => {
-                        error!("Error fetching subtitles {e}");
-                        tx.send(ChangeStatus(
-                            "Error fetching subtitles list, check logs".into(),
-                        ))
-                        .await?;
+            task_runner.run(async move {
+                if text.query.len() < 3 {
+                    Ok(SubsFetched(SubtitlesResponse { data: vec![] }))
+                } else {
+                    let result = subtitles(&text.query, text.languages, text.id).await;
+                    match result {
+                        Ok(subtitles) => Ok(SubsFetched(subtitles)),
+                        Err(e) => {
+                            error!("Error fetching subtitles {e}");
+                            Err(Error::msg("Error fetching subtitles list, check logs"))
+                        }
                     }
                 }
-            }
+            })
         }
     }
 }
