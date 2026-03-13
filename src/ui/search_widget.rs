@@ -40,7 +40,7 @@ impl SearchWidget {
     pub fn from(
         base_path: &Path,
         file_name: Option<&str>,
-        task_runner: TaskRunner
+        task_runner: TaskRunner,
     ) -> Result<SearchWidget> {
         Ok(Self {
             query_widget: QueryWidget::from(file_name.unwrap_or("").into()),
@@ -53,12 +53,6 @@ impl SearchWidget {
 
     pub fn query(&self) -> String {
         self.query_widget.query()
-    }
-
-    async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
-        match action {
-            _ => Ok(vec![]),
-        }
     }
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
@@ -101,7 +95,7 @@ impl SearchWidget {
                             self.task_runner.run(async move {dn.download(file_id, &language).await});
 
                             let status = format!("Downloading {}", s.title);
-                            Ok(Some(ChangeStatus(status.into())))
+                            Ok(Some(ChangeStatus(status)))
                         }
                         None => Ok(None),
                     }

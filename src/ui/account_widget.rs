@@ -6,12 +6,12 @@ use crate::ui::actions::Action::{ReceivedInput, SwitchScreen, UserLoggedIn, User
 use crate::ui::app::CurrentScreen::Search;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
+use crate::ui::task_runner::TaskRunner;
 use anyhow::Result;
 use crossterm::event::Event;
 use log::{error, info};
 use ratatui::Frame;
 use ratatui::layout::Rect;
-use crate::ui::task_runner::TaskRunner;
 
 pub struct AccountWidget {
     login_widget: LoginWidget,
@@ -99,9 +99,7 @@ impl AccountWidget {
                 other => Ok(other),
             }
         } else {
-            match self.login_widget.handle_key_event(event).await? {
-                other => Ok(other),
-            }
+            Ok(self.login_widget.handle_key_event(event).await?)
         }
     }
 }

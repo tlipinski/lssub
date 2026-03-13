@@ -349,21 +349,10 @@ impl App {
                 } => Ok(Some(SwitchScreen(About))),
 
                 _ => match self.current_screen {
-                    Search => match key_event.code {
-                        _ => self.search_widget.handle_key_event(event).await,
-                    },
-
-                    Language => match key_event.code {
-                        _ => self.languages_widget.handle_key_event(event),
-                    },
-
-                    Account => match key_event.code {
-                        _ => self.account_widget.handle_key_event(event).await,
-                    },
-
-                    About => match key_event.code {
-                        _ => Ok(self.about_widget.handle_key_event(event)),
-                    },
+                    Search => self.search_widget.handle_key_event(event).await,
+                    Language => self.languages_widget.handle_key_event(event),
+                    Account => self.account_widget.handle_key_event(event).await,
+                    About => Ok(self.about_widget.handle_key_event(event)),
                 },
             }
         } else {

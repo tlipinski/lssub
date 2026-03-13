@@ -73,7 +73,7 @@ fn insert_if_some<'a>(params: &mut HashMap<&'a str, String>, value: Option<Strin
     match value {
         None => {}
         Some(v) => {
-            params.insert(&name, v);
+            params.insert(name, v);
         }
     }
 }

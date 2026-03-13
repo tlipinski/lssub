@@ -43,7 +43,6 @@ pub struct UserData {
     pub downloads_count: i32,
     pub remaining_downloads: i32,
     pub level: String,
-    pub reset_time_utc: String,
     pub allowed_translations: i32,
     pub allowed_downloads: i32
 }

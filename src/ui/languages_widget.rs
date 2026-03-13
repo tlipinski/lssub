@@ -27,12 +27,6 @@ impl LanguagesWidget {
         })
     }
 
-    async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
-        match action {
-            _ => Ok(vec![]),
-        }
-    }
-
     pub fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if let Event::Key(key_event) = event {
             match key_event.code {

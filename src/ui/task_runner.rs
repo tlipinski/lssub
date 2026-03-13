@@ -24,7 +24,5 @@ impl TaskRunner {
                 }
             }
         });
-
-        ()
     }
 }

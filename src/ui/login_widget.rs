@@ -1,4 +1,6 @@
 use crate::osb::login::{Credentials, login};
+use crate::osb::user_info;
+use crate::osb::user_info::get_user_info;
 use crate::secret::store;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, UserLoggedIn};
@@ -15,8 +17,6 @@ use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::osb::user_info;
-use crate::osb::user_info::get_user_info;
 
 pub struct LoginWidget {
     username: Input,
@@ -27,7 +27,7 @@ pub struct LoginWidget {
 
 enum Focus {
     Username,
-    Password
+    Password,
 }
 
 impl LoginWidget {
@@ -120,8 +120,7 @@ impl LoginWidget {
                         password: self.password.value().to_owned(),
                     };
 
-                    self.task_runner
-                        .run(async move { LoginWidget::login_user(credentials) }.await);
+                    self.task_runner.run(LoginWidget::login_user(credentials));
 
                     Ok(Some(ChangeStatus("Logging in...".into())))
                 }
@@ -166,7 +165,7 @@ impl LoginWidget {
             }
             Err(e) => {
                 warn!("Error logging in: {}", e);
-                Err(Error::msg(format!("Error logging in: {}", e.to_string())))
+                Err(Error::msg(format!("Error logging in: {}", e)))
             }
         }
     }
