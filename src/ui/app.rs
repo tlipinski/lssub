@@ -55,7 +55,6 @@ pub struct App {
     user_widget: UserWidget,
     nav_widget: NavWidget,
     about_widget: AboutWidget,
-    ui_tx: Sender<Action>,
     features_tx: Sender<SubtitlesQuery>,
     modal_visible: bool,
 }
@@ -95,7 +94,6 @@ impl App {
             user_widget: UserWidget::from(),
             nav_widget: NavWidget::new(),
             about_widget: AboutWidget::new(),
-            ui_tx: ui_tx.clone(),
             features_tx,
             modal_visible: false,
         };
