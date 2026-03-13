@@ -66,7 +66,7 @@ impl App {
         file_name: Option<&str>,
     ) -> Result<()> {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
-        let (subtitles_tx, features_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
+        let (subtitles_tx, subtitles_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
         let (featurex_tx, featurex_rx) = tokio::sync::mpsc::channel::<i32>(100);
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
@@ -76,7 +76,7 @@ impl App {
         let spinner_clone = spinner.clone();
 
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
-        tokio::spawn(subtitles_fetch_task(features_rx, task_runner.clone()));
+        tokio::spawn(subtitles_fetch_task(subtitles_rx, task_runner.clone()));
         tokio::spawn(spinner_task(spinner_clone));
 
         let provider = ConfigProvider::default();
@@ -247,7 +247,7 @@ impl App {
                 vec![]
             }
 
-            FeatureInfo(id) => vec![]
+            FeatureInfo(id) => vec![],
         }
     }
 
