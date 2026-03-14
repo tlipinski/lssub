@@ -39,22 +39,21 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget};
 use ratatui::{DefaultTerminal, Frame};
 use std::cmp::PartialEq;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::ops::Deref;
 use std::path::Path;
 use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
+use crate::ui::action_handler::ActionHandler;
 
 pub struct App {
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
     languages_widget: LanguagesWidget,
-    account_widget: AccountWidget,
     status_widget: StatusWidget,
     user_widget: UserWidget,
-    nav_widget: NavWidget,
     about_widget: AboutWidget,
     subtitles_tx: Sender<SubtitlesQuery>,
     config_provider: ConfigProvider,
@@ -85,14 +84,23 @@ impl App {
 
         let search_screen = SearchWidget::from(base_path, file_name, task_runner.clone())?;
 
+        let account_widget = AccountWidget::new(task_runner.clone());
+        let nav_widget = NavWidget::new();
+
+        let mut x: HashMap<String, Box<dyn ActionHandler>> = HashMap::new();
+        x.insert("account".into(), Box::new(account_widget));
+        x.insert("nav".into(), Box::new(nav_widget));
+
+        x.iter_mut().for_each(|(key, widget)| {
+            widget.update(todo!())
+        });
+
         let mut app = App {
             search_widget: search_screen,
             current_screen: CurrentScreen::default(),
             languages_widget: LanguagesWidget::new(config_provider.get_config()?.languages)?,
-            account_widget: AccountWidget::new(task_runner.clone()),
             status_widget: StatusWidget::from(spinner.clone()),
             user_widget: UserWidget::from(),
-            nav_widget: NavWidget::new(),
             about_widget: AboutWidget::new(),
             config_provider,
             subtitles_tx,
@@ -161,11 +169,10 @@ impl App {
             UserLoggedIn(user_info) => {
                 self.user_widget.requests = user_info.data.downloads_count;
                 self.user_widget.remaining = user_info.data.remaining_downloads;
-                self.nav_widget.username = Some(user_info.data.username.clone());
 
                 // todo make priv
-                self.account_widget.logged_in = true;
-                self.account_widget.logged_in_widget.user_info = user_info.clone();
+                // self.account_widget.logged_in = true;
+                // self.account_widget.logged_in_widget.user_info = user_info.clone();
 
                 Some(Tuple(
                     Box::from(SwitchScreen(Search)),
@@ -179,11 +186,11 @@ impl App {
             UserLoggedOut => {
                 self.user_widget.requests = 0;
                 self.user_widget.remaining = 0;
-                self.nav_widget.username = None;
+                // self.nav_widget.username = None;
 
                 // todo make priv
-                self.account_widget.logged_in = false;
-                self.account_widget.logged_in_widget.user_info = UserInfo::default();
+                // self.account_widget.logged_in = false;
+                // self.account_widget.logged_in_widget.user_info = UserInfo::default();
 
                 None
             }
@@ -212,7 +219,7 @@ impl App {
             }
 
             Init => {
-                self.account_widget.refresh();
+                // self.account_widget.refresh();
 
                 let query: String = self.search_widget.query();
                 if !query.is_empty() {
@@ -295,7 +302,7 @@ impl App {
 
         self.status_widget.render(frame, status[0]);
         self.user_widget.render(frame, status[1]);
-        self.nav_widget.render(frame, content[2]);
+        // self.nav_widget.render(frame, content[2]);
 
         match &self.current_screen {
             Search => {
@@ -305,7 +312,7 @@ impl App {
                 self.languages_widget.render(frame, content[0]);
             }
             Account => {
-                self.account_widget.render(frame, content[0]);
+                // self.account_widget.render(frame, content[0]);
             }
             About => {
                 self.about_widget.render(frame, content[0]);
@@ -386,7 +393,7 @@ impl App {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Hash, Eq, PartialEq)]
 pub enum CurrentScreen {
     #[default]
     Search,

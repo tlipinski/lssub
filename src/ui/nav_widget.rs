@@ -1,12 +1,34 @@
+use crossterm::event::Event;
+use crate::ui::action_handler::ActionHandler;
+use crate::ui::actions::Action;
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::prelude::Line;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
 use ratatui::widgets::{Block, Borders, Paragraph};
+use Action::{UserLoggedIn, UserLoggedOut};
 
 pub struct NavWidget {
     pub username: Option<String>,
+}
+
+impl ActionHandler for NavWidget {
+    fn update(&mut self, action: Action) -> () {
+        match action {
+            UserLoggedIn(user_info) => {
+                self.username = Some(user_info.data.username.clone());
+            }
+            UserLoggedOut => {
+                self.username = None;
+            }
+            _ => {}
+        }
+    }
+
+    fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+        None
+    }
 }
 
 impl NavWidget {

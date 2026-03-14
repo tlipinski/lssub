@@ -15,12 +15,38 @@ use log::{error, info};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::text::ToSpan;
+use crate::ui::action_handler::ActionHandler;
 
 pub struct AccountWidget {
     login_widget: LoginWidget,
     pub logged_in_widget: LoggedInWidget,
     task_runner: TaskRunner,
     pub logged_in: bool,
+}
+
+impl ActionHandler for AccountWidget {
+    fn update(&mut self, action: Action) -> () {
+        match action {
+            Action::Init => {
+                self.refresh();
+            }
+            UserLoggedIn(_) => {
+                self.logged_in = true;
+            }
+            UserLoggedOut => {
+                self.logged_in = false;
+            }
+            _ => {}
+        }
+    }
+
+    fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+        if (self.logged_in) {
+            self.logged_in_widget.handle_key_event(event)
+        } else {
+            self.login_widget.handle_key_event(event)
+        }
+    }
 }
 
 impl AccountWidget {
@@ -54,19 +80,6 @@ impl AccountWidget {
         }
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
-        if (self.logged_in) {
-            match self.logged_in_widget.handle_key_event(event) {
-                Some(UserLoggedOut) => {
-                    self.logged_in = false;
-                    Some(UserLoggedOut)
-                }
-                other => other,
-            }
-        } else {
-            self.login_widget.handle_key_event(event)
-        }
-    }
 
     pub fn refresh(&mut self) {
         self.task_runner.run(async move {
@@ -75,7 +88,7 @@ impl AccountWidget {
                     Ok(user_info) => Ok(UserLoggedIn(user_info)),
                     Err(e) => {
                         error!("Error getting user info: {e}");
-                        Ok(ChangeStatus(e.to_string()))
+                        Ok(ChangeStatus(e.to_string())) // todo replace with Err
                     }
                 },
                 Ok(None) => Ok(ChangeStatus("".into())), // todo
