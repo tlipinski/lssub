@@ -77,7 +77,7 @@ impl SearchWidget {
         }
     }
 
-    pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match key_event {
                 KeyEvent {
@@ -95,9 +95,9 @@ impl SearchWidget {
                             self.task_runner.run(async move {dn.download(file_id, &language).await});
 
                             let status = format!("Downloading {}", s.title);
-                            Ok(Some(ChangeStatus(status)))
+                            Some(ChangeStatus(status))
                         }
-                        None => Ok(None),
+                        None => None,
                     }
                 }
 
@@ -120,11 +120,11 @@ impl SearchWidget {
                     code: KeyCode::Char('l'),
                     modifiers: KeyModifiers::CONTROL,
                     ..
-                } => Ok(self.subs_list_widget.handle_key_event(key_event)),
-                _ => self.query_widget.handle_key_event(event).await,
+                } => self.subs_list_widget.handle_key_event(key_event),
+                _ => self.query_widget.handle_key_event(event),
             }
         } else {
-            Ok(None)
+            None
         }
     }
 

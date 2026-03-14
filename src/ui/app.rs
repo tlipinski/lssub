@@ -358,7 +358,7 @@ impl App {
                 } => Ok(Some(SwitchScreen(About))),
 
                 _ => match self.current_screen {
-                    Search => self.search_widget.handle_key_event(event).await,
+                    Search => Ok(self.search_widget.handle_key_event(event)),
                     Language => Ok(self.languages_widget.handle_key_event(event)),
                     Account => self.account_widget.handle_key_event(event).await,
                     About => Ok(self.about_widget.handle_key_event(event)),

@@ -45,12 +45,12 @@ impl QueryWidget {
         frame.render_widget(view, area);
     }
 
-    pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if let Some(state_changed) = self.input.handle_event(&event)
             && state_changed.value
         {
-            return Ok(Some(SearchQueryUpdated));
+            return Some(SearchQueryUpdated);
         }
-        Ok(None)
+        None
     }
 }
