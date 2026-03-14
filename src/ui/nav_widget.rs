@@ -29,14 +29,8 @@ impl ActionHandler for NavWidget {
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         None
     }
-}
 
-impl NavWidget {
-    pub fn new() -> NavWidget {
-        Self { username: None }
-    }
-
-    pub fn render(&self, frame: &mut Frame, area: Rect) {
+    fn render(&self, frame: &mut Frame, area: Rect) {
         let main_nav = {
             let account = if let Some(u) = &self.username {
                 Span::from(format!(" Account ({}) | ", u))
@@ -58,9 +52,16 @@ impl NavWidget {
                 Span::from("F12:").bold(),
                 Span::from(" About"),
             ]))
-            .centered()
+                .centered()
         };
 
         frame.render_widget(main_nav, area);
     }
+}
+
+impl NavWidget {
+    pub fn new() -> NavWidget {
+        Self { username: None }
+    }
+
 }

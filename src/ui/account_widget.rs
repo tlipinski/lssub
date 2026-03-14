@@ -1,6 +1,7 @@
 use crate::osb::login::login;
 use crate::osb::user_info::{UserInfo, get_user_info};
 use crate::secret::{clear, retrieve, store};
+use crate::ui::action_handler::ActionHandler;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, ReceivedInput, SwitchScreen, UserLoggedIn, UserLoggedOut,
@@ -15,7 +16,6 @@ use log::{error, info};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::text::ToSpan;
-use crate::ui::action_handler::ActionHandler;
 
 pub struct AccountWidget {
     login_widget: LoginWidget,
@@ -47,6 +47,14 @@ impl ActionHandler for AccountWidget {
             self.login_widget.handle_key_event(event)
         }
     }
+
+    fn render(&self, frame: &mut Frame, area: Rect) {
+        if (self.logged_in) {
+            self.logged_in_widget.render(frame, area);
+        } else {
+            self.login_widget.render(frame, area);
+        }
+    }
 }
 
 impl AccountWidget {
@@ -71,15 +79,6 @@ impl AccountWidget {
             None
         }
     }
-
-    pub fn render(&self, frame: &mut Frame, area: Rect) {
-        if (self.logged_in) {
-            self.logged_in_widget.render(frame, area);
-        } else {
-            self.login_widget.render(frame, area);
-        }
-    }
-
 
     pub fn refresh(&mut self) {
         self.task_runner.run(async move {

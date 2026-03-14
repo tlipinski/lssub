@@ -303,6 +303,7 @@ impl App {
 
         self.status_widget.render(frame, status[0]);
         self.user_widget.render(frame, status[1]);
+        self.widgets.get_mut("nav").unwrap().render(frame, content[2]);
         // self.nav_widget.render(frame, content[2]);
 
         match &self.current_screen {
@@ -313,6 +314,7 @@ impl App {
                 self.languages_widget.render(frame, content[0]);
             }
             Account => {
+                self.widgets.get_mut("account").unwrap().render(frame, content[0]);
                 // self.account_widget.render(frame, content[0]);
             }
             About => {
