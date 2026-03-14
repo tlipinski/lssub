@@ -53,6 +53,13 @@ impl Component for SearchWidget {
         if let Event::Key(key_event) = event {
             match key_event {
                 KeyEvent {
+                    code: KeyCode::F(1), ..
+                } => {
+                    self.help = !self.help;
+                    None
+                }
+
+                KeyEvent {
                     code: KeyCode::Enter,
                     ..
                 } => {

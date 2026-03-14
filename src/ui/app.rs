@@ -318,6 +318,15 @@ impl App {
         }
     }
 
+    fn active_widget(&self) -> WidgetName {
+        match self.active_screen {
+            Search => WidgetName::Search,
+            Account => WidgetName::Account,
+            Language => WidgetName::Languages,
+            About => WidgetName::About,
+        }
+    }
+
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if (self.modal_visible) {
             if let Event::Key(key_event) = event {
@@ -378,27 +387,8 @@ impl App {
                     ..
                 } => Some(SwitchScreen(About)),
 
-                _ => match self.active_screen {
-                    Search => self
-                        .widgets
-                        .get_mut(&WidgetName::Search)
-                        .unwrap()
-                        .handle_key_event(event),
-                    Language => self
-                        .widgets
-                        .get_mut(&WidgetName::Languages)
-                        .unwrap()
-                        .handle_key_event(event),
-                    Account => self
-                        .widgets
-                        .get_mut(&WidgetName::Account)
-                        .unwrap()
-                        .handle_key_event(event),
-                    About => self
-                        .widgets
-                        .get_mut(&WidgetName::About)
-                        .unwrap()
-                        .handle_key_event(event),
+                _ => {
+                    self.widgets.get_mut(&self.active_widget()).unwrap().handle_key_event(event)
                 },
             }
         } else {
