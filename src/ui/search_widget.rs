@@ -39,7 +39,6 @@ pub struct SearchWidget {
 
 impl Component for SearchWidget {
     fn update(&mut self, action: &Action) -> () {
-
         match action {
             SubsFetched(subtitles) => {
                 self.update_subtitles(&subtitles);

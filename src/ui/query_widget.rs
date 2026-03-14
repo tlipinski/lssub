@@ -49,7 +49,7 @@ impl QueryWidget {
         if let Some(state_changed) = self.input.handle_event(&event)
             && state_changed.value
         {
-            return Some(SearchQueryUpdated);
+            return Some(SearchQueryUpdated(self.input.value().into()));
         }
         None
     }

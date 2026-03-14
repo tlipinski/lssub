@@ -17,6 +17,7 @@ use ratatui::widgets::{
     Block, Cell, Row, ScrollDirection, Scrollbar, ScrollbarOrientation, ScrollbarState,
     StatefulWidget, Table, TableState,
 };
+use Action::DisabledLimitSubsToId;
 
 #[derive(Default)]
 pub struct SubsListWidget {
@@ -105,7 +106,7 @@ impl SubsListWidget {
             } => {
                 if (self.single_feature != Disabled) {
                     self.single_feature = Disabled;
-                    Some(SearchQueryUpdated) // trigger refreshing subs
+                    Some(DisabledLimitSubsToId)
                 } else {
                     self.single_feature = Triggered;
                     self.state

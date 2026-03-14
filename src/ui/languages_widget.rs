@@ -25,7 +25,7 @@ impl Component for LanguagesWidget {
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                KeyCode::Enter => Some(LanguagesUpdated),
+                KeyCode::Enter => Some(LanguagesUpdated(self.languages())),
 
                 _ => {
                     self.input.handle_event(&event);

@@ -50,14 +50,12 @@ use tokio::task::JoinHandle;
 
 pub struct App {
     current_screen: CurrentScreen,
-    // search_widget: SearchWidget,
-    // languages_widget: LanguagesWidget,
-    // status_widget: StatusWidget,
-    // about_widget: AboutWidget,
     subtitles_tx: Sender<SubtitlesQuery>,
     config_provider: ConfigProvider,
     modal_visible: bool,
-    pub widgets: HashMap<String, Box<dyn Component>>,
+    widgets: HashMap<String, Box<dyn Component>>,
+    query: String,
+    languages: Vec<String>,
 }
 
 impl App {
@@ -115,6 +113,8 @@ impl App {
             subtitles_tx,
             modal_visible: false,
             widgets: components,
+            query: "".to_string(),
+            languages: vec![],
         };
 
         let mut message_opt = Some(Init);
@@ -155,19 +155,18 @@ impl App {
                 Some(ChangeStatus(format!("{} results", subtitles.data.len())))
             }
 
-            LanguagesUpdated => {
+            LanguagesUpdated(languages) => {
+                self.languages = languages.clone();
+                
                 self.config_provider.modify(|c: &Config| {
                     let mut updated = c.clone();
-                    updated.languages = self.languages_widget.languages().clone();
+                    updated.languages = self.languages.clone();
                     updated
                 });
 
-                let languages = self.languages_widget.languages();
-                let query: String = self.search_widget.query();
-
                 Some(Tuple(
                     Box::from(SwitchScreen(Search)),
-                    Box::from(FetchSubs(query, languages)),
+                    Box::from(FetchSubs(self.query.clone(), self.languages.clone())),
                 ))
             }
 
@@ -181,13 +180,10 @@ impl App {
 
             UserLoggedOut => None,
 
-            SearchQueryUpdated => {
+            SearchQueryUpdated(query) => {
                 // self.status_widget.in_progress = true;
-
-                let languages = self.languages_widget.languages();
-                let query = self.search_widget.query();
-
-                Some(FetchSubs(query, languages))
+                self.query = query.clone();
+                Some(FetchSubs(query.clone(), self.languages.clone()))
             }
 
             FetchSubs(query, languages) => {
@@ -205,9 +201,9 @@ impl App {
             }
 
             Init => {
-                let query: String = self.search_widget.query();
+                let query: String = self.query.clone();
                 if !query.is_empty() {
-                    let languages = self.languages_widget.languages();
+                    let languages = self.languages.clone();
                     Some(FetchSubs(query, languages))
                 } else {
                     None
@@ -227,8 +223,8 @@ impl App {
             Exit => None,
 
             EnabledLimitSubsToId(id) => {
-                let languages = self.languages_widget.languages();
-                let query = self.search_widget.query();
+                let languages = self.languages.clone();
+                let query = self.query.clone();
                 self.subtitles_tx
                     .send(SubtitlesQuery {
                         query,
@@ -327,7 +323,7 @@ impl App {
                         code: KeyCode::Esc, ..
                     } => match self.current_screen {
                         Search => {
-                            self.search_widget.help = false;
+                            // self.search_widget.help = false;
                             self.modal_visible = false;
                             Ok(None)
                         }
@@ -348,7 +344,7 @@ impl App {
                     ..
                 } => match self.current_screen {
                     Search => {
-                        self.search_widget.help = !self.search_widget.help;
+                        // self.search_widget.help = !self.search_widget.help;
                         self.modal_visible = true;
                         Ok(None)
                     }
@@ -376,18 +372,26 @@ impl App {
                 } => Ok(Some(SwitchScreen(About))),
 
                 _ => match self.current_screen {
-                    Search => {
-                        Ok(self.widgets.get_mut("search").unwrap().handle_key_event(event))
-                    },
-                    Language => {
-                        Ok(self.widgets.get_mut("language").unwrap().handle_key_event(event))
-                    },
-                    Account => {
-                        Ok(self.widgets.get_mut("account").unwrap().handle_key_event(event))
-                    }
-                    About => {
-                        Ok(self.widgets.get_mut("about").unwrap().handle_key_event(event))
-                    },
+                    Search => Ok(self
+                        .widgets
+                        .get_mut("search")
+                        .unwrap()
+                        .handle_key_event(event)),
+                    Language => Ok(self
+                        .widgets
+                        .get_mut("language")
+                        .unwrap()
+                        .handle_key_event(event)),
+                    Account => Ok(self
+                        .widgets
+                        .get_mut("account")
+                        .unwrap()
+                        .handle_key_event(event)),
+                    About => Ok(self
+                        .widgets
+                        .get_mut("about")
+                        .unwrap()
+                        .handle_key_event(event)),
                 },
             }
         } else {
