@@ -1,5 +1,5 @@
 use crossterm::event::Event;
-use crate::ui::action_handler::ActionHandler;
+use crate::ui::action_handler::Component;
 use crate::ui::actions::Action;
 use ratatui::Frame;
 use ratatui::layout::Rect;
@@ -13,7 +13,7 @@ pub struct NavWidget {
     pub username: Option<String>,
 }
 
-impl ActionHandler for NavWidget {
+impl Component for NavWidget {
     fn update(&mut self, action: &Action) -> () {
         match action {
             UserLoggedIn(user_info) => {

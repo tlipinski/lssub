@@ -1,7 +1,7 @@
 use crate::osb::login::login;
 use crate::osb::user_info::{UserInfo, get_user_info};
 use crate::secret::{clear, retrieve, store};
-use crate::ui::action_handler::ActionHandler;
+use crate::ui::action_handler::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, ReceivedInput, SwitchScreen, UserLoggedIn, UserLoggedOut,
@@ -19,22 +19,24 @@ use ratatui::text::ToSpan;
 
 pub struct AccountWidget {
     login_widget: LoginWidget,
-    pub logged_in_widget: LoggedInWidget,
+    logged_in_widget: LoggedInWidget,
     task_runner: TaskRunner,
-    pub logged_in: bool,
+    logged_in: bool,
 }
 
-impl ActionHandler for AccountWidget {
+impl Component for AccountWidget {
     fn update(&mut self, action: &Action) -> () {
         match action {
             Action::Init => {
                 self.refresh();
             }
-            UserLoggedIn(_) => {
+            UserLoggedIn(user_info) => {
                 self.logged_in = true;
+                self.logged_in_widget.user_info = user_info.clone();
             }
             UserLoggedOut => {
                 self.logged_in = false;
+                self.logged_in_widget.user_info = UserInfo::default();
             }
             _ => {}
         }

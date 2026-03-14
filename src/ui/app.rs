@@ -46,7 +46,7 @@ use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use crate::ui::action_handler::ActionHandler;
+use crate::ui::action_handler::Component;
 
 pub struct App {
     current_screen: CurrentScreen,
@@ -58,7 +58,7 @@ pub struct App {
     subtitles_tx: Sender<SubtitlesQuery>,
     config_provider: ConfigProvider,
     modal_visible: bool,
-    pub widgets: HashMap<String, Box<dyn ActionHandler>>,
+    pub widgets: HashMap<String, Box<dyn Component>>,
 }
 
 impl App {
@@ -88,7 +88,7 @@ impl App {
         let account_widget = AccountWidget::new(task_runner.clone());
         let nav_widget = NavWidget::new();
 
-        let mut x: HashMap<String, Box<dyn ActionHandler>> = HashMap::new();
+        let mut x: HashMap<String, Box<dyn Component>> = HashMap::new();
         x.insert("account".into(), Box::new(account_widget));
         x.insert("nav".into(), Box::new(nav_widget));
 
@@ -171,9 +171,6 @@ impl App {
                 self.user_widget.requests = user_info.data.downloads_count;
                 self.user_widget.remaining = user_info.data.remaining_downloads;
 
-                // todo make priv
-                // self.account_widget.logged_in = true;
-                // self.account_widget.logged_in_widget.user_info = user_info.clone();
 
                 Some(Tuple(
                     Box::from(SwitchScreen(Search)),
@@ -187,11 +184,6 @@ impl App {
             UserLoggedOut => {
                 self.user_widget.requests = 0;
                 self.user_widget.remaining = 0;
-                // self.nav_widget.username = None;
-
-                // todo make priv
-                // self.account_widget.logged_in = false;
-                // self.account_widget.logged_in_widget.user_info = UserInfo::default();
 
                 None
             }
