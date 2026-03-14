@@ -173,13 +173,10 @@ impl App {
                 ]))
             }
 
-            UserLoggedIn(user_info) => Some(Multiple(vec![
-                SwitchScreen(Search),
-                ChangeStatus(format!(
-                    "Logged in as {}",
-                    user_info.data.username
-                )),
-            ])),
+            UserLoggedIn(user_info) => Some(ChangeStatus(format!(
+                "Logged in as {}",
+                user_info.data.username
+            ))),
 
             UserLoggedOut => None,
 
