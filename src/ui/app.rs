@@ -10,7 +10,7 @@ use crate::ui::action_handler::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FeatureInfo, FetchSubs, Init,
-    LanguagesUpdated, SearchQueryUpdated, SwitchScreen, Tuple, UserLoggedIn, UserLoggedOut,
+    LanguagesUpdated, Multiple, SearchQueryUpdated, SwitchScreen, UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::CurrentScreen::{About, Account, Language, Search};
@@ -141,10 +141,13 @@ impl App {
 
     async fn update(&mut self, action: &Action) -> Option<Action> {
         debug!("action: {:?}", action);
-        let map = self.widgets.values_mut().map(|(component)| {
-            component.update(action);
-        });
-        match action {
+        let mut widget_actions = self
+            .widgets
+            .values_mut()
+            .map(|(component)| component.update(action))
+            .collect::<Vec<Option<Action>>>();
+
+        let new_action = match action {
             ReceivedInput(event) => match self.handle_key_event(event) {
                 Ok(Some(m)) => Some(m),
                 Ok(None) => None,
@@ -157,26 +160,26 @@ impl App {
 
             LanguagesUpdated(languages) => {
                 self.languages = languages.clone();
-                
+
                 self.config_provider.modify(|c: &Config| {
                     let mut updated = c.clone();
                     updated.languages = self.languages.clone();
                     updated
                 });
 
-                Some(Tuple(
-                    Box::from(SwitchScreen(Search)),
-                    Box::from(FetchSubs(self.query.clone(), self.languages.clone())),
-                ))
+                Some(Multiple(vec![
+                    SwitchScreen(Search),
+                    FetchSubs(self.query.clone(), self.languages.clone()),
+                ]))
             }
 
-            UserLoggedIn(user_info) => Some(Tuple(
-                Box::from(SwitchScreen(Search)),
-                Box::from(ChangeStatus(format!(
+            UserLoggedIn(user_info) => Some(Multiple(vec![
+                SwitchScreen(Search),
+                ChangeStatus(format!(
                     "Logged in as {}",
                     user_info.data.username
-                ))),
-            )),
+                )),
+            ])),
 
             UserLoggedOut => None,
 
@@ -237,19 +240,30 @@ impl App {
                 None
             }
 
-            Tuple(action1, action2) => {
-                if let Some(a1) = Box::pin(self.update(action1)).await {
-                    Box::pin(self.update(&a1)).await
-                } else {
-                    if let Some(a2) = Box::pin(self.update(action2)).await {
-                        Box::pin(self.update(&a2)).await
-                    } else {
-                        None
+            Multiple(actions) => {
+                let mut next_action = None;
+                for action in actions {
+                    if let Some(a) = Box::pin(self.update(action)).await {
+                        next_action = Box::pin(self.update(&a)).await;
                     }
                 }
+
+                next_action
             }
 
             _ => None,
+        };
+
+        if let Some(action) = new_action {
+            widget_actions.push(Some(action));
+        }
+
+        let actions: Vec<Action> = widget_actions.into_iter().filter_map(|a| a).collect();
+
+        match actions.len() {
+            0 => None,
+            1 => actions.into_iter().next(),
+            _ => Some(Multiple(actions)),
         }
     }
 
@@ -379,7 +393,7 @@ impl App {
                         .handle_key_event(event)),
                     Language => Ok(self
                         .widgets
-                        .get_mut("language")
+                        .get_mut("languages")
                         .unwrap()
                         .handle_key_event(event)),
                     Account => Ok(self

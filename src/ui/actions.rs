@@ -23,6 +23,6 @@ pub enum Action {
     DisabledLimitSubsToId,
     FeatureInfo(i64),
     ChangeStatus(String),
-    Tuple(Box<Action>, Box<Action>),
+    Multiple(Vec<Action>),
     Exit,
 }
