@@ -2,6 +2,7 @@ use crate::config::{Config, ConfigProvider};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{FetchSubs, LanguagesUpdated};
 use crate::ui::app::CurrentScreen::Search;
+use crate::ui::pad::BlockTitlePadExt;
 use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
 use ratatui::Frame;
@@ -11,41 +12,30 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::pad::BlockTitlePadExt;
 
 pub struct LanguagesWidget {
-    config_provider: ConfigProvider,
     input: Input,
 }
 
 impl LanguagesWidget {
-    pub fn new(config_provider: ConfigProvider) -> anyhow::Result<LanguagesWidget> {
-        let languages = config_provider.get_config()?.languages;
+    pub fn new(languages: Vec<String>) -> anyhow::Result<LanguagesWidget> {
         Ok(Self {
-            config_provider,
             input: Input::new(languages.join(",")),
         })
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match key_event.code {
-                KeyCode::Enter => {
-                    self.config_provider.modify(|c: &Config| {
-                        let mut updated = c.clone();
-                        updated.languages = self.languages().clone();
-                        updated
-                    });
-                    Ok(Some(LanguagesUpdated))
-                }
+                KeyCode::Enter => Some(LanguagesUpdated),
 
                 _ => {
                     self.input.handle_event(&event);
-                    Ok(None)
+                    None
                 }
             }
         } else {
-            Ok(None)
+            None
         }
     }
 

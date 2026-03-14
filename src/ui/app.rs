@@ -56,6 +56,7 @@ pub struct App {
     nav_widget: NavWidget,
     about_widget: AboutWidget,
     subtitles_tx: Sender<SubtitlesQuery>,
+    config_provider: ConfigProvider,
     modal_visible: bool,
 }
 
@@ -79,19 +80,20 @@ impl App {
         tokio::spawn(subtitles_fetch_task(subtitles_rx, task_runner.clone()));
         tokio::spawn(spinner_task(spinner_clone));
 
-        let provider = ConfigProvider::default();
+        let config_provider = ConfigProvider::default();
 
         let search_screen = SearchWidget::from(base_path, file_name, task_runner.clone())?;
 
         let mut app = App {
             search_widget: search_screen,
             current_screen: CurrentScreen::default(),
-            languages_widget: LanguagesWidget::new(provider)?,
+            languages_widget: LanguagesWidget::new(config_provider.get_config()?.languages)?,
             account_widget: AccountWidget::new(task_runner.clone()),
             status_widget: StatusWidget::from(spinner.clone()),
             user_widget: UserWidget::from(),
             nav_widget: NavWidget::new(),
             about_widget: AboutWidget::new(),
+            config_provider,
             subtitles_tx,
             modal_visible: false,
         };
@@ -144,8 +146,15 @@ impl App {
             }
 
             LanguagesUpdated => {
+                self.config_provider.modify(|c: &Config| {
+                    let mut updated = c.clone();
+                    updated.languages = self.languages_widget.languages().clone();
+                    updated
+                });
+
                 let languages = self.languages_widget.languages();
                 let query: String = self.search_widget.query();
+
                 vec![SwitchScreen(Search), FetchSubs(query, languages)]
             }
 
@@ -350,7 +359,7 @@ impl App {
 
                 _ => match self.current_screen {
                     Search => self.search_widget.handle_key_event(event).await,
-                    Language => self.languages_widget.handle_key_event(event),
+                    Language => Ok(self.languages_widget.handle_key_event(event)),
                     Account => self.account_widget.handle_key_event(event).await,
                     About => Ok(self.about_widget.handle_key_event(event)),
                 },
