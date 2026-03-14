@@ -13,7 +13,7 @@ use crate::ui::actions::Action::{
     LanguagesUpdated, Multiple, SearchQueryUpdated, SwitchScreen, UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
-use crate::ui::app::CurrentScreen::{About, Account, Language, Search};
+use crate::ui::app::Screen::{About, Account, Language, Search};
 use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::languages_widget::LanguagesWidget;
@@ -49,7 +49,7 @@ use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 
 pub struct App {
-    current_screen: CurrentScreen,
+    active_screen: Screen,
     subtitles_tx: Sender<SubtitlesQuery>,
     config_provider: ConfigProvider,
     modal_visible: bool,
@@ -108,7 +108,7 @@ impl App {
         components.insert(WidgetName::About, Box::new(AboutWidget::new()));
 
         let mut app = App {
-            current_screen: CurrentScreen::default(),
+            active_screen: Screen::default(),
             config_provider,
             subtitles_tx,
             modal_visible: false,
@@ -215,7 +215,7 @@ impl App {
             }
 
             SwitchScreen(screen) => {
-                self.current_screen = *screen;
+                self.active_screen = *screen;
 
                 None
             }
@@ -294,7 +294,7 @@ impl App {
             .unwrap()
             .render(frame, content[2]);
 
-        match &self.current_screen {
+        match &self.active_screen {
             Search => {
                 self.widgets
                     .get_mut(&WidgetName::Search)
@@ -332,7 +332,7 @@ impl App {
                     }
                     | KeyEvent {
                         code: KeyCode::Esc, ..
-                    } => match self.current_screen {
+                    } => match self.active_screen {
                         Search => {
                             // self.search_widget.help = false;
                             self.modal_visible = false;
@@ -353,7 +353,7 @@ impl App {
                 KeyEvent {
                     code: KeyCode::F(1),
                     ..
-                } => match self.current_screen {
+                } => match self.active_screen {
                     Search => {
                         // self.search_widget.help = !self.search_widget.help;
                         self.modal_visible = true;
@@ -382,7 +382,7 @@ impl App {
                     ..
                 } => Ok(Some(SwitchScreen(About))),
 
-                _ => match self.current_screen {
+                _ => match self.active_screen {
                     Search => Ok(self
                         .widgets
                         .get_mut(&WidgetName::Search)
@@ -423,7 +423,7 @@ enum WidgetName {
 }
 
 #[derive(Debug, Default, Hash, Eq, PartialEq, Copy, Clone)]
-pub enum CurrentScreen {
+pub enum Screen {
     #[default]
     Search,
     Account,

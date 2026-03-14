@@ -6,7 +6,7 @@ use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
     SearchQueryUpdated, SubsFetched, SwitchScreen, UserLoggedOut,
 };
-use crate::ui::app::CurrentScreen::Search;
+use crate::ui::app::Screen::Search;
 use crate::ui::downloader::{Downloaded, Downloader};
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;

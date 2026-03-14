@@ -1,7 +1,7 @@
 use crate::config::{Config, ConfigProvider};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{FetchSubs, LanguagesUpdated};
-use crate::ui::app::CurrentScreen::Search;
+use crate::ui::app::Screen::Search;
 use crate::ui::pad::BlockTitlePadExt;
 use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
