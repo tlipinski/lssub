@@ -52,7 +52,6 @@ pub struct App {
     active_screen: Screen,
     subtitles_tx: Sender<SubtitlesQuery>,
     config_provider: ConfigProvider,
-    modal_visible: bool,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
     query: String,
     languages: Vec<String>,
@@ -111,7 +110,6 @@ impl App {
             active_screen: Screen::default(),
             config_provider,
             subtitles_tx,
-            modal_visible: false,
             widgets: components,
             query: "".to_string(),
             languages: vec![],
@@ -329,44 +327,8 @@ impl App {
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
-        if (self.modal_visible) {
-            if let Event::Key(key_event) = event {
-                match key_event {
-                    KeyEvent {
-                        code: KeyCode::F(1),
-                        ..
-                    }
-                    | KeyEvent {
-                        code: KeyCode::Esc, ..
-                    } => match self.active_screen {
-                        Search => {
-                            // self.search_widget.help = false;
-                            self.modal_visible = false;
-                            None
-                        }
-                        _ => None,
-                    },
-                    _ => None,
-                }
-            } else {
-                None
-            }
-        } else if let Event::Key(key_event) = event {
+        if let Event::Key(key_event) = event {
             match key_event {
-                KeyEvent {
-                    code: KeyCode::Esc, ..
-                } => Some(SwitchScreen(Search)),
-                KeyEvent {
-                    code: KeyCode::F(1),
-                    ..
-                } => match self.active_screen {
-                    Search => {
-                        // self.search_widget.help = !self.search_widget.help;
-                        self.modal_visible = true;
-                        None
-                    }
-                    _ => None,
-                },
                 KeyEvent {
                     code: KeyCode::F(2),
                     ..

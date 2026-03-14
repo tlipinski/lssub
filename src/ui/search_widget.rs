@@ -51,57 +51,78 @@ impl Component for SearchWidget {
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
-            match key_event {
-                KeyEvent {
-                    code: KeyCode::F(1), ..
-                } => {
-                    self.help = !self.help;
-                    None
-                }
-
-                KeyEvent {
-                    code: KeyCode::Enter,
-                    ..
-                } => {
-                    let selected_sub = self.subs_list_widget.selected();
-
-                    match selected_sub {
-                        Some(s) => {
-                            let dn = self.downloader.clone();
-                            let file_id = s.file_id;
-                            let language = s.language.clone();
-
-                            self.task_runner
-                                .run(async move { dn.download(file_id, &language).await });
-
-                            let status = format!("Downloading {}", s.title);
-                            Some(ChangeStatus(status))
-                        }
-                        None => None,
+            if (self.help) {
+                match key_event {
+                    KeyEvent {
+                        code: KeyCode::Esc,
+                        ..
+                    } => {
+                        self.help = !self.help;
+                        None
                     }
+                    KeyEvent {
+                        code: KeyCode::F(1),
+                        ..
+                    } => {
+                        self.help = !self.help;
+                        None
+                    }
+                    _ => None
                 }
+            } else {
+                match key_event {
+                    KeyEvent {
+                        code: KeyCode::F(1),
+                        ..
+                    } => {
+                        self.help = !self.help;
+                        None
+                    }
 
-                KeyEvent {
-                    code: KeyCode::PageUp,
-                    ..
+                    KeyEvent {
+                        code: KeyCode::Enter,
+                        ..
+                    } => {
+                        let selected_sub = self.subs_list_widget.selected();
+
+                        match selected_sub {
+                            Some(s) => {
+                                let dn = self.downloader.clone();
+                                let file_id = s.file_id;
+                                let language = s.language.clone();
+
+                                self.task_runner
+                                    .run(async move { dn.download(file_id, &language).await });
+
+                                let status = format!("Downloading {}", s.title);
+                                Some(ChangeStatus(status))
+                            }
+                            None => None,
+                        }
+                    }
+
+                    KeyEvent {
+                        code: KeyCode::PageUp,
+                        ..
+                    }
+                    | KeyEvent {
+                        code: KeyCode::PageDown,
+                        ..
+                    }
+                    | KeyEvent {
+                        code: KeyCode::Up, ..
+                    }
+                    | KeyEvent {
+                        code: KeyCode::Down,
+                        ..
+                    }
+                    | KeyEvent {
+                        code: KeyCode::Char('l'),
+                        modifiers: KeyModifiers::CONTROL,
+                        ..
+                    } => self.subs_list_widget.handle_key_event(key_event),
+                    _ => self.query_widget.handle_key_event(event),
                 }
-                | KeyEvent {
-                    code: KeyCode::PageDown,
-                    ..
-                }
-                | KeyEvent {
-                    code: KeyCode::Up, ..
-                }
-                | KeyEvent {
-                    code: KeyCode::Down,
-                    ..
-                }
-                | KeyEvent {
-                    code: KeyCode::Char('l'),
-                    modifiers: KeyModifiers::CONTROL,
-                    ..
-                } => self.subs_list_widget.handle_key_event(key_event),
-                _ => self.query_widget.handle_key_event(event),
             }
         } else {
             None
@@ -128,10 +149,6 @@ impl Component for SearchWidget {
                 .style(Style::new().black().on_gray());
             frame.render_widget(popup, area);
         }
-    }
-
-    fn active_popup(&self) -> bool {
-        self.help
     }
 }
 
