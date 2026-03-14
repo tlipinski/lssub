@@ -6,6 +6,7 @@ use crate::osb::user_info::{UserInfo, get_user_info};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
+use crate::ui::action_handler::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FeatureInfo, FetchSubs, Init,
@@ -46,14 +47,12 @@ use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use crate::ui::action_handler::Component;
 
 pub struct App {
     current_screen: CurrentScreen,
     search_widget: SearchWidget,
     languages_widget: LanguagesWidget,
     status_widget: StatusWidget,
-    user_widget: UserWidget,
     about_widget: AboutWidget,
     subtitles_tx: Sender<SubtitlesQuery>,
     config_provider: ConfigProvider,
@@ -85,24 +84,24 @@ impl App {
 
         let search_screen = SearchWidget::from(base_path, file_name, task_runner.clone())?;
 
-        let account_widget = AccountWidget::new(task_runner.clone());
-        let nav_widget = NavWidget::new();
-
-        let mut x: HashMap<String, Box<dyn Component>> = HashMap::new();
-        x.insert("account".into(), Box::new(account_widget));
-        x.insert("nav".into(), Box::new(nav_widget));
+        let mut components: HashMap<String, Box<dyn Component>> = HashMap::new();
+        components.insert(
+            "account".into(),
+            Box::new(AccountWidget::new(task_runner.clone())),
+        );
+        components.insert("nav".into(), Box::new(NavWidget::new()));
+        components.insert("user".into(), Box::new(UserWidget::from()));
 
         let mut app = App {
             search_widget: search_screen,
             current_screen: CurrentScreen::default(),
             languages_widget: LanguagesWidget::new(config_provider.get_config()?.languages)?,
             status_widget: StatusWidget::from(spinner.clone()),
-            user_widget: UserWidget::from(),
             about_widget: AboutWidget::new(),
             config_provider,
             subtitles_tx,
             modal_visible: false,
-            widgets: x
+            widgets: components,
         };
 
         let mut message_opt = Some(Init);
@@ -115,7 +114,7 @@ impl App {
                         shutdown_tx.send(())?;
                         break 'main_loop;
                     }
-                    _ => message_opt = app.update(&msg).await
+                    _ => message_opt = app.update(&msg).await,
                 }
             }
 
@@ -129,8 +128,8 @@ impl App {
 
     async fn update(&mut self, action: &Action) -> Option<Action> {
         debug!("action: {:?}", action);
-        self.widgets.iter_mut().for_each(|(k, v)| {
-            v.update(action);
+        let map = self.widgets.values_mut().map(|(component)| {
+            component.update(action);
         });
         match action {
             ReceivedInput(event) => match self.handle_key_event(event) {
@@ -167,26 +166,15 @@ impl App {
                 ))
             }
 
-            UserLoggedIn(user_info) => {
-                self.user_widget.requests = user_info.data.downloads_count;
-                self.user_widget.remaining = user_info.data.remaining_downloads;
+            UserLoggedIn(user_info) => Some(Tuple(
+                Box::from(SwitchScreen(Search)),
+                Box::from(ChangeStatus(format!(
+                    "Logged in as {}",
+                    user_info.data.username
+                ))),
+            )),
 
-
-                Some(Tuple(
-                    Box::from(SwitchScreen(Search)),
-                    Box::from(ChangeStatus(format!(
-                        "Logged in as {}",
-                        user_info.data.username
-                    ))),
-                ))
-            }
-
-            UserLoggedOut => {
-                self.user_widget.requests = 0;
-                self.user_widget.remaining = 0;
-
-                None
-            }
+            UserLoggedOut => None,
 
             SearchQueryUpdated => {
                 self.status_widget.in_progress = true;
@@ -212,8 +200,6 @@ impl App {
             }
 
             Init => {
-                // self.account_widget.refresh();
-
                 let query: String = self.search_widget.query();
                 if !query.is_empty() {
                     let languages = self.languages_widget.languages();
@@ -225,8 +211,6 @@ impl App {
 
             DownloadedSubs(downloaded) => {
                 self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
-                self.user_widget.requests = downloaded.requests;
-                self.user_widget.remaining = downloaded.remaining;
 
                 None
             }
@@ -294,9 +278,14 @@ impl App {
             .split(content[1]);
 
         self.status_widget.render(frame, status[0]);
-        self.user_widget.render(frame, status[1]);
-        self.widgets.get_mut("nav").unwrap().render(frame, content[2]);
-        // self.nav_widget.render(frame, content[2]);
+        self.widgets
+            .get_mut("user")
+            .unwrap()
+            .render(frame, status[1]);
+        self.widgets
+            .get_mut("nav")
+            .unwrap()
+            .render(frame, content[2]);
 
         match &self.current_screen {
             Search => {
@@ -306,8 +295,10 @@ impl App {
                 self.languages_widget.render(frame, content[0]);
             }
             Account => {
-                self.widgets.get_mut("account").unwrap().render(frame, content[0]);
-                // self.account_widget.render(frame, content[0]);
+                self.widgets
+                    .get_mut("account")
+                    .unwrap()
+                    .render(frame, content[0]);
             }
             About => {
                 self.about_widget.render(frame, content[0]);
@@ -381,7 +372,7 @@ impl App {
                     Account => {
                         let aw = self.widgets.get_mut("account").unwrap();
                         Ok(aw.handle_key_event(event))
-                    },
+                    }
                     About => Ok(self.about_widget.handle_key_event(event)),
                 },
             }
