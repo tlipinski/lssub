@@ -99,23 +99,23 @@ impl App {
             modal_visible: false,
         };
 
-        let mut messages = VecDeque::from([Init]);
+        let mut message_opt = Some(Init);
 
         'main_loop: loop {
-            while let Some(msg) = messages.pop_front() {
+            while let Some(msg) = message_opt {
                 match msg {
                     Exit => {
                         info!("Exiting application");
                         shutdown_tx.send(())?;
                         break 'main_loop;
                     }
-                    _ => messages.extend(app.update(msg).await),
+                    _ => message_opt = app.update(msg).await
                 }
             }
 
             terminal.draw(|frame| app.draw(frame))?;
 
-            messages.extend(ui_rx.recv().await);
+            message_opt = ui_rx.recv().await;
         }
 
         Ok(())
