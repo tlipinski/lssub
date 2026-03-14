@@ -20,7 +20,7 @@ pub struct UserWidget {
 }
 
 impl Component for UserWidget {
-    fn update(&mut self, action: &Action) -> () {
+    fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
             UserLoggedIn(user_info) => {
                 self.requests = user_info.data.downloads_count;
@@ -36,6 +36,8 @@ impl Component for UserWidget {
             }
             _ => {}
         }
+
+        None
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {

@@ -23,13 +23,15 @@ pub struct StatusWidget {
 }
 
 impl Component for StatusWidget {
-    fn update(&mut self, action: &Action) -> () {
+    fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
             ChangeStatus(status) => {
                 self.info = status.clone();
             }
             _ => {}
         }
+
+        None
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {

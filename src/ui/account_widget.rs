@@ -25,10 +25,10 @@ pub struct AccountWidget {
 }
 
 impl Component for AccountWidget {
-    fn update(&mut self, action: &Action) -> () {
+    fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
             Action::Init => {
-                self.refresh();
+                self.refresh(); // todo side effect
             }
             UserLoggedIn(user_info) => {
                 self.logged_in = true;
@@ -40,6 +40,8 @@ impl Component for AccountWidget {
             }
             _ => {}
         }
+
+        None
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {

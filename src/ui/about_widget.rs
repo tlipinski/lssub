@@ -12,8 +12,8 @@ use ratatui::widgets::{Block, Paragraph};
 pub struct AboutWidget {}
 
 impl Component for AboutWidget {
-    fn update(&mut self, action: &Action) -> () {
-
+    fn update(&mut self, action: &Action) -> Option<Action> {
+        None
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {

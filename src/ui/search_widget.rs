@@ -1,5 +1,6 @@
 use crate::osb::subtitles::SubtitlesResponse;
 use crate::secret::retrieve;
+use crate::ui::action_handler::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
@@ -27,7 +28,6 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use std::path::Path;
 use tokio::sync::mpsc::Sender;
 use tui_popup::Popup;
-use crate::ui::action_handler::Component;
 
 pub struct SearchWidget {
     query_widget: QueryWidget,
@@ -38,12 +38,14 @@ pub struct SearchWidget {
 }
 
 impl Component for SearchWidget {
-    fn update(&mut self, action: &Action) -> () {
+    fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
+            Init => Some(SearchQueryUpdated(self.query_widget.query())),
             SubsFetched(subtitles) => {
                 self.update_subtitles(&subtitles);
+                None
             }
-            _ => {}
+            _ => None,
         }
     }
 
@@ -62,7 +64,8 @@ impl Component for SearchWidget {
                             let file_id = s.file_id;
                             let language = s.language.clone();
 
-                            self.task_runner.run(async move {dn.download(file_id, &language).await});
+                            self.task_runner
+                                .run(async move { dn.download(file_id, &language).await });
 
                             let status = format!("Downloading {}", s.title);
                             Some(ChangeStatus(status))
