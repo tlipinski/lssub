@@ -9,7 +9,7 @@ use crate::ui::component::Component;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
 use crate::ui::task_runner::TaskRunner;
-use anyhow::Result;
+use anyhow::{Error, Result};
 use crossterm::event::Event;
 use log::{error, info};
 use ratatui::Frame;
@@ -90,13 +90,13 @@ impl AccountWidget {
                     Ok(user_info) => Ok(UserLoggedIn(user_info)),
                     Err(e) => {
                         error!("Error getting user info: {e}");
-                        Ok(ChangeStatus(e.to_string())) // todo replace with Err
+                        Err(Error::msg(e.to_string()))
                     }
                 },
                 Ok(None) => Ok(ChangeStatus("".into())), // todo
                 Err(e) => {
                     error!("Error retrieving jwt: {e}");
-                    Ok(ChangeStatus(e.to_string()))
+                    Err(Error::msg(e.to_string()))
                 }
             }
         });
