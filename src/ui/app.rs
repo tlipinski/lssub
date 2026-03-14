@@ -7,11 +7,7 @@ use crate::secret::{clear, retrieve, store};
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{
-    ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FeatureInfo, FetchSubs, Init,
-    LanguagesUpdated, Multi, SearchQueryUpdated, StartProgress, StopProgress, SwitchScreen,
-    UserLoggedIn, UserLoggedOut,
-};
+use crate::ui::actions::Action::{ChangeStatus, DisabledLimitSubsToId, DownloadedSubs, EnabledLimitSubsToId, Exit, FeatureInfo, FetchSubs, Init, LanguagesUpdated, Multi, SearchQueryUpdated, StartProgress, StopProgress, SwitchScreen, UserLoggedIn, UserLoggedOut};
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::Screen::{About, Account, Language, Search};
 use crate::ui::component::Component;
@@ -237,6 +233,10 @@ impl App {
                 });
 
                 None
+            }
+
+            DisabledLimitSubsToId => {
+                Some(FetchSubs(self.query.clone(), self.languages.clone()))
             }
 
             Multi(actions) => {
