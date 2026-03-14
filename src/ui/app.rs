@@ -161,10 +161,6 @@ impl App {
                 }
             }
 
-            SubsFetched(subtitles) => {
-                Some(ChangeStatus(format!("{} results", subtitles.data.len())))
-            }
-
             LanguagesUpdated(languages) => {
                 self.languages = languages.clone();
 
@@ -218,8 +214,6 @@ impl App {
                 self.active_screen = *screen;
                 None
             }
-
-            Exit => None,
 
             EnabledLimitSubsToId(id) => {
                 let languages = self.languages.clone();
