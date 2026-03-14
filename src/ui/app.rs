@@ -7,7 +7,11 @@ use crate::secret::{clear, retrieve, store};
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, DisabledLimitSubsToId, DownloadedSubs, EnabledLimitSubsToId, Exit, FeatureInfo, FetchSubs, Init, LanguagesUpdated, Multi, SearchQueryUpdated, StartProgress, StopProgress, SwitchScreen, UserLoggedIn, UserLoggedOut};
+use crate::ui::actions::Action::{
+    ChangeStatus, DisabledLimitSubsToId, DownloadedSubs, EnabledLimitSubsToId, Exit, FeatureInfo,
+    FetchSubs, Init, LanguagesUpdated, Multi, SearchQueryUpdated, StartProgress, StopProgress,
+    SwitchScreen, UserLoggedIn, UserLoggedOut,
+};
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::Screen::{About, Account, Language, Search};
 use crate::ui::component::Component;
@@ -142,6 +146,8 @@ impl App {
             .map(|(component)| component.update(action))
             .collect::<Vec<Option<Action>>>();
 
+        debug!("widget_actions: {:?}", widget_actions.len());
+
         let new_action = match action {
             ReceivedInput(event) => self.handle_key_event(event),
 
@@ -204,7 +210,6 @@ impl App {
                 None
             }
 
-
             DownloadedSubs(downloaded) => {
                 Some(ChangeStatus(format!("Downloaded: {:?}", downloaded.path)))
             }
@@ -235,9 +240,7 @@ impl App {
                 None
             }
 
-            DisabledLimitSubsToId => {
-                Some(FetchSubs(self.query.clone(), self.languages.clone()))
-            }
+            DisabledLimitSubsToId => Some(FetchSubs(self.query.clone(), self.languages.clone())),
 
             Multi(actions) => {
                 let mut next_action = None;
@@ -296,32 +299,7 @@ impl App {
             .unwrap()
             .render(frame, content[2]);
 
-        match &self.active_screen {
-            Search => {
-                self.widgets
-                    .get_mut(&WidgetName::Search)
-                    .unwrap()
-                    .render(frame, content[0]);
-            }
-            Language => {
-                self.widgets
-                    .get_mut(&WidgetName::Languages)
-                    .unwrap()
-                    .render(frame, content[0]);
-            }
-            Account => {
-                self.widgets
-                    .get_mut(&WidgetName::Account)
-                    .unwrap()
-                    .render(frame, content[0]);
-            }
-            About => {
-                self.widgets
-                    .get_mut(&WidgetName::About)
-                    .unwrap()
-                    .render(frame, content[0]);
-            }
-        }
+        self.active_widget().render(frame, content[0]);
     }
 
     fn active_widget(&mut self) -> &mut Box<dyn Component> {
