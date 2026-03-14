@@ -148,9 +148,7 @@ impl App {
             ReceivedInput(event) => match self.handle_key_event(event) {
                 Ok(Some(m)) => Some(m),
                 Ok(None) => None,
-                Err(e) => {
-                    Some(ChangeStatus(e.to_string()))
-                }
+                Err(e) => Some(ChangeStatus(e.to_string())),
             },
 
             SubsFetched(subtitles) => {
@@ -281,7 +279,10 @@ impl App {
             .constraints([Constraint::Fill(1), Constraint::Length(23)])
             .split(content[1]);
 
-        self.status_widget.render(frame, status[0]);
+        self.widgets
+            .get_mut("status")
+            .unwrap()
+            .render(frame, status[0]);
         self.widgets
             .get_mut("user")
             .unwrap()
@@ -293,10 +294,16 @@ impl App {
 
         match &self.current_screen {
             Search => {
-                self.search_widget.render(frame, content[0]);
+                self.widgets
+                    .get_mut("search")
+                    .unwrap()
+                    .render(frame, content[0]);
             }
             Language => {
-                self.languages_widget.render(frame, content[0]);
+                self.widgets
+                    .get_mut("languages")
+                    .unwrap()
+                    .render(frame, content[0]);
             }
             Account => {
                 self.widgets
@@ -305,7 +312,10 @@ impl App {
                     .render(frame, content[0]);
             }
             About => {
-                self.about_widget.render(frame, content[0]);
+                self.widgets
+                    .get_mut("account")
+                    .unwrap()
+                    .render(frame, content[0]);
             }
         }
     }
