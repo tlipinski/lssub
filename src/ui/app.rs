@@ -126,7 +126,7 @@ impl App {
                         shutdown_tx.send(())?;
                         break 'main_loop;
                     }
-                    _ => message_opt = app.update(&msg).await,
+                    _ => message_opt = app.update(&msg),
                 }
             }
 
@@ -138,7 +138,7 @@ impl App {
         Ok(())
     }
 
-    async fn update(&mut self, action: &Action) -> Option<Action> {
+    fn update(&mut self, action: &Action) -> Option<Action> {
         debug!("action: {:?}", action);
         let mut widget_actions = self
             .widgets
@@ -148,6 +148,16 @@ impl App {
 
         let new_action = match action {
             ReceivedInput(event) => self.handle_key_event(event),
+
+            Init => {
+                let query: String = self.query.clone();
+                if !query.is_empty() {
+                    let languages = self.languages.clone();
+                    Some(FetchSubs(query, languages))
+                } else {
+                    None
+                }
+            }
 
             SubsFetched(subtitles) => {
                 Some(ChangeStatus(format!("{} results", subtitles.data.len())))
@@ -181,26 +191,23 @@ impl App {
             }
 
             FetchSubs(query, languages) => {
-                self.subtitles_tx
-                    .send(SubtitlesQuery {
-                        query: query.to_string(),
-                        languages: languages.to_vec(),
-                        id: None,
-                    })
-                    .await;
+                let subtitles_tx = self.subtitles_tx.clone();
+                let query = query.to_string();
+                let languages = languages.to_vec();
+
+                tokio::spawn(async move {
+                    subtitles_tx
+                        .send(SubtitlesQuery {
+                            query,
+                            languages,
+                            id: None,
+                        })
+                        .await;
+                });
 
                 None
             }
 
-            Init => {
-                let query: String = self.query.clone();
-                if !query.is_empty() {
-                    let languages = self.languages.clone();
-                    Some(FetchSubs(query, languages))
-                } else {
-                    None
-                }
-            }
 
             DownloadedSubs(downloaded) => {
                 Some(ChangeStatus(format!("Downloaded: {:?}", downloaded.path)))
@@ -208,7 +215,6 @@ impl App {
 
             SwitchScreen(screen) => {
                 self.active_screen = *screen;
-
                 None
             }
 
@@ -217,14 +223,18 @@ impl App {
             EnabledLimitSubsToId(id) => {
                 let languages = self.languages.clone();
                 let query = self.query.clone();
-                self.subtitles_tx
-                    .send(SubtitlesQuery {
-                        query,
-                        languages,
-                        id: Some(*id),
-                    })
-                    .await
-                    .unwrap(); // todo
+                let id = *id;
+                let subtitles_tx = self.subtitles_tx.clone();
+
+                tokio::spawn(async move {
+                    subtitles_tx
+                        .send(SubtitlesQuery {
+                            query,
+                            languages,
+                            id: Some(id),
+                        })
+                        .await
+                });
 
                 None
             }
@@ -232,8 +242,8 @@ impl App {
             Multi(actions) => {
                 let mut next_action = None;
                 for action in actions {
-                    if let Some(a) = Box::pin(self.update(action)).await {
-                        next_action = Box::pin(self.update(&a)).await;
+                    if let Some(a) = self.update(action) {
+                        next_action = self.update(&a);
                     }
                 }
 
