@@ -22,5 +22,6 @@ pub enum Action {
     EnabledLimitSubsToId(i64),
     FeatureInfo(i64),
     ChangeStatus(String),
+    Tuple(Box<Action>, Box<Action>),
     Exit,
 }

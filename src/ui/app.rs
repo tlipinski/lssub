@@ -9,7 +9,7 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FeatureInfo, FetchSubs, Init,
-    LanguagesUpdated, SearchQueryUpdated, SwitchScreen, UserLoggedIn, UserLoggedOut,
+    LanguagesUpdated, SearchQueryUpdated, SwitchScreen, Tuple, UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::CurrentScreen::{About, Account, Language, Search};
@@ -38,6 +38,7 @@ use ratatui::prelude::{StatefulWidget, Stylize};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget};
 use ratatui::{DefaultTerminal, Frame};
+use std::cmp::PartialEq;
 use std::collections::VecDeque;
 use std::ops::Deref;
 use std::path::Path;
@@ -120,19 +121,15 @@ impl App {
         Ok(())
     }
 
-    async fn update(&mut self, action: Action) -> Vec<Action> {
+    async fn update(&mut self, action: Action) -> Option<Action> {
         debug!("action: {:?}", action);
         match action {
-            ReceivedInput(event) => match self.handle_key_event(event).await {
-                Ok(Some(m)) => {
-                    vec![m]
-                }
-                Ok(None) => {
-                    vec![]
-                }
+            ReceivedInput(event) => match self.handle_key_event(event) {
+                Ok(Some(m)) => Some(m),
+                Ok(None) => None,
                 Err(e) => {
                     self.status_widget.info = e.to_string();
-                    vec![]
+                    None
                 }
             },
 
@@ -142,7 +139,7 @@ impl App {
 
                 self.status_widget.in_progress = false;
 
-                vec![]
+                None
             }
 
             LanguagesUpdated => {
@@ -155,7 +152,10 @@ impl App {
                 let languages = self.languages_widget.languages();
                 let query: String = self.search_widget.query();
 
-                vec![SwitchScreen(Search), FetchSubs(query, languages)]
+                Some(Tuple(
+                    Box::from(SwitchScreen(Search)),
+                    Box::from(FetchSubs(query, languages)),
+                ))
             }
 
             UserLoggedIn(user_info) => {
@@ -167,10 +167,13 @@ impl App {
                 self.account_widget.logged_in = true;
                 self.account_widget.logged_in_widget.user_info = user_info.clone();
 
-                vec![
-                    SwitchScreen(Search),
-                    ChangeStatus(format!("Logged in as {}", user_info.data.username)),
-                ]
+                Some(Tuple(
+                    Box::from(SwitchScreen(Search)),
+                    Box::from(ChangeStatus(format!(
+                        "Logged in as {}",
+                        user_info.data.username
+                    ))),
+                ))
             }
 
             UserLoggedOut => {
@@ -182,7 +185,7 @@ impl App {
                 self.account_widget.logged_in = false;
                 self.account_widget.logged_in_widget.user_info = UserInfo::default();
 
-                vec![]
+                None
             }
 
             SearchQueryUpdated => {
@@ -190,7 +193,8 @@ impl App {
 
                 let languages = self.languages_widget.languages();
                 let query = self.search_widget.query();
-                vec![FetchSubs(query, languages)]
+
+                Some(FetchSubs(query, languages))
             }
 
             FetchSubs(query, languages) => {
@@ -204,7 +208,7 @@ impl App {
                     })
                     .await;
 
-                vec![]
+                None
             }
 
             Init => {
@@ -213,9 +217,9 @@ impl App {
                 let query: String = self.search_widget.query();
                 if !query.is_empty() {
                     let languages = self.languages_widget.languages();
-                    vec![FetchSubs(query, languages)]
+                    Some(FetchSubs(query, languages))
                 } else {
-                    vec![]
+                    None
                 }
             }
 
@@ -224,16 +228,16 @@ impl App {
                 self.user_widget.requests = downloaded.requests;
                 self.user_widget.remaining = downloaded.remaining;
 
-                vec![]
+                None
             }
 
             SwitchScreen(screen) => {
                 self.current_screen = screen;
 
-                vec![]
+                None
             }
 
-            Exit => vec![],
+            Exit => None,
 
             EnabledLimitSubsToId(id) => {
                 let languages = self.languages_widget.languages();
@@ -247,16 +251,28 @@ impl App {
                     .await
                     .unwrap(); // todo
 
-                vec![]
+                None
             }
 
             ChangeStatus(status) => {
                 self.status_widget.info = status;
 
-                vec![]
+                None
             }
 
-            FeatureInfo(id) => vec![],
+            FeatureInfo(id) => None,
+
+            Tuple(action1, action2) => {
+                if let Some(a1) = Box::pin(self.update(*action1)).await {
+                    Box::pin(self.update(a1)).await
+                } else {
+                    if let Some(a2) = Box::pin(self.update(*action2)).await {
+                        Box::pin(self.update(a2)).await
+                    } else {
+                        None
+                    }
+                }
+            }
         }
     }
 
@@ -297,7 +313,7 @@ impl App {
         }
     }
 
-    async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
+    fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
         if (self.modal_visible) {
             if let Event::Key(key_event) = event {
                 match key_event {
