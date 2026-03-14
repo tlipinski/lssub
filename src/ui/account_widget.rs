@@ -6,7 +6,6 @@ use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, ReceivedInput, SwitchScreen, UserLoggedIn, UserLoggedOut,
 };
-use crate::ui::app::CurrentScreen::Search;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
 use crate::ui::task_runner::TaskRunner;

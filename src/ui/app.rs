@@ -53,7 +53,7 @@ pub struct App {
     subtitles_tx: Sender<SubtitlesQuery>,
     config_provider: ConfigProvider,
     modal_visible: bool,
-    widgets: HashMap<String, Box<dyn Component>>,
+    widgets: HashMap<WidgetName, Box<dyn Component>>,
     query: String,
     languages: Vec<String>,
 }
@@ -80,15 +80,15 @@ impl App {
 
         let config_provider = ConfigProvider::default();
 
-        let mut components: HashMap<String, Box<dyn Component>> = HashMap::new();
+        let mut components: HashMap<WidgetName, Box<dyn Component>> = HashMap::new();
         components.insert(
-            "account".into(),
+            WidgetName::Account,
             Box::new(AccountWidget::new(task_runner.clone())),
         );
-        components.insert("nav".into(), Box::new(NavWidget::new()));
-        components.insert("user".into(), Box::new(UserWidget::from()));
+        components.insert(WidgetName::Nav, Box::new(NavWidget::new()));
+        components.insert(WidgetName::User, Box::new(UserWidget::from()));
         components.insert(
-            "search".into(),
+            WidgetName::Search,
             Box::new(SearchWidget::from(
                 base_path,
                 file_name,
@@ -96,16 +96,16 @@ impl App {
             )?),
         );
         components.insert(
-            "languages".into(),
+            WidgetName::Languages,
             Box::new(LanguagesWidget::new(
                 config_provider.get_config()?.languages,
             )),
         );
         components.insert(
-            "status".into(),
+            WidgetName::Status,
             Box::new(StatusWidget::from(spinner.clone())),
         );
-        components.insert("about".into(), Box::new(AboutWidget::new()));
+        components.insert(WidgetName::About, Box::new(AboutWidget::new()));
 
         let mut app = App {
             current_screen: CurrentScreen::default(),
@@ -282,40 +282,40 @@ impl App {
             .split(content[1]);
 
         self.widgets
-            .get_mut("status")
+            .get_mut(&WidgetName::Status)
             .unwrap()
             .render(frame, status[0]);
         self.widgets
-            .get_mut("user")
+            .get_mut(&WidgetName::User)
             .unwrap()
             .render(frame, status[1]);
         self.widgets
-            .get_mut("nav")
+            .get_mut(&WidgetName::Nav)
             .unwrap()
             .render(frame, content[2]);
 
         match &self.current_screen {
             Search => {
                 self.widgets
-                    .get_mut("search")
+                    .get_mut(&WidgetName::Search)
                     .unwrap()
                     .render(frame, content[0]);
             }
             Language => {
                 self.widgets
-                    .get_mut("languages")
+                    .get_mut(&WidgetName::Languages)
                     .unwrap()
                     .render(frame, content[0]);
             }
             Account => {
                 self.widgets
-                    .get_mut("account")
+                    .get_mut(&WidgetName::Account)
                     .unwrap()
                     .render(frame, content[0]);
             }
             About => {
                 self.widgets
-                    .get_mut("account")
+                    .get_mut(&WidgetName::About)
                     .unwrap()
                     .render(frame, content[0]);
             }
@@ -385,22 +385,22 @@ impl App {
                 _ => match self.current_screen {
                     Search => Ok(self
                         .widgets
-                        .get_mut("search")
+                        .get_mut(&WidgetName::Search)
                         .unwrap()
                         .handle_key_event(event)),
                     Language => Ok(self
                         .widgets
-                        .get_mut("languages")
+                        .get_mut(&WidgetName::Languages)
                         .unwrap()
                         .handle_key_event(event)),
                     Account => Ok(self
                         .widgets
-                        .get_mut("account")
+                        .get_mut(&WidgetName::Account)
                         .unwrap()
                         .handle_key_event(event)),
                     About => Ok(self
                         .widgets
-                        .get_mut("about")
+                        .get_mut(&WidgetName::About)
                         .unwrap()
                         .handle_key_event(event)),
                 },
@@ -409,6 +409,17 @@ impl App {
             Ok(None)
         }
     }
+}
+
+#[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
+enum WidgetName {
+    Account,
+    Nav,
+    User,
+    Search,
+    Languages,
+    Status,
+    About,
 }
 
 #[derive(Debug, Default, Hash, Eq, PartialEq, Copy, Clone)]
