@@ -163,6 +163,7 @@ impl App {
                 self.user_widget.remaining = user_info.data.remaining_downloads;
                 self.nav_widget.username = Some(user_info.data.username.clone());
 
+                // todo make priv
                 self.account_widget.logged_in = true;
                 self.account_widget.logged_in_widget.user_info = user_info.clone();
 
@@ -176,6 +177,10 @@ impl App {
                 self.user_widget.requests = 0;
                 self.user_widget.remaining = 0;
                 self.nav_widget.username = None;
+
+                // todo make priv
+                self.account_widget.logged_in = false;
+                self.account_widget.logged_in_widget.user_info = UserInfo::default();
 
                 vec![]
             }
