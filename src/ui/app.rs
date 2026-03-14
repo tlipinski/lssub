@@ -152,12 +152,7 @@ impl App {
             },
 
             SubsFetched(subtitles) => {
-                // self.search_widget.update_subtitles(&subtitles);
-                // self.status_widget.info = format!("{} results", subtitles.data.len());
-
-                // self.status_widget.in_progress = false;
-
-                None
+                Some(ChangeStatus(format!("{} results", subtitles.data.len())))
             }
 
             LanguagesUpdated => {
@@ -381,13 +376,18 @@ impl App {
                 } => Ok(Some(SwitchScreen(About))),
 
                 _ => match self.current_screen {
-                    Search => Ok(self.search_widget.handle_key_event(event)),
-                    Language => Ok(self.languages_widget.handle_key_event(event)),
+                    Search => {
+                        Ok(self.widgets.get_mut("search").unwrap().handle_key_event(event))
+                    },
+                    Language => {
+                        Ok(self.widgets.get_mut("language").unwrap().handle_key_event(event))
+                    },
                     Account => {
-                        let aw = self.widgets.get_mut("account").unwrap();
-                        Ok(aw.handle_key_event(event))
+                        Ok(self.widgets.get_mut("account").unwrap().handle_key_event(event))
                     }
-                    About => Ok(self.about_widget.handle_key_event(event)),
+                    About => {
+                        Ok(self.widgets.get_mut("about").unwrap().handle_key_event(event))
+                    },
                 },
             }
         } else {
