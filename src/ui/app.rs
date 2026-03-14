@@ -318,13 +318,14 @@ impl App {
         }
     }
 
-    fn active_widget(&self) -> WidgetName {
-        match self.active_screen {
+    fn active_widget(&mut self) -> &mut Box<dyn Component> {
+        let widget_name = match self.active_screen {
             Search => WidgetName::Search,
             Account => WidgetName::Account,
             Language => WidgetName::Languages,
             About => WidgetName::About,
-        }
+        };
+        self.widgets.get_mut(&widget_name).unwrap()
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
@@ -387,9 +388,7 @@ impl App {
                     ..
                 } => Some(SwitchScreen(About)),
 
-                _ => {
-                    self.widgets.get_mut(&self.active_widget()).unwrap().handle_key_event(event)
-                },
+                _ => self.active_widget().handle_key_event(event),
             }
         } else {
             None

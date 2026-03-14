@@ -34,7 +34,7 @@ pub struct SearchWidget {
     subs_list_widget: SubsListWidget,
     downloader: Downloader,
     task_runner: TaskRunner,
-    pub help: bool,
+    help: bool,
 }
 
 impl Component for SearchWidget {
@@ -128,6 +128,10 @@ impl Component for SearchWidget {
                 .style(Style::new().black().on_gray());
             frame.render_widget(popup, area);
         }
+    }
+
+    fn active_popup(&self) -> bool {
+        self.help
     }
 }
 
