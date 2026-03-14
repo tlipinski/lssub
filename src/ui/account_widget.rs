@@ -25,7 +25,7 @@ pub struct AccountWidget {
 }
 
 impl ActionHandler for AccountWidget {
-    fn update(&mut self, action: Action) -> () {
+    fn update(&mut self, action: &Action) -> () {
         match action {
             Action::Init => {
                 self.refresh();
@@ -40,7 +40,7 @@ impl ActionHandler for AccountWidget {
         }
     }
 
-    fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if (self.logged_in) {
             self.logged_in_widget.handle_key_event(event)
         } else {

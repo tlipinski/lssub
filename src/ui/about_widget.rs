@@ -40,7 +40,7 @@ impl AboutWidget {
         frame.render_widget(about, layout[0]);
     }
 
-    pub fn handle_key_event(&self, event: Event) -> Option<Action> {
+    pub fn handle_key_event(&self, event: &Event) -> Option<Action> {
         None
     }
 }

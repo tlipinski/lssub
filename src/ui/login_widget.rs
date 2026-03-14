@@ -111,7 +111,7 @@ impl LoginWidget {
         };
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match key_event.code {
                 KeyCode::Enter => {

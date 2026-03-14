@@ -14,7 +14,7 @@ pub struct NavWidget {
 }
 
 impl ActionHandler for NavWidget {
-    fn update(&mut self, action: Action) -> () {
+    fn update(&mut self, action: &Action) -> () {
         match action {
             UserLoggedIn(user_info) => {
                 self.username = Some(user_info.data.username.clone());
@@ -26,7 +26,7 @@ impl ActionHandler for NavWidget {
         }
     }
 
-    fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         None
     }
 }

@@ -58,6 +58,7 @@ pub struct App {
     subtitles_tx: Sender<SubtitlesQuery>,
     config_provider: ConfigProvider,
     modal_visible: bool,
+    pub widgets: HashMap<String, Box<dyn ActionHandler>>,
 }
 
 impl App {
@@ -91,10 +92,6 @@ impl App {
         x.insert("account".into(), Box::new(account_widget));
         x.insert("nav".into(), Box::new(nav_widget));
 
-        x.iter_mut().for_each(|(key, widget)| {
-            widget.update(todo!())
-        });
-
         let mut app = App {
             search_widget: search_screen,
             current_screen: CurrentScreen::default(),
@@ -105,6 +102,7 @@ impl App {
             config_provider,
             subtitles_tx,
             modal_visible: false,
+            widgets: x
         };
 
         let mut message_opt = Some(Init);
@@ -117,7 +115,7 @@ impl App {
                         shutdown_tx.send(())?;
                         break 'main_loop;
                     }
-                    _ => message_opt = app.update(msg).await
+                    _ => message_opt = app.update(&msg).await
                 }
             }
 
@@ -129,8 +127,11 @@ impl App {
         Ok(())
     }
 
-    async fn update(&mut self, action: Action) -> Option<Action> {
+    async fn update(&mut self, action: &Action) -> Option<Action> {
         debug!("action: {:?}", action);
+        self.widgets.iter_mut().for_each(|(k, v)| {
+            v.update(action);
+        });
         match action {
             ReceivedInput(event) => match self.handle_key_event(event) {
                 Ok(Some(m)) => Some(m),
@@ -209,8 +210,8 @@ impl App {
 
                 self.subtitles_tx
                     .send(SubtitlesQuery {
-                        query,
-                        languages,
+                        query: query.to_string(),
+                        languages: languages.to_vec(),
                         id: None,
                     })
                     .await;
@@ -239,7 +240,7 @@ impl App {
             }
 
             SwitchScreen(screen) => {
-                self.current_screen = screen;
+                self.current_screen = *screen;
 
                 None
             }
@@ -253,7 +254,7 @@ impl App {
                     .send(SubtitlesQuery {
                         query,
                         languages,
-                        id: Some(id),
+                        id: Some(*id),
                     })
                     .await
                     .unwrap(); // todo
@@ -262,7 +263,7 @@ impl App {
             }
 
             ChangeStatus(status) => {
-                self.status_widget.info = status;
+                self.status_widget.info = status.clone();
 
                 None
             }
@@ -270,11 +271,11 @@ impl App {
             FeatureInfo(id) => None,
 
             Tuple(action1, action2) => {
-                if let Some(a1) = Box::pin(self.update(*action1)).await {
-                    Box::pin(self.update(a1)).await
+                if let Some(a1) = Box::pin(self.update(action1)).await {
+                    Box::pin(self.update(&a1)).await
                 } else {
-                    if let Some(a2) = Box::pin(self.update(*action2)).await {
-                        Box::pin(self.update(a2)).await
+                    if let Some(a2) = Box::pin(self.update(action2)).await {
+                        Box::pin(self.update(&a2)).await
                     } else {
                         None
                     }
@@ -320,7 +321,7 @@ impl App {
         }
     }
 
-    fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
+    fn handle_key_event(&mut self, event: &Event) -> Result<Option<Action>> {
         if (self.modal_visible) {
             if let Event::Key(key_event) = event {
                 match key_event {
@@ -383,7 +384,10 @@ impl App {
                 _ => match self.current_screen {
                     Search => Ok(self.search_widget.handle_key_event(event)),
                     Language => Ok(self.languages_widget.handle_key_event(event)),
-                    Account => Ok(self.account_widget.handle_key_event(event)),
+                    Account => {
+                        let aw = self.widgets.get_mut("account").unwrap();
+                        Ok(aw.handle_key_event(event))
+                    },
                     About => Ok(self.about_widget.handle_key_event(event)),
                 },
             }
@@ -393,7 +397,7 @@ impl App {
     }
 }
 
-#[derive(Debug, Default, Hash, Eq, PartialEq)]
+#[derive(Debug, Default, Hash, Eq, PartialEq, Copy, Clone)]
 pub enum CurrentScreen {
     #[default]
     Search,

@@ -83,7 +83,7 @@ impl LoggedInWidget {
         frame.render_widget(buttons_block, layout[1]);
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         info!("key event: {:?}", event);
         if let Event::Key(key_event) = event {
             match key_event {

@@ -45,7 +45,7 @@ impl QueryWidget {
         frame.render_widget(view, area);
     }
 
-    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
+    pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Some(state_changed) = self.input.handle_event(&event)
             && state_changed.value
         {

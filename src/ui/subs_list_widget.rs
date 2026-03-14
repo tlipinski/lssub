@@ -55,7 +55,7 @@ impl SubsListWidget {
             .and_then(|selection| self.subs.get(selection))
     }
 
-    pub fn handle_key_event(&mut self, key_event: KeyEvent) -> Option<Action> {
+    pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<Action> {
         match key_event {
             KeyEvent {
                 code: KeyCode::Up, ..
