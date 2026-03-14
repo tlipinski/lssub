@@ -148,11 +148,7 @@ impl App {
             .collect::<Vec<Option<Action>>>();
 
         let new_action = match action {
-            ReceivedInput(event) => match self.handle_key_event(event) {
-                Ok(Some(m)) => Some(m),
-                Ok(None) => None,
-                Err(e) => Some(ChangeStatus(e.to_string())),
-            },
+            ReceivedInput(event) => self.handle_key_event(event),
 
             SubsFetched(subtitles) => {
                 Some(ChangeStatus(format!("{} results", subtitles.data.len())))
@@ -322,7 +318,7 @@ impl App {
         }
     }
 
-    fn handle_key_event(&mut self, event: &Event) -> Result<Option<Action>> {
+    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if (self.modal_visible) {
             if let Event::Key(key_event) = event {
                 match key_event {
@@ -336,20 +332,20 @@ impl App {
                         Search => {
                             // self.search_widget.help = false;
                             self.modal_visible = false;
-                            Ok(None)
+                            None
                         }
-                        _ => Ok(None),
+                        _ => None,
                     },
-                    _ => Ok(None),
+                    _ => None,
                 }
             } else {
-                Ok(None)
+                None
             }
         } else if let Event::Key(key_event) = event {
             match key_event {
                 KeyEvent {
                     code: KeyCode::Esc, ..
-                } => Ok(Some(SwitchScreen(Search))),
+                } => Some(SwitchScreen(Search)),
                 KeyEvent {
                     code: KeyCode::F(1),
                     ..
@@ -357,56 +353,56 @@ impl App {
                     Search => {
                         // self.search_widget.help = !self.search_widget.help;
                         self.modal_visible = true;
-                        Ok(None)
+                        None
                     }
-                    _ => Ok(None),
+                    _ => None,
                 },
                 KeyEvent {
                     code: KeyCode::F(2),
                     ..
-                } => Ok(Some(SwitchScreen(Search))),
+                } => Some(SwitchScreen(Search)),
                 KeyEvent {
                     code: KeyCode::F(3),
                     ..
-                } => Ok(Some(SwitchScreen(Account))),
+                } => Some(SwitchScreen(Account)),
                 KeyEvent {
                     code: KeyCode::F(4),
                     ..
-                } => Ok(Some(SwitchScreen(Language))),
+                } => Some(SwitchScreen(Language)),
                 KeyEvent {
                     code: KeyCode::F(10),
                     ..
-                } => Ok(Some(Exit)),
+                } => Some(Exit),
                 KeyEvent {
                     code: KeyCode::F(12),
                     ..
-                } => Ok(Some(SwitchScreen(About))),
+                } => Some(SwitchScreen(About)),
 
                 _ => match self.active_screen {
-                    Search => Ok(self
+                    Search => self
                         .widgets
                         .get_mut(&WidgetName::Search)
                         .unwrap()
-                        .handle_key_event(event)),
-                    Language => Ok(self
+                        .handle_key_event(event),
+                    Language => self
                         .widgets
                         .get_mut(&WidgetName::Languages)
                         .unwrap()
-                        .handle_key_event(event)),
-                    Account => Ok(self
+                        .handle_key_event(event),
+                    Account => self
                         .widgets
                         .get_mut(&WidgetName::Account)
                         .unwrap()
-                        .handle_key_event(event)),
-                    About => Ok(self
+                        .handle_key_event(event),
+                    About => self
                         .widgets
                         .get_mut(&WidgetName::About)
                         .unwrap()
-                        .handle_key_event(event)),
+                        .handle_key_event(event),
                 },
             }
         } else {
-            Ok(None)
+            None
         }
     }
 }

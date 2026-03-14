@@ -1,8 +1,10 @@
 use crate::config::{Config, ConfigProvider};
+use crate::ui::action_handler::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{FetchSubs, LanguagesUpdated};
 use crate::ui::app::Screen::Search;
 use crate::ui::pad::BlockTitlePadExt;
+use Action::Init;
 use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
 use ratatui::Frame;
@@ -12,7 +14,6 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::action_handler::Component;
 
 pub struct LanguagesWidget {
     input: Input,
@@ -20,7 +21,10 @@ pub struct LanguagesWidget {
 
 impl Component for LanguagesWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
-        None
+        match action {
+            Init => Some(LanguagesUpdated(self.languages())),
+            _ => None,
+        }
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
@@ -66,11 +70,9 @@ impl LanguagesWidget {
         }
     }
 
-
     pub fn languages(&self) -> Vec<String> {
         let langs: String = self.input.value().into();
         let v = langs.split(",").collect::<Vec<&str>>();
         v.iter().map(|&x| String::from(x)).collect::<Vec<String>>()
     }
-
 }
