@@ -1,5 +1,5 @@
 use crate::config::{Config, ConfigProvider};
-use crate::ui::action_handler::Component;
+use crate::ui::component::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{FetchSubs, LanguagesUpdated};
 use crate::ui::app::Screen::Search;

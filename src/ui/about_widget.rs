@@ -1,5 +1,5 @@
 use crate::osb::values::{APP_NAME, VERSION};
-use crate::ui::action_handler::Component;
+use crate::ui::component::Component;
 use crate::ui::actions::Action;
 use crate::ui::pad::BlockTitlePadExt;
 use crossterm::event::Event;

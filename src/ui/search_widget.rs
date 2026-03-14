@@ -1,6 +1,6 @@
 use crate::osb::subtitles::SubtitlesResponse;
 use crate::secret::retrieve;
-use crate::ui::action_handler::Component;
+use crate::ui::component::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,

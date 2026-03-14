@@ -17,4 +17,4 @@ mod subtitles_fetcher;
 mod user_widget;
 mod pad;
 mod task_runner;
-mod action_handler;
+mod component;

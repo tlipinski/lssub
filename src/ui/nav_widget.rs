@@ -1,5 +1,5 @@
 use crossterm::event::Event;
-use crate::ui::action_handler::Component;
+use crate::ui::component::Component;
 use crate::ui::actions::Action;
 use ratatui::Frame;
 use ratatui::layout::Rect;

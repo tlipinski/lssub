@@ -6,7 +6,7 @@ use crate::osb::user_info::{UserInfo, get_user_info};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
-use crate::ui::action_handler::Component;
+use crate::ui::component::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FeatureInfo, FetchSubs, Init,
