@@ -178,7 +178,7 @@ impl App {
                 user_info.data.username
             ))),
 
-            UserLoggedOut => None,
+            UserLoggedOut => Some(ChangeStatus("Logged out".to_string())),
 
             SearchQueryUpdated(query) => {
                 // self.status_widget.in_progress = true;
