@@ -1,13 +1,13 @@
-use crossterm::event::Event;
-use crate::ui::component::Component;
 use crate::ui::actions::Action;
+use crate::ui::component::Component;
+use Action::{UserLoggedIn, UserLoggedOut};
+use crossterm::event::Event;
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::prelude::Line;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
 use ratatui::widgets::{Block, Borders, Paragraph};
-use Action::{UserLoggedIn, UserLoggedOut};
 
 pub struct NavWidget {
     pub username: Option<String>,
@@ -54,7 +54,7 @@ impl Component for NavWidget {
                 Span::from("F12:").bold(),
                 Span::from(" About"),
             ]))
-                .centered()
+            .centered()
         };
 
         frame.render_widget(main_nav, area);
@@ -65,5 +65,4 @@ impl NavWidget {
     pub fn new() -> NavWidget {
         Self { username: None }
     }
-
 }

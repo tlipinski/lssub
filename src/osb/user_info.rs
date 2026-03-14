@@ -44,5 +44,5 @@ pub struct UserData {
     pub remaining_downloads: i32,
     pub level: String,
     pub allowed_translations: i32,
-    pub allowed_downloads: i32
+    pub allowed_downloads: i32,
 }

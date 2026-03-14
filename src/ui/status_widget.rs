@@ -1,8 +1,9 @@
-use crate::ui::component::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs, StopProgress};
+use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::spinner::Spinner;
+use Action::StartProgress;
 use anyhow::Result;
 use gio::glib::random_int_range;
 use ratatui::Frame;
@@ -15,7 +16,6 @@ use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
 use std::sync::{Arc, RwLock};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use Action::StartProgress;
 
 pub struct StatusWidget {
     info: String,

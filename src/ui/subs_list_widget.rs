@@ -1,8 +1,11 @@
 use crate::osb::subtitles::SubtitlesResponse;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{EnabledLimitSubsToId, FeatureInfo, FetchSubs, SearchQueryUpdated};
+use crate::ui::actions::Action::{
+    EnabledLimitSubsToId, FeatureInfo, FetchSubs, SearchQueryUpdated,
+};
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::subs_list_widget::SingleFeature::Triggered;
+use Action::DisabledLimitSubsToId;
 use SingleFeature::{Disabled, Enabled};
 use crossterm::event::KeyModifiers;
 use log::{debug, info};
@@ -17,7 +20,6 @@ use ratatui::widgets::{
     Block, Cell, Row, ScrollDirection, Scrollbar, ScrollbarOrientation, ScrollbarState,
     StatefulWidget, Table, TableState,
 };
-use Action::DisabledLimitSubsToId;
 
 #[derive(Default)]
 pub struct SubsListWidget {
@@ -115,17 +117,16 @@ impl SubsListWidget {
                         .map(|s| EnabledLimitSubsToId(s.feature_id))
                 }
             }
-            
+
             KeyEvent {
                 code: KeyCode::Char('i'),
                 modifiers: KeyModifiers::CONTROL,
                 ..
-            } => {
-                self.state
-                    .selected()
-                    .and_then(|selection| self.subs.get(selection))
-                    .map(|s| FeatureInfo(s.feature_id))
-            }
+            } => self
+                .state
+                .selected()
+                .and_then(|selection| self.subs.get(selection))
+                .map(|s| FeatureInfo(s.feature_id)),
 
             _ => None,
         }

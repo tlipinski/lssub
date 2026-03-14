@@ -1,12 +1,12 @@
 use crate::osb::subtitles::SubtitlesResponse;
 use crate::secret::retrieve;
-use crate::ui::component::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
     Multi, SearchQueryUpdated, StartProgress, SubsFetched, SwitchScreen, UserLoggedOut,
 };
 use crate::ui::app::Screen::Search;
+use crate::ui::component::Component;
 use crate::ui::downloader::{Downloaded, Downloader};
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;
