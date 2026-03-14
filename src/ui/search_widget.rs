@@ -4,7 +4,7 @@ use crate::ui::action_handler::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
-    SearchQueryUpdated, SubsFetched, SwitchScreen, UserLoggedOut,
+    Multi, SearchQueryUpdated, StartProgress, SubsFetched, SwitchScreen, UserLoggedOut,
 };
 use crate::ui::app::Screen::Search;
 use crate::ui::downloader::{Downloaded, Downloader};
@@ -54,8 +54,7 @@ impl Component for SearchWidget {
             if (self.help) {
                 match key_event {
                     KeyEvent {
-                        code: KeyCode::Esc,
-                        ..
+                        code: KeyCode::Esc, ..
                     } => {
                         self.help = !self.help;
                         None
@@ -67,7 +66,7 @@ impl Component for SearchWidget {
                         self.help = !self.help;
                         None
                     }
-                    _ => None
+                    _ => None,
                 }
             } else {
                 match key_event {
@@ -94,8 +93,7 @@ impl Component for SearchWidget {
                                 self.task_runner
                                     .run(async move { dn.download(file_id, &language).await });
 
-                                let status = format!("Downloading {}", s.title);
-                                Some(ChangeStatus(status))
+                                Some(ChangeStatus(format!("Downloading {}", s.title)))
                             }
                             None => None,
                         }

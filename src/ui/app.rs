@@ -10,7 +10,8 @@ use crate::ui::action_handler::Component;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FeatureInfo, FetchSubs, Init,
-    LanguagesUpdated, Multiple, SearchQueryUpdated, SwitchScreen, UserLoggedIn, UserLoggedOut,
+    LanguagesUpdated, Multi, SearchQueryUpdated, StartProgress, StopProgress, SwitchScreen,
+    UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::Screen::{About, Account, Language, Search};
@@ -161,7 +162,7 @@ impl App {
                     updated
                 });
 
-                Some(Multiple(vec![
+                Some(Multi(vec![
                     SwitchScreen(Search),
                     FetchSubs(self.query.clone(), self.languages.clone()),
                 ]))
@@ -175,14 +176,11 @@ impl App {
             UserLoggedOut => Some(ChangeStatus("Logged out".to_string())),
 
             SearchQueryUpdated(query) => {
-                // self.status_widget.in_progress = true;
                 self.query = query.clone();
                 Some(FetchSubs(query.clone(), self.languages.clone()))
             }
 
             FetchSubs(query, languages) => {
-                // self.status_widget.in_progress = true;
-
                 self.subtitles_tx
                     .send(SubtitlesQuery {
                         query: query.to_string(),
@@ -231,7 +229,7 @@ impl App {
                 None
             }
 
-            Multiple(actions) => {
+            Multi(actions) => {
                 let mut next_action = None;
                 for action in actions {
                     if let Some(a) = Box::pin(self.update(action)).await {
@@ -254,7 +252,7 @@ impl App {
         match actions.len() {
             0 => None,
             1 => actions.into_iter().next(),
-            _ => Some(Multiple(actions)),
+            _ => Some(Multi(actions)),
         }
     }
 
@@ -327,41 +325,39 @@ impl App {
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
-        self.active_widget()
-            .handle_key_event(event)
-            .or_else(|| {
-                if let Event::Key(key_event) = event {
-                    match key_event {
-                        KeyEvent {
-                            code: KeyCode::Esc, ..
-                        } => Some(SwitchScreen(Search)),
-                        KeyEvent {
-                            code: KeyCode::F(2),
-                            ..
-                        } => Some(SwitchScreen(Search)),
-                        KeyEvent {
-                            code: KeyCode::F(3),
-                            ..
-                        } => Some(SwitchScreen(Account)),
-                        KeyEvent {
-                            code: KeyCode::F(4),
-                            ..
-                        } => Some(SwitchScreen(Language)),
-                        KeyEvent {
-                            code: KeyCode::F(10),
-                            ..
-                        } => Some(Exit),
-                        KeyEvent {
-                            code: KeyCode::F(12),
-                            ..
-                        } => Some(SwitchScreen(About)),
+        self.active_widget().handle_key_event(event).or_else(|| {
+            if let Event::Key(key_event) = event {
+                match key_event {
+                    KeyEvent {
+                        code: KeyCode::Esc, ..
+                    } => Some(SwitchScreen(Search)),
+                    KeyEvent {
+                        code: KeyCode::F(2),
+                        ..
+                    } => Some(SwitchScreen(Search)),
+                    KeyEvent {
+                        code: KeyCode::F(3),
+                        ..
+                    } => Some(SwitchScreen(Account)),
+                    KeyEvent {
+                        code: KeyCode::F(4),
+                        ..
+                    } => Some(SwitchScreen(Language)),
+                    KeyEvent {
+                        code: KeyCode::F(10),
+                        ..
+                    } => Some(Exit),
+                    KeyEvent {
+                        code: KeyCode::F(12),
+                        ..
+                    } => Some(SwitchScreen(About)),
 
-                        _ => None,
-                    }
-                } else {
-                    None
+                    _ => None,
                 }
-            })
+            } else {
+                None
+            }
+        })
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::ui::action_handler::Component;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs};
+use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs, StopProgress};
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::spinner::Spinner;
 use anyhow::Result;
@@ -15,11 +15,12 @@ use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
 use std::sync::{Arc, RwLock};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use Action::StartProgress;
 
 pub struct StatusWidget {
-    pub info: String,
+    info: String,
     spinner: Arc<RwLock<Spinner>>,
-    pub in_progress: bool,
+    in_progress: bool,
 }
 
 impl Component for StatusWidget {
@@ -27,11 +28,18 @@ impl Component for StatusWidget {
         match action {
             ChangeStatus(status) => {
                 self.info = status.clone();
+                None
             }
-            _ => {}
+            StartProgress => {
+                self.in_progress = true;
+                None
+            }
+            StopProgress => {
+                self.in_progress = false;
+                None
+            }
+            _ => None,
         }
-
-        None
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
