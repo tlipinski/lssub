@@ -12,6 +12,7 @@ use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
+// todo move to subtitles.rs
 pub struct SubtitlesQuery {
     pub query: String,
     pub languages: Vec<String>,
