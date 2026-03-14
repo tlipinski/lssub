@@ -2,7 +2,9 @@ use crate::osb::login::login;
 use crate::osb::user_info::{UserInfo, get_user_info};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ReceivedInput, SwitchScreen, UserLoggedIn, UserLoggedOut};
+use crate::ui::actions::Action::{
+    ChangeStatus, ReceivedInput, SwitchScreen, UserLoggedIn, UserLoggedOut,
+};
 use crate::ui::app::CurrentScreen::Search;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
@@ -12,11 +14,13 @@ use crossterm::event::Event;
 use log::{error, info};
 use ratatui::Frame;
 use ratatui::layout::Rect;
+use ratatui::text::ToSpan;
 
 pub struct AccountWidget {
     login_widget: LoginWidget,
-    logged_in_widget: LoggedInWidget,
-    logged_in: bool,
+    pub logged_in_widget: LoggedInWidget,
+    task_runner: TaskRunner,
+    pub logged_in: bool,
 }
 
 impl AccountWidget {
@@ -27,8 +31,9 @@ impl AccountWidget {
                 UserInfo {
                     data: Default::default(),
                 },
-                task_runner.clone()
+                task_runner.clone(),
             ),
+            task_runner,
             logged_in: false,
         }
     }
@@ -38,49 +43,6 @@ impl AccountWidget {
             Some(self.logged_in_widget.user_info.clone())
         } else {
             None
-        }
-    }
-
-    pub async fn update(&mut self, action: Action) -> Result<Vec<Action>> {
-        match action {
-            // todo
-            Action::Init => {
-                let result = tokio::spawn(async move {
-                    match retrieve().await {
-                        Ok(Some(jwt)) => match get_user_info(&jwt).await {
-                            Ok(user_info) => Ok(Some(user_info)),
-                            Err(e) => {
-                                error!("Error getting user info: {e}");
-                                Err(e)
-                            }
-                        },
-                        Ok(None) => Ok(None),
-                        Err(e) => {
-                            error!("Error retrieving jwt: {e}");
-                            Ok(None)
-                        }
-                    }
-                })
-                .await?;
-
-                match result {
-                    Ok(Some(user_info)) => {
-                        self.logged_in = true;
-                        self.logged_in_widget.user_info = user_info.clone();
-                        Ok(vec![UserLoggedIn(user_info)])
-                    }
-                    Ok(None) => {
-                        self.logged_in = false;
-                        Ok(vec![UserLoggedOut])
-                    }
-                    Err(_) => {
-                        self.logged_in = false;
-                        Ok(vec![UserLoggedOut])
-                    }
-                }
-            }
-
-            _ => Ok(vec![]),
         }
     }
 
@@ -104,5 +66,24 @@ impl AccountWidget {
         } else {
             self.login_widget.handle_key_event(event)
         }
+    }
+
+    pub fn refresh(&mut self) {
+        self.task_runner.run(async move {
+            match retrieve().await {
+                Ok(Some(jwt)) => match get_user_info(&jwt).await {
+                    Ok(user_info) => Ok(UserLoggedIn(user_info)),
+                    Err(e) => {
+                        error!("Error getting user info: {e}");
+                        Ok(ChangeStatus(e.to_string()))
+                    }
+                },
+                Ok(None) => Ok(ChangeStatus("".into())), // todo
+                Err(e) => {
+                    error!("Error retrieving jwt: {e}");
+                    Ok(ChangeStatus(e.to_string()))
+                }
+            }
+        });
     }
 }

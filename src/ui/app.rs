@@ -163,6 +163,9 @@ impl App {
                 self.user_widget.remaining = user_info.data.remaining_downloads;
                 self.nav_widget.username = Some(user_info.data.username.clone());
 
+                self.account_widget.logged_in = true;
+                self.account_widget.logged_in_widget.user_info = user_info.clone();
+
                 vec![
                     SwitchScreen(Search),
                     ChangeStatus(format!("Logged in as {}", user_info.data.username)),
@@ -200,22 +203,14 @@ impl App {
             }
 
             Init => {
-                let mut actions_res = self.account_widget.update(Init).await;
+                self.account_widget.refresh();
 
-                match actions_res {
-                    Ok(mut actions) => {
-                        let query: String = self.search_widget.query();
-                        if !query.is_empty() {
-                            let languages = self.languages_widget.languages();
-                            actions.push(FetchSubs(query, languages));
-                        }
-
-                        actions
-                    }
-                    Err(_) => {
-                        self.status_widget.info = "Init error, check logs".to_string();
-                        vec![]
-                    }
+                let query: String = self.search_widget.query();
+                if !query.is_empty() {
+                    let languages = self.languages_widget.languages();
+                    vec![FetchSubs(query, languages)]
+                } else {
+                    vec![]
                 }
             }
 
