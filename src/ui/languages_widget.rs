@@ -12,19 +12,17 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use crate::ui::action_handler::Component;
 
 pub struct LanguagesWidget {
     input: Input,
 }
 
-impl LanguagesWidget {
-    pub fn new(languages: Vec<String>) -> anyhow::Result<LanguagesWidget> {
-        Ok(Self {
-            input: Input::new(languages.join(",")),
-        })
+impl Component for LanguagesWidget {
+    fn update(&mut self, action: &Action) -> () {
     }
 
-    pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match key_event.code {
                 KeyCode::Enter => Some(LanguagesUpdated),
@@ -39,13 +37,7 @@ impl LanguagesWidget {
         }
     }
 
-    pub fn languages(&self) -> Vec<String> {
-        let langs: String = self.input.value().into();
-        let v = langs.split(",").collect::<Vec<&str>>();
-        v.iter().map(|&x| String::from(x)).collect::<Vec<String>>()
-    }
-
-    pub fn render(&self, frame: &mut Frame, area: Rect) {
+    fn render(&mut self, frame: &mut Frame, area: Rect) {
         let layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Length(3), Constraint::Fill(1)])
@@ -64,4 +56,20 @@ impl LanguagesWidget {
 
         frame.render_widget(view, layout[0]);
     }
+}
+
+impl LanguagesWidget {
+    pub fn new(languages: Vec<String>) -> LanguagesWidget {
+        Self {
+            input: Input::new(languages.join(",")),
+        }
+    }
+
+
+    pub fn languages(&self) -> Vec<String> {
+        let langs: String = self.input.value().into();
+        let v = langs.split(",").collect::<Vec<&str>>();
+        v.iter().map(|&x| String::from(x)).collect::<Vec<String>>()
+    }
+
 }

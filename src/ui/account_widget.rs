@@ -50,7 +50,7 @@ impl Component for AccountWidget {
         }
     }
 
-    fn render(&self, frame: &mut Frame, area: Rect) {
+    fn render(&mut self, frame: &mut Frame, area: Rect) {
         if (self.logged_in) {
             self.logged_in_widget.render(frame, area);
         } else {

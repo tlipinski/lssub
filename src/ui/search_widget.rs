@@ -27,6 +27,7 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use std::path::Path;
 use tokio::sync::mpsc::Sender;
 use tui_popup::Popup;
+use crate::ui::action_handler::Component;
 
 pub struct SearchWidget {
     query_widget: QueryWidget,
@@ -36,48 +37,18 @@ pub struct SearchWidget {
     pub help: bool,
 }
 
-impl SearchWidget {
-    pub fn from(
-        base_path: &Path,
-        file_name: Option<&str>,
-        task_runner: TaskRunner,
-    ) -> Result<SearchWidget> {
-        Ok(Self {
-            query_widget: QueryWidget::from(file_name.unwrap_or("").into()),
-            subs_list_widget: SubsListWidget::default(),
-            downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
-            task_runner,
-            help: false,
-        })
-    }
+impl Component for SearchWidget {
+    fn update(&mut self, action: &Action) -> () {
 
-    pub fn query(&self) -> String {
-        self.query_widget.query()
-    }
-
-    pub fn render(&mut self, frame: &mut Frame, area: Rect) {
-        let layout = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Fill(1)])
-            .split(area);
-
-        self.query_widget.render(frame, layout[0]);
-        self.subs_list_widget.render(frame, layout[1]);
-
-        if (self.help) {
-            let body = Text::from(vec![
-                "".into(),
-                Line::from("Ctrl + L: Narrow results to single feature"),
-                "".into(),
-            ]);
-            let popup = Popup::new(body)
-                .title(" Help ")
-                .style(Style::new().black().on_gray());
-            frame.render_widget(popup, area);
+        match action {
+            SubsFetched(subtitles) => {
+                self.update_subtitles(&subtitles);
+            }
+            _ => {}
         }
     }
 
-    pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match key_event {
                 KeyEvent {
@@ -126,6 +97,48 @@ impl SearchWidget {
         } else {
             None
         }
+    }
+
+    fn render(&mut self, frame: &mut Frame, area: Rect) {
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(3), Constraint::Fill(1)])
+            .split(area);
+
+        self.query_widget.render(frame, layout[0]);
+        self.subs_list_widget.render(frame, layout[1]);
+
+        if (self.help) {
+            let body = Text::from(vec![
+                "".into(),
+                Line::from("Ctrl + L: Narrow results to single feature"),
+                "".into(),
+            ]);
+            let popup = Popup::new(body)
+                .title(" Help ")
+                .style(Style::new().black().on_gray());
+            frame.render_widget(popup, area);
+        }
+    }
+}
+
+impl SearchWidget {
+    pub fn from(
+        base_path: &Path,
+        file_name: Option<&str>,
+        task_runner: TaskRunner,
+    ) -> Result<SearchWidget> {
+        Ok(Self {
+            query_widget: QueryWidget::from(file_name.unwrap_or("").into()),
+            subs_list_widget: SubsListWidget::default(),
+            downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
+            task_runner,
+            help: false,
+        })
+    }
+
+    pub fn query(&self) -> String {
+        self.query_widget.query()
     }
 
     pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {

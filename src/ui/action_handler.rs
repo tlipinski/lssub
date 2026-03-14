@@ -6,5 +6,5 @@ use ratatui::layout::Rect;
 pub trait Component {
     fn update(&mut self, action: &Action) -> ();
     fn handle_key_event(&mut self, event: &Event) -> Option<Action>;
-    fn render(&self, frame: &mut Frame, area: Rect);
+    fn render(&mut self, frame: &mut Frame, area: Rect);
 }

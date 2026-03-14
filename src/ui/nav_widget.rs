@@ -30,7 +30,7 @@ impl Component for NavWidget {
         None
     }
 
-    fn render(&self, frame: &mut Frame, area: Rect) {
+    fn render(&mut self, frame: &mut Frame, area: Rect) {
         let main_nav = {
             let account = if let Some(u) = &self.username {
                 Span::from(format!(" Account ({}) | ", u))

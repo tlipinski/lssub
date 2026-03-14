@@ -42,7 +42,7 @@ impl Component for UserWidget {
         None
     }
 
-    fn render(&self, frame: &mut Frame, area: Rect) {
+    fn render(&mut self, frame: &mut Frame, area: Rect) {
         let downloads = {
             let block = Block::bordered()
                 .title_pad("Downloads remaining")

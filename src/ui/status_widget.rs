@@ -1,4 +1,7 @@
+use crate::ui::action_handler::Component;
 use crate::ui::actions::Action;
+use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs};
+use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::spinner::Spinner;
 use anyhow::Result;
 use gio::glib::random_int_range;
@@ -12,12 +15,45 @@ use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
 use std::sync::{Arc, RwLock};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::pad::BlockTitlePadExt;
 
 pub struct StatusWidget {
     pub info: String,
     spinner: Arc<RwLock<Spinner>>,
     pub in_progress: bool,
+}
+
+impl Component for StatusWidget {
+    fn update(&mut self, action: &Action) -> () {
+        match action {
+            ChangeStatus(status) => {
+                self.info = status.clone();
+            }
+            _ => {}
+        }
+    }
+
+    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+        None
+    }
+
+    fn render(&mut self, frame: &mut Frame, area: Rect) {
+        let c = self.spinner.read().unwrap().c;
+        let mut title = if (self.in_progress) {
+            ("Status ".to_string() + &c.to_string())
+        } else {
+            ("Status".to_string())
+        };
+
+        let block = Block::bordered()
+            .title_pad(title.as_str())
+            .border_set(border::PLAIN);
+
+        let par = Line::from(self.info.clone());
+
+        let view = Paragraph::new(par).block(block);
+
+        frame.render_widget(view, area);
+    }
 }
 
 impl StatusWidget {
@@ -27,22 +63,5 @@ impl StatusWidget {
             spinner,
             in_progress: false,
         }
-    }
-
-    pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let c = self.spinner.read().unwrap().c;
-        let mut title = if (self.in_progress) {
-            ("Status ".to_string() + &c.to_string())
-        } else {
-            ("Status".to_string())
-        };
-
-        let block = Block::bordered().title_pad(title.as_str()).border_set(border::PLAIN);
-
-        let par = Line::from(self.info.clone());
-
-        let view = Paragraph::new(par).block(block);
-
-        frame.render_widget(view, area);
     }
 }

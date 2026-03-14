@@ -50,10 +50,10 @@ use tokio::task::JoinHandle;
 
 pub struct App {
     current_screen: CurrentScreen,
-    search_widget: SearchWidget,
-    languages_widget: LanguagesWidget,
-    status_widget: StatusWidget,
-    about_widget: AboutWidget,
+    // search_widget: SearchWidget,
+    // languages_widget: LanguagesWidget,
+    // status_widget: StatusWidget,
+    // about_widget: AboutWidget,
     subtitles_tx: Sender<SubtitlesQuery>,
     config_provider: ConfigProvider,
     modal_visible: bool,
@@ -82,8 +82,6 @@ impl App {
 
         let config_provider = ConfigProvider::default();
 
-        let search_screen = SearchWidget::from(base_path, file_name, task_runner.clone())?;
-
         let mut components: HashMap<String, Box<dyn Component>> = HashMap::new();
         components.insert(
             "account".into(),
@@ -91,13 +89,28 @@ impl App {
         );
         components.insert("nav".into(), Box::new(NavWidget::new()));
         components.insert("user".into(), Box::new(UserWidget::from()));
+        components.insert(
+            "search".into(),
+            Box::new(SearchWidget::from(
+                base_path,
+                file_name,
+                task_runner.clone(),
+            )?),
+        );
+        components.insert(
+            "languages".into(),
+            Box::new(LanguagesWidget::new(
+                config_provider.get_config()?.languages,
+            )),
+        );
+        components.insert(
+            "status".into(),
+            Box::new(StatusWidget::from(spinner.clone())),
+        );
+        components.insert("about".into(), Box::new(AboutWidget::new()));
 
         let mut app = App {
-            search_widget: search_screen,
             current_screen: CurrentScreen::default(),
-            languages_widget: LanguagesWidget::new(config_provider.get_config()?.languages)?,
-            status_widget: StatusWidget::from(spinner.clone()),
-            about_widget: AboutWidget::new(),
             config_provider,
             subtitles_tx,
             modal_visible: false,
@@ -136,16 +149,15 @@ impl App {
                 Ok(Some(m)) => Some(m),
                 Ok(None) => None,
                 Err(e) => {
-                    self.status_widget.info = e.to_string();
-                    None
+                    Some(ChangeStatus(e.to_string()))
                 }
             },
 
             SubsFetched(subtitles) => {
-                self.search_widget.update_subtitles(&subtitles);
-                self.status_widget.info = format!("{} results", subtitles.data.len());
+                // self.search_widget.update_subtitles(&subtitles);
+                // self.status_widget.info = format!("{} results", subtitles.data.len());
 
-                self.status_widget.in_progress = false;
+                // self.status_widget.in_progress = false;
 
                 None
             }
@@ -177,7 +189,7 @@ impl App {
             UserLoggedOut => None,
 
             SearchQueryUpdated => {
-                self.status_widget.in_progress = true;
+                // self.status_widget.in_progress = true;
 
                 let languages = self.languages_widget.languages();
                 let query = self.search_widget.query();
@@ -186,7 +198,7 @@ impl App {
             }
 
             FetchSubs(query, languages) => {
-                self.status_widget.in_progress = true;
+                // self.status_widget.in_progress = true;
 
                 self.subtitles_tx
                     .send(SubtitlesQuery {
@@ -210,9 +222,7 @@ impl App {
             }
 
             DownloadedSubs(downloaded) => {
-                self.status_widget.info = format!("Downloaded: {:?}", downloaded.path);
-
-                None
+                Some(ChangeStatus(format!("Downloaded: {:?}", downloaded.path)))
             }
 
             SwitchScreen(screen) => {
@@ -238,14 +248,6 @@ impl App {
                 None
             }
 
-            ChangeStatus(status) => {
-                self.status_widget.info = status.clone();
-
-                None
-            }
-
-            FeatureInfo(id) => None,
-
             Tuple(action1, action2) => {
                 if let Some(a1) = Box::pin(self.update(action1)).await {
                     Box::pin(self.update(&a1)).await
@@ -257,6 +259,8 @@ impl App {
                     }
                 }
             }
+
+            _ => None,
         }
     }
 
