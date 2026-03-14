@@ -129,14 +129,14 @@ impl SearchWidget {
         base_path: &Path,
         file_name: Option<&str>,
         task_runner: TaskRunner,
-    ) -> Result<SearchWidget> {
-        Ok(Self {
+    ) -> SearchWidget {
+        Self {
             query_widget: QueryWidget::from(file_name.unwrap_or("").into()),
             subs_list_widget: SubsListWidget::default(),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
             task_runner,
             help: false,
-        })
+        }
     }
 
     pub fn query(&self) -> String {

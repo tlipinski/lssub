@@ -81,19 +81,20 @@ impl App {
         let config_provider = ConfigProvider::default();
 
         let mut components: HashMap<WidgetName, Box<dyn Component>> = HashMap::new();
+        components.insert(WidgetName::Nav, Box::new(NavWidget::new()));
+        components.insert(WidgetName::User, Box::new(UserWidget::from()));
+        components.insert(WidgetName::About, Box::new(AboutWidget::new()));
         components.insert(
             WidgetName::Account,
             Box::new(AccountWidget::new(task_runner.clone())),
         );
-        components.insert(WidgetName::Nav, Box::new(NavWidget::new()));
-        components.insert(WidgetName::User, Box::new(UserWidget::from()));
         components.insert(
             WidgetName::Search,
             Box::new(SearchWidget::from(
                 base_path,
                 file_name,
                 task_runner.clone(),
-            )?),
+            )),
         );
         components.insert(
             WidgetName::Languages,
@@ -105,7 +106,6 @@ impl App {
             WidgetName::Status,
             Box::new(StatusWidget::from(spinner.clone())),
         );
-        components.insert(WidgetName::About, Box::new(AboutWidget::new()));
 
         let mut app = App {
             active_screen: Screen::default(),
