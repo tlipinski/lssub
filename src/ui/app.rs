@@ -327,33 +327,41 @@ impl App {
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
-        if let Event::Key(key_event) = event {
-            match key_event {
-                KeyEvent {
-                    code: KeyCode::F(2),
-                    ..
-                } => Some(SwitchScreen(Search)),
-                KeyEvent {
-                    code: KeyCode::F(3),
-                    ..
-                } => Some(SwitchScreen(Account)),
-                KeyEvent {
-                    code: KeyCode::F(4),
-                    ..
-                } => Some(SwitchScreen(Language)),
-                KeyEvent {
-                    code: KeyCode::F(10),
-                    ..
-                } => Some(Exit),
-                KeyEvent {
-                    code: KeyCode::F(12),
-                    ..
-                } => Some(SwitchScreen(About)),
-
-                _ => self.active_widget().handle_key_event(event),
-            }
+        if let Some(action) = self.active_widget().handle_key_event(event) {
+            Some(action)
         } else {
-            None
+            if let Event::Key(key_event) = event {
+                match key_event {
+                    KeyEvent {
+                        code: KeyCode::Esc,
+                        ..
+                    } => Some(SwitchScreen(Search)),
+                    KeyEvent {
+                        code: KeyCode::F(2),
+                        ..
+                    } => Some(SwitchScreen(Search)),
+                    KeyEvent {
+                        code: KeyCode::F(3),
+                        ..
+                    } => Some(SwitchScreen(Account)),
+                    KeyEvent {
+                        code: KeyCode::F(4),
+                        ..
+                    } => Some(SwitchScreen(Language)),
+                    KeyEvent {
+                        code: KeyCode::F(10),
+                        ..
+                    } => Some(Exit),
+                    KeyEvent {
+                        code: KeyCode::F(12),
+                        ..
+                    } => Some(SwitchScreen(About)),
+
+                    _ => None,
+                }
+            } else {
+                None
+            }
         }
     }
 }
