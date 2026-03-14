@@ -111,7 +111,7 @@ impl LoginWidget {
         };
     }
 
-    pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match key_event.code {
                 KeyCode::Enter => {
@@ -122,22 +122,22 @@ impl LoginWidget {
 
                     self.task_runner.run(LoginWidget::login_user(credentials));
 
-                    Ok(Some(ChangeStatus("Logging in...".into())))
+                    Some(ChangeStatus("Logging in...".into()))
                 }
                 KeyCode::Up => {
                     self.focus = Focus::Username;
-                    Ok(None)
+                    None
                 }
                 KeyCode::Down => {
                     self.focus = Focus::Password;
-                    Ok(None)
+                    None
                 }
                 KeyCode::Tab => {
                     match self.focus {
                         Focus::Username => self.focus = Focus::Password,
                         Focus::Password => self.focus = Focus::Username,
                     }
-                    Ok(None)
+                    None
                 }
                 _ => {
                     match self.focus {
@@ -148,11 +148,11 @@ impl LoginWidget {
                             self.password.handle_event(&event);
                         }
                     }
-                    Ok(None)
+                    None
                 }
             }
         } else {
-            Ok(None)
+            None
         }
     }
 

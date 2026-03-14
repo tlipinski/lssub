@@ -360,7 +360,7 @@ impl App {
                 _ => match self.current_screen {
                     Search => Ok(self.search_widget.handle_key_event(event)),
                     Language => Ok(self.languages_widget.handle_key_event(event)),
-                    Account => self.account_widget.handle_key_event(event).await,
+                    Account => Ok(self.account_widget.handle_key_event(event)),
                     About => Ok(self.about_widget.handle_key_event(event)),
                 },
             }

@@ -2,7 +2,9 @@ use crate::osb::login::Credentials;
 use crate::osb::user_info::UserInfo;
 use crate::secret::clear;
 use crate::ui::actions::Action;
+use crate::ui::actions::Action::UserLoggedOut;
 use crate::ui::pad::BlockTitlePadExt;
+use crate::ui::task_runner::TaskRunner;
 use anyhow::Result;
 use crossterm::event::KeyModifiers;
 use log::info;
@@ -16,14 +18,17 @@ use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 
-#[derive(Debug)]
 pub struct LoggedInWidget {
     pub user_info: UserInfo,
+    task_runner: TaskRunner,
 }
 
 impl LoggedInWidget {
-    pub fn from(user_info: UserInfo) -> Self {
-        LoggedInWidget { user_info }
+    pub fn from(user_info: UserInfo, task_runner: TaskRunner) -> Self {
+        LoggedInWidget {
+            user_info,
+            task_runner,
+        }
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
@@ -58,9 +63,18 @@ impl LoggedInWidget {
         let already_logged = Paragraph::new(vec![
             Line::from(format!("Username: {}", self.user_info.data.username)),
             Line::from(format!("Level: {}", self.user_info.data.level)),
-            Line::from(format!("Allowed downloads: {}", self.user_info.data.allowed_downloads)),
-            Line::from(format!("Downloads count: {}", self.user_info.data.downloads_count)),
-            Line::from(format!("Remaining downloads: {}", self.user_info.data.remaining_downloads)),
+            Line::from(format!(
+                "Allowed downloads: {}",
+                self.user_info.data.allowed_downloads
+            )),
+            Line::from(format!(
+                "Downloads count: {}",
+                self.user_info.data.downloads_count
+            )),
+            Line::from(format!(
+                "Remaining downloads: {}",
+                self.user_info.data.remaining_downloads
+            )),
         ])
         .block(Block::bordered());
 
@@ -69,7 +83,7 @@ impl LoggedInWidget {
         frame.render_widget(buttons_block, layout[1]);
     }
 
-    pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         info!("key event: {:?}", event);
         if let Event::Key(key_event) = event {
             match key_event {
@@ -78,14 +92,17 @@ impl LoggedInWidget {
                     // modifiers: KeyModifiers::SHIFT,
                     ..
                 } => {
-                    clear().await;
+                    self.task_runner.run(async move {
+                        clear().await;
+                        Ok(UserLoggedOut)
+                    });
                     self.user_info = UserInfo::default();
-                    Ok(Some(Action::UserLoggedOut))
+                    None
                 }
-                _ => Ok(None),
+                _ => None,
             }
         } else {
-            Ok(None)
+            None
         }
     }
 }

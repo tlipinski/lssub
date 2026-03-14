@@ -22,10 +22,13 @@ pub struct AccountWidget {
 impl AccountWidget {
     pub fn new(task_runner: TaskRunner) -> Self {
         Self {
-            login_widget: LoginWidget::from(task_runner),
-            logged_in_widget: LoggedInWidget::from(UserInfo {
-                data: Default::default(),
-            }),
+            login_widget: LoginWidget::from(task_runner.clone()),
+            logged_in_widget: LoggedInWidget::from(
+                UserInfo {
+                    data: Default::default(),
+                },
+                task_runner.clone()
+            ),
             logged_in: false,
         }
     }
@@ -89,17 +92,17 @@ impl AccountWidget {
         }
     }
 
-    pub async fn handle_key_event(&mut self, event: Event) -> Result<Option<Action>> {
+    pub fn handle_key_event(&mut self, event: Event) -> Option<Action> {
         if (self.logged_in) {
-            match self.logged_in_widget.handle_key_event(event).await? {
+            match self.logged_in_widget.handle_key_event(event) {
                 Some(UserLoggedOut) => {
                     self.logged_in = false;
-                    Ok(Some(UserLoggedOut))
+                    Some(UserLoggedOut)
                 }
-                other => Ok(other),
+                other => other,
             }
         } else {
-            Ok(self.login_widget.handle_key_event(event).await?)
+            self.login_widget.handle_key_event(event)
         }
     }
 }
