@@ -42,7 +42,7 @@ impl Component for SearchWidget {
         match action {
             Init => Some(SearchQueryUpdated(SubtitlesQuery {
                 query: self.query_widget.query(),
-                feature_id: None,
+                params: SubListQueryParams::default(),
             })),
             SubsFetched(subtitles) => {
                 self.update_subtitles(&subtitles);
@@ -92,20 +92,18 @@ impl Component for SearchWidget {
                     }
 
                     _ => match self.subs_list_widget.handle_key_event(key_event) {
-                        Handled(result) => {
-                            result.map(|sub_list_query_params| {
-                                SearchQueryUpdated(SubtitlesQuery {
-                                    query: self.query_widget.query(),
-                                    feature_id: sub_list_query_params.feature_id,
-                                })
-                            })
-                        }
-                        Unhandled => self.query_widget.handle_key_event(event).map(|query| {
+                        Handled(result) => result.map(|params| {
                             SearchQueryUpdated(SubtitlesQuery {
-                                query,
-                                feature_id: None,
+                                query: self.query_widget.query(),
+                                params,
                             })
                         }),
+                        Unhandled => {
+                            let params = self.subs_list_widget.params.clone();
+                            self.query_widget
+                                .handle_key_event(event)
+                                .map(|query| SearchQueryUpdated(SubtitlesQuery { query, params }))
+                        }
                     },
                 }
             }
@@ -160,5 +158,5 @@ impl SearchWidget {
 #[derive(Debug, Clone, Default)]
 pub struct SubtitlesQuery {
     pub query: String,
-    pub feature_id: Option<i64>,
+    pub params: SubListQueryParams,
 }

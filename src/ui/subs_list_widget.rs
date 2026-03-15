@@ -27,7 +27,7 @@ pub struct SubsListWidget {
     state: TableState,
     scroll_state: ScrollbarState,
     single_feature: SingleFeature,
-    params: SubListQueryParams
+    pub params: SubListQueryParams
 }
 
 #[derive(Debug, Default, PartialEq)]
@@ -52,9 +52,10 @@ pub struct Sub {
     votes: String,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct SubListQueryParams {
     pub feature_id: Option<i64>,
+    pub exclude_ai: bool
 }
 
 impl SubsListWidget {
@@ -124,6 +125,12 @@ impl SubsListWidget {
                 }
             }
 
+            (KeyCode::Char('t'), KeyModifiers::CONTROL) => {
+                self.params.exclude_ai = !self.params.exclude_ai;
+
+                Handled(Some(self.params.clone()))
+            }
+
             // (KeyCode::Char('i'), KeyModifiers::CONTROL) => self
             //     .state
             //     .selected()
@@ -140,6 +147,7 @@ impl SubsListWidget {
             self.single_feature = Enabled;
         } else {
             self.single_feature = Disabled;
+            self.params.feature_id = None;
         }
 
         self.scroll_state = self
@@ -206,11 +214,13 @@ impl SubsListWidget {
             ])
         });
 
-        let title = if (self.single_feature == Enabled) {
-            format!("Results: {} (single feature)", self.subs.len())
-        } else {
-            format!("Results: {}", self.subs.len())
-        };
+        let mut title = format!("Results: {}", self.subs.len());
+        if (self.single_feature == Enabled) {
+            title.push_str(" (single feature)");
+        }
+        if (self.params.exclude_ai) {
+            title.push_str(" (AI excluded)");
+        }
 
         let block_bot = Block::bordered()
             .title_pad(&title)

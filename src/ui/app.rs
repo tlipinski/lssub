@@ -155,8 +155,13 @@ impl App {
                     let languages = self.languages.clone();
                     let request = SubtitlesRequest {
                         query: query.query.clone(),
-                        id: query.feature_id,
+                        id: query.params.feature_id,
                         languages: self.languages.clone(),
+                        ai_translated: if (query.params.exclude_ai) {
+                            "exclude".to_string()
+                        } else {
+                            "include".to_string()
+                        }
                     };
                     Some(FetchSubs(request))
                 } else {
@@ -175,8 +180,13 @@ impl App {
 
                 let request = SubtitlesRequest {
                     query: self.query.query.clone(),
-                    id: self.query.feature_id,
+                    id: self.query.params.feature_id,
                     languages: self.languages.clone(),
+                    ai_translated: if (self.query.params.exclude_ai) {
+                        "exclude".to_string()
+                    } else {
+                        "include".to_string()
+                    }
                 };
 
                 Some(Multi(vec![SwitchScreen(Search), FetchSubs(request)]))
@@ -187,8 +197,13 @@ impl App {
 
                 let request = SubtitlesRequest {
                     query: query.query.clone(),
-                    id: query.feature_id,
+                    id: query.params.feature_id,
                     languages: self.languages.clone(),
+                    ai_translated:  if (query.params.exclude_ai) {
+                        "exclude".to_string()
+                    } else {
+                        "include".to_string()
+                    }
                 };
 
                 Some(FetchSubs(request))

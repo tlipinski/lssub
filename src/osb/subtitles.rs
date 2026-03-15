@@ -12,6 +12,8 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<SubtitlesResponse> {
     let langs = request.languages.join(",");
     params.insert("languages", langs);
 
+    params.insert("ai_translated", request.ai_translated.to_string());
+
     if let Some(i) = request.id {
         params.insert("id", i.to_string());
     }
@@ -103,4 +105,5 @@ pub struct SubtitlesRequest {
     pub query: String,
     pub languages: Vec<String>,
     pub id: Option<i64>,
+    pub ai_translated: String,
 }
