@@ -147,8 +147,6 @@ impl App {
             .map(|(component)| component.update(action))
             .collect::<Vec<Option<Action>>>();
 
-        debug!("widget_actions: {:?}", widget_actions.len());
-
         let new_action = match action {
             ReceivedInput(event) => self.handle_key_event(event),
 

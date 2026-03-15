@@ -59,14 +59,14 @@ impl SubsListWidget {
             .and_then(|selection| self.subs.get(selection))
     }
 
-    pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<SubListQuery> {
+    pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<Option<SubListQuery>> {
         match key_event {
             KeyEvent {
                 code: KeyCode::Up, ..
             } => {
                 self.state.select_previous();
                 self.scroll_state.prev();
-                None
+                Some(None)
             }
 
             KeyEvent {
@@ -75,7 +75,7 @@ impl SubsListWidget {
             } => {
                 self.state.select_next();
                 self.scroll_state.next();
-                None
+                Some(None)
             }
 
             KeyEvent {
@@ -87,7 +87,7 @@ impl SubsListWidget {
                 for i in 1..10 {
                     self.scroll_state.scroll(ScrollDirection::Backward)
                 }
-                None
+                Some(None)
             }
 
             KeyEvent {
@@ -99,7 +99,7 @@ impl SubsListWidget {
                 for i in 1..10 {
                     self.scroll_state.scroll(ScrollDirection::Forward)
                 }
-                None
+                Some(None)
             }
 
             KeyEvent {
@@ -109,13 +109,13 @@ impl SubsListWidget {
             } => {
                 if (self.single_feature != Disabled) {
                     self.single_feature = Disabled;
-                    Some(SubListQuery{feature_id: None})
+                    Some(Some(SubListQuery{feature_id: None}))
                 } else {
                     self.single_feature = Triggered;
                     self.state
                         .selected()
                         .and_then(|selection| self.subs.get(selection))
-                        .map(|s| SubListQuery{feature_id: Some(s.feature_id)})
+                        .map(|s| Some(SubListQuery{feature_id: Some(s.feature_id)}))
                 }
             }
 

@@ -11,7 +11,7 @@ use crate::ui::downloader::{Downloaded, Downloader};
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;
 use crate::ui::status_widget::StatusWidget;
-use crate::ui::subs_list_widget::{Sub, SubsListWidget};
+use crate::ui::subs_list_widget::{Sub, SubListQuery, SubsListWidget};
 use crate::ui::task_runner::TaskRunner;
 use crate::ui::user_widget::UserWidget;
 use anyhow::Result;
@@ -101,39 +101,22 @@ impl Component for SearchWidget {
                         }
                     }
 
-                    KeyEvent {
-                        code: KeyCode::PageUp,
-                        ..
-                    }
-                    | KeyEvent {
-                        code: KeyCode::PageDown,
-                        ..
-                    }
-                    | KeyEvent {
-                        code: KeyCode::Up, ..
-                    }
-                    | KeyEvent {
-                        code: KeyCode::Down,
-                        ..
-                    }
-                    | KeyEvent {
-                        code: KeyCode::Char('l'),
-                        modifiers: KeyModifiers::CONTROL,
-                        ..
-                    } => self.subs_list_widget.handle_key_event(key_event).map({
-                        |sub_list_query| {
-                            SearchQueryUpdated(SubtitlesQuery {
+                    other => match self.subs_list_widget.handle_key_event(other) {
+                        Some(params) => match params {
+                            Some(x) => Some(SearchQueryUpdated(SubtitlesQuery {
                                 query: self.query_widget.query(),
-                                feature_id: sub_list_query.feature_id,
+                                feature_id: x.feature_id,
+                            })),
+                            None => None
+                        },
+                        // if key not handled by sub_list_widget then try query_widget
+                        None => self.query_widget.handle_key_event(event).map(|query| {
+                            SearchQueryUpdated(SubtitlesQuery {
+                                query,
+                                feature_id: None,
                             })
-                        }
-                    }),
-                    _ => self.query_widget.handle_key_event(event).map(|query| {
-                        SearchQueryUpdated(SubtitlesQuery {
-                            query,
-                            feature_id: None,
-                        })
-                    }),
+                        }),
+                    },
                 }
             }
         } else {
