@@ -19,8 +19,6 @@ pub enum Action {
     Init,
     DownloadedSubs(Downloaded),
     SwitchScreen(Screen),
-    EnabledLimitSubsToId(i64),
-    DisabledLimitSubsToId,
     FeatureInfo(i64),
     ChangeStatus(String),
     Multi(Vec<Action>),

@@ -2,8 +2,8 @@ use crate::osb::subtitles::SubtitlesResponse;
 use crate::secret::retrieve;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus, DownloadedSubs, EnabledLimitSubsToId, Exit, FetchSubs, Init, LanguagesUpdated,
-    Multi, SearchQueryUpdated, StartProgress, SubsFetched, SwitchScreen, UserLoggedOut,
+    ChangeStatus, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, Multi,
+    SearchQueryUpdated, StartProgress, SubsFetched, SwitchScreen, UserLoggedOut,
 };
 use crate::ui::app::Screen::Search;
 use crate::ui::component::Component;
@@ -39,7 +39,10 @@ pub struct SearchWidget {
 impl Component for SearchWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
-            Init => Some(SearchQueryUpdated(self.query_widget.query())),
+            Init => Some(SearchQueryUpdated(SubtitlesQuery {
+                query: self.query_widget.query(),
+                feature_id: None,
+            })),
             SubsFetched(subtitles) => {
                 self.update_subtitles(&subtitles);
                 None
@@ -117,7 +120,13 @@ impl Component for SearchWidget {
                         code: KeyCode::Char('l'),
                         modifiers: KeyModifiers::CONTROL,
                         ..
-                    } => self.subs_list_widget.handle_key_event(key_event),
+                    } => match self.subs_list_widget.handle_key_event(key_event) {
+                        Some(feature_id) => Some(SearchQueryUpdated(SubtitlesQuery {
+                            query: self.query_widget.query(),
+                            feature_id: Some(feature_id),
+                        })),
+                        None => None,
+                    },
                     _ => match self.query_widget.handle_key_event(event) {
                         Some(query) => Some(SearchQueryUpdated(SubtitlesQuery {
                             query,

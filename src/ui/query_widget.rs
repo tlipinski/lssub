@@ -28,11 +28,8 @@ impl QueryWidget {
         }
     }
 
-    pub fn query(&self) -> SubtitlesQuery {
-        SubtitlesQuery {
-            query: self.input.value().into(),
-            feature_id: None,
-        }
+    pub fn query(&self) -> String {
+        self.input.value().into()
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {

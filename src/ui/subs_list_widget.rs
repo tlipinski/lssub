@@ -1,11 +1,10 @@
 use crate::osb::subtitles::SubtitlesResponse;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    EnabledLimitSubsToId, FeatureInfo, FetchSubs, SearchQueryUpdated,
+     FeatureInfo, FetchSubs, SearchQueryUpdated,
 };
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::subs_list_widget::SingleFeature::Triggered;
-use Action::DisabledLimitSubsToId;
 use SingleFeature::{Disabled, Enabled};
 use crossterm::event::KeyModifiers;
 use log::{debug, info};
@@ -58,7 +57,7 @@ impl SubsListWidget {
             .and_then(|selection| self.subs.get(selection))
     }
 
-    pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<Action> {
+    pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<i64> {
         match key_event {
             KeyEvent {
                 code: KeyCode::Up, ..
@@ -108,25 +107,25 @@ impl SubsListWidget {
             } => {
                 if (self.single_feature != Disabled) {
                     self.single_feature = Disabled;
-                    Some(DisabledLimitSubsToId)
+                    None
                 } else {
                     self.single_feature = Triggered;
                     self.state
                         .selected()
                         .and_then(|selection| self.subs.get(selection))
-                        .map(|s| EnabledLimitSubsToId(s.feature_id))
+                        .map(|s| s.feature_id)
                 }
             }
 
-            KeyEvent {
-                code: KeyCode::Char('i'),
-                modifiers: KeyModifiers::CONTROL,
-                ..
-            } => self
-                .state
-                .selected()
-                .and_then(|selection| self.subs.get(selection))
-                .map(|s| FeatureInfo(s.feature_id)),
+            // KeyEvent {
+            //     code: KeyCode::Char('i'),
+            //     modifiers: KeyModifiers::CONTROL,
+            //     ..
+            // } => self
+            //     .state
+            //     .selected()
+            //     .and_then(|selection| self.subs.get(selection))
+            //     .map(|s| FeatureInfo(s.feature_id)),
 
             _ => None,
         }
