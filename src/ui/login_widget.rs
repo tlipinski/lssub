@@ -3,7 +3,7 @@ use crate::osb::user_info;
 use crate::osb::user_info::get_user_info;
 use crate::secret::store;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, UserLoggedIn};
+use crate::ui::actions::Action::{ChangeStatus, Multi, UserLoggedIn};
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::task_runner::TaskRunner;
 use anyhow::{Error, Result};
@@ -161,7 +161,10 @@ impl LoginWidget {
             Ok(jwt) => {
                 store(&jwt, &credentials.username).await?;
                 let user_info = get_user_info(&jwt).await?;
-                Ok(UserLoggedIn(user_info))
+                Ok(Multi(vec![
+                    UserLoggedIn(user_info.clone()),
+                    ChangeStatus(format!("Logged in as {}", user_info.data.username)),
+                ]))
             }
             Err(e) => {
                 warn!("Error logging in: {}", e);

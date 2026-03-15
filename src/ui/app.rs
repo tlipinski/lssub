@@ -176,13 +176,6 @@ impl App {
                 ]))
             }
 
-            UserLoggedIn(user_info) => Some(ChangeStatus(format!(
-                "Logged in as {}",
-                user_info.data.username
-            ))),
-
-            UserLoggedOut => Some(ChangeStatus("Logged out".to_string())),
-
             SearchQueryUpdated(query) => {
                 self.query = query.clone();
                 Some(FetchSubs(query.clone(), self.languages.clone()))

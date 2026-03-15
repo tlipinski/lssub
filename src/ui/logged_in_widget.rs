@@ -2,7 +2,7 @@ use crate::osb::login::Credentials;
 use crate::osb::user_info::UserInfo;
 use crate::secret::clear;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::UserLoggedOut;
+use crate::ui::actions::Action::{ChangeStatus, Multi, UserLoggedOut};
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::task_runner::TaskRunner;
 use anyhow::Result;
@@ -94,7 +94,10 @@ impl LoggedInWidget {
                 } => {
                     self.task_runner.run(async move {
                         clear().await;
-                        Ok(UserLoggedOut)
+                        Ok(Multi(vec![
+                            UserLoggedOut,
+                            ChangeStatus("User logged out".to_string())
+                        ]))
                     });
                     None
                 }
