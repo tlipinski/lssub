@@ -9,7 +9,7 @@ use crate::ui::task_runner::TaskRunner;
 use anyhow::{Error, Result};
 use log::{error, info, warn};
 use ratatui::Frame;
-use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
+use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
@@ -113,8 +113,8 @@ impl LoginWidget {
 
     pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
-            match key_event.code {
-                KeyCode::Enter => {
+            match (key_event.code, key_event.modifiers) {
+                (KeyCode::Enter, KeyModifiers::NONE) => {
                     let credentials = Credentials {
                         username: self.username.value().to_owned(),
                         password: self.password.value().to_owned(),
@@ -124,15 +124,15 @@ impl LoginWidget {
 
                     Some(ChangeStatus("Logging in...".into()))
                 }
-                KeyCode::Up => {
+                (KeyCode::Up, KeyModifiers::NONE) => {
                     self.focus = Focus::Username;
                     None
                 }
-                KeyCode::Down => {
+                (KeyCode::Down, KeyModifiers::NONE) => {
                     self.focus = Focus::Password;
                     None
                 }
-                KeyCode::Tab => {
+                (KeyCode::Tab, KeyModifiers::NONE) => {
                     match self.focus {
                         Focus::Username => self.focus = Focus::Password,
                         Focus::Password => self.focus = Focus::Username,

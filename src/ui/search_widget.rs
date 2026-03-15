@@ -54,25 +54,25 @@ impl Component for SearchWidget {
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             if (self.help) {
-                match key_event.code {
-                    KeyCode::Esc => {
+                match (key_event.code, key_event.modifiers) {
+                    (KeyCode::Esc, KeyModifiers::NONE) => {
                         self.help = !self.help;
                         None
                     }
-                    KeyCode::F(1) => {
+                    (KeyCode::F(1), KeyModifiers::NONE) => {
                         self.help = !self.help;
                         None
                     }
                     _ => None,
                 }
             } else {
-                match key_event.code {
-                    KeyCode::F(1) => {
+                match (key_event.code, key_event.modifiers) {
+                    (KeyCode::F(1), KeyModifiers::NONE) => {
                         self.help = !self.help;
                         None
                     }
 
-                    KeyCode::Enter => {
+                    (KeyCode::Enter, KeyModifiers::NONE) => {
                         let selected_sub = self.subs_list_widget.selected();
 
                         match selected_sub {

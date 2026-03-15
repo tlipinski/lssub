@@ -86,12 +86,8 @@ impl LoggedInWidget {
     pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         info!("key event: {:?}", event);
         if let Event::Key(key_event) = event {
-            match key_event {
-                KeyEvent {
-                    code: KeyCode::F(13),
-                    // modifiers: KeyModifiers::SHIFT,
-                    ..
-                } => {
+            match (key_event.code, key_event.modifiers) {
+                (KeyCode::F(13), KeyModifiers::NONE) => {
                     self.task_runner.run(async move {
                         clear().await;
                         Ok(Multi(vec![

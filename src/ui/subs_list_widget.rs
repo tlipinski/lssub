@@ -60,28 +60,20 @@ impl SubsListWidget {
     }
 
     pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<Option<SubListQueryParams>> {
-        match key_event {
-            KeyEvent {
-                code: KeyCode::Up, ..
-            } => {
+        match (key_event.code, key_event.modifiers) {
+            (KeyCode::Up, KeyModifiers::NONE) => {
                 self.state.select_previous();
                 self.scroll_state.prev();
                 Some(None)
             }
 
-            KeyEvent {
-                code: KeyCode::Down,
-                ..
-            } => {
+            (KeyCode::Down, KeyModifiers::NONE) => {
                 self.state.select_next();
                 self.scroll_state.next();
                 Some(None)
             }
 
-            KeyEvent {
-                code: KeyCode::PageUp,
-                ..
-            } => {
+            (KeyCode::PageUp, KeyModifiers::NONE) => {
                 let next = self.state.selected().map_or(0, |i| i.saturating_sub(10));
                 self.state.select(Some(next));
                 for i in 1..10 {
@@ -90,10 +82,7 @@ impl SubsListWidget {
                 Some(None)
             }
 
-            KeyEvent {
-                code: KeyCode::PageDown,
-                ..
-            } => {
+            (KeyCode::PageDown, KeyModifiers::NONE) => {
                 let next = self.state.selected().map_or(0, |i| i.saturating_add(10));
                 self.state.select(Some(next));
                 for i in 1..10 {
@@ -102,11 +91,7 @@ impl SubsListWidget {
                 Some(None)
             }
 
-            KeyEvent {
-                code: KeyCode::Char('l'),
-                modifiers: KeyModifiers::CONTROL,
-                ..
-            } => {
+            (KeyCode::Char('l'), KeyModifiers::CONTROL) => {
                 if (self.single_feature != Disabled) {
                     self.single_feature = Disabled;
                     Some(Some(SubListQueryParams {feature_id: None}))
@@ -119,11 +104,7 @@ impl SubsListWidget {
                 }
             }
 
-            // KeyEvent {
-            //     code: KeyCode::Char('i'),
-            //     modifiers: KeyModifiers::CONTROL,
-            //     ..
-            // } => self
+            // (KeyCode::Char('i'), KeyModifiers::CONTROL) => self
             //     .state
             //     .selected()
             //     .and_then(|selection| self.subs.get(selection))

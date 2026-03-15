@@ -9,9 +9,8 @@ use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus,  DownloadedSubs,  Exit, FeatureInfo,
-    FetchSubs, Init, LanguagesUpdated, Multi, SearchQueryUpdated, StartProgress, StopProgress,
-    SwitchScreen, UserLoggedIn, UserLoggedOut,
+    ChangeStatus, DownloadedSubs, Exit, FeatureInfo, FetchSubs, Init, LanguagesUpdated, Multi,
+    SearchQueryUpdated, StartProgress, StopProgress, SwitchScreen, UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::Screen::{About, Account, Language, Search};
@@ -32,7 +31,6 @@ use crate::ui::task_runner::TaskRunner;
 use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
-use crossterm::event::KeyEvent;
 use gio::prelude::DBusInterfaceSkeletonExt;
 use log::{debug, error, info};
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
@@ -180,10 +178,7 @@ impl App {
                     languages: self.languages.clone(),
                 };
 
-                Some(Multi(vec![
-                    SwitchScreen(Search),
-                    FetchSubs(request),
-                ]))
+                Some(Multi(vec![SwitchScreen(Search), FetchSubs(request)]))
             }
 
             SearchQueryUpdated(query) => {
@@ -288,31 +283,13 @@ impl App {
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         self.active_widget().handle_key_event(event).or_else(|| {
             if let Event::Key(key_event) = event {
-                match key_event {
-                    KeyEvent {
-                        code: KeyCode::Esc, ..
-                    } => Some(SwitchScreen(Search)),
-                    KeyEvent {
-                        code: KeyCode::F(2),
-                        ..
-                    } => Some(SwitchScreen(Search)),
-                    KeyEvent {
-                        code: KeyCode::F(3),
-                        ..
-                    } => Some(SwitchScreen(Account)),
-                    KeyEvent {
-                        code: KeyCode::F(4),
-                        ..
-                    } => Some(SwitchScreen(Language)),
-                    KeyEvent {
-                        code: KeyCode::F(10),
-                        ..
-                    } => Some(Exit),
-                    KeyEvent {
-                        code: KeyCode::F(12),
-                        ..
-                    } => Some(SwitchScreen(About)),
-
+                match (key_event.code, key_event.modifiers) {
+                    (KeyCode::Esc, KeyModifiers::NONE) => Some(SwitchScreen(Search)),
+                    (KeyCode::F(2), KeyModifiers::NONE) => Some(SwitchScreen(Search)),
+                    (KeyCode::F(3), KeyModifiers::NONE) => Some(SwitchScreen(Account)),
+                    (KeyCode::F(4), KeyModifiers::NONE) => Some(SwitchScreen(Language)),
+                    (KeyCode::F(10), KeyModifiers::NONE) => Some(Exit),
+                    (KeyCode::F(12), KeyModifiers::NONE) => Some(SwitchScreen(About)),
                     _ => None,
                 }
             } else {

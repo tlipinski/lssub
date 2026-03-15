@@ -6,7 +6,7 @@ use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
 use Action::Init;
 use anyhow::Result;
-use crossterm::event::{Event, KeyCode};
+use crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
@@ -29,8 +29,8 @@ impl Component for LanguagesWidget {
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
-            match key_event.code {
-                KeyCode::Enter => Some(LanguagesUpdated(self.languages())),
+            match (key_event.code, key_event.modifiers) {
+                (KeyCode::Enter, KeyModifiers::NONE) => Some(LanguagesUpdated(self.languages())),
 
                 _ => {
                     self.input.handle_event(&event);
