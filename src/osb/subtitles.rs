@@ -4,9 +4,7 @@ use log::{debug, error, info, trace};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub async fn subtitles(
-    request: SubtitlesRequest,
-) -> Result<SubtitlesResponse> {
+pub async fn subtitles(request: SubtitlesRequest) -> Result<SubtitlesResponse> {
     let url = format!("{}/subtitles", API_URL);
 
     let mut params: HashMap<&'static str, String> = HashMap::new();
@@ -33,9 +31,11 @@ pub async fn subtitles(
 
     let text_body = response.text().await?;
 
+    debug!("{}", text_body);
+
     match status {
         s if s.is_success() || s.is_redirection() => {
-            trace!("Response {}", text_body);
+            debug!("Response {}", text_body);
             let json: Result<SubtitlesResponse, _> = serde_json::from_str(&text_body);
             match json {
                 Ok(subtitles_response) => {
@@ -51,12 +51,8 @@ pub async fn subtitles(
         s if s.is_client_error() => {
             let error_response: crate::osb::login::ErrorResponse =
                 serde_json::from_str(&text_body)?;
-            info!("Client error {:?}", error_response);
-            if error_response.message.contains("invalid username/password") {
-                Err(Error::msg("Invalid username or password"))
-            } else {
-                Err(Error::msg("Error calling OSB"))
-            }
+            info!("Client error [{}]: {:?}", s.as_u16(), error_response);
+            Err(Error::msg(error_response))
         }
         s => {
             error!("Server error [{}]: {}", s.as_u16(), text_body);
@@ -108,4 +104,3 @@ pub struct SubtitlesRequest {
     pub languages: Vec<String>,
     pub id: Option<i64>,
 }
-

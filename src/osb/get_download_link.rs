@@ -60,7 +60,7 @@ pub async fn get_download_link(
             let error_response: crate::osb::login::ErrorResponse =
                 serde_json::from_str(&text_body)?;
             info!("Client error {:?}", error_response);
-            Err(Error::msg(error_response.message))
+            Err(Error::msg(error_response))
         }
         s => {
             error!("Server error [{}]: {}", s.as_u16(), text_body);

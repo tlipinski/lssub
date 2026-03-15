@@ -4,6 +4,7 @@ use anyhow::{Error, Result};
 use log::{debug, error, info};
 use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
     info!("Logging in");
@@ -45,11 +46,7 @@ pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
         s if s.is_client_error() => {
             let error_response: ErrorResponse = serde_json::from_str(&text_body)?;
             info!("Client error {:?}", error_response);
-            if error_response.message.contains("invalid username/password") {
-                Err(Error::msg("Invalid username or password"))
-            } else {
-                Err(Error::msg("Error calling OSB"))
-            }
+            Err(Error::msg(error_response))
         }
         s => {
             error!("Server error [{}]: {}", s.as_u16(), text_body);
@@ -86,6 +83,26 @@ struct User {
 
 #[derive(Deserialize, Debug)]
 pub(crate) struct ErrorResponse {
-    pub message: String,
+    pub message: Option<String>,
+    pub errors: Option<Vec<String>>,
+    pub error: Option<String>,
     pub status: Option<u32>,
+}
+
+impl Display for ErrorResponse {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        if let Some(msg) = &self.message {
+            write!(f, "{}", msg)?;
+        } else if let Some(errors) = &self.errors {
+            write!(f, "{}", errors.join(", "))?;
+        } else if let Some(error) = &self.error {
+            write!(f, "{}", error)?;
+        }
+
+        if let Some(status) = self.status {
+            write!(f, " (status: {})", status)?;
+        }
+
+        Ok(())
+    }
 }

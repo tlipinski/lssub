@@ -54,11 +54,7 @@ pub async fn guess_search(guess_response: GuessResponse) -> Result<()> {
             let error_response: crate::osb::login::ErrorResponse =
                 serde_json::from_str(&text_body)?;
             info!("Client error {:?}", error_response);
-            if error_response.message.contains("invalid username/password") {
-                Err(Error::msg("Invalid username or password"))
-            } else {
-                Err(Error::msg("Error calling OSB"))
-            }
+            Err(Error::msg(error_response))
         }
         s => {
             error!("Server error [{}]: {}", s.as_u16(), text_body);
