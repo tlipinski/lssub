@@ -53,7 +53,7 @@ impl LoggedInWidget {
         let buttons_block = Block::default().title(
             Line::from(vec![
                 Span::from("Logout").bold(),
-                Span::from(" [SHIFT + F3]  "),
+                Span::from(" [Ctrl+O]  "),
                 Span::from("Cancel").bold(),
                 Span::from(" [Esc]"),
             ])
@@ -87,12 +87,12 @@ impl LoggedInWidget {
         info!("key event: {:?}", event);
         if let Event::Key(key_event) = event {
             match (key_event.code, key_event.modifiers) {
-                (KeyCode::F(13), KeyModifiers::NONE) => {
+                (KeyCode::Char('o'), KeyModifiers::CONTROL) => {
                     self.task_runner.run(async move {
                         clear().await;
                         Ok(Multi(vec![
                             UserLoggedOut,
-                            ChangeStatus("User logged out".to_string())
+                            ChangeStatus("Logged out".to_string())
                         ]))
                     });
                     None
