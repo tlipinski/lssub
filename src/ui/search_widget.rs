@@ -121,11 +121,11 @@ impl Component for SearchWidget {
                         modifiers: KeyModifiers::CONTROL,
                         ..
                     } => match self.subs_list_widget.handle_key_event(key_event) {
-                        Some(feature_id) => Some(SearchQueryUpdated(SubtitlesQuery {
+                        Some(sub_list_query) => Some(SearchQueryUpdated(SubtitlesQuery {
                             query: self.query_widget.query(),
-                            feature_id: Some(feature_id),
+                            feature_id: sub_list_query.feature_id
                         })),
-                        None => None,
+                        None => None
                     },
                     _ => match self.query_widget.handle_key_event(event) {
                         Some(query) => Some(SearchQueryUpdated(SubtitlesQuery {

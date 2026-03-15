@@ -1,8 +1,6 @@
 use crate::osb::subtitles::SubtitlesResponse;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{
-     FeatureInfo, FetchSubs, SearchQueryUpdated,
-};
+use crate::ui::actions::Action::{FeatureInfo, FetchSubs, SearchQueryUpdated};
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::subs_list_widget::SingleFeature::Triggered;
 use SingleFeature::{Disabled, Enabled};
@@ -50,6 +48,10 @@ pub struct Sub {
     votes: String,
 }
 
+pub struct SubListQuery {
+    pub feature_id: Option<i64>,
+}
+
 impl SubsListWidget {
     pub fn selected(&self) -> Option<&Sub> {
         self.state
@@ -57,7 +59,7 @@ impl SubsListWidget {
             .and_then(|selection| self.subs.get(selection))
     }
 
-    pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<i64> {
+    pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<SubListQuery> {
         match key_event {
             KeyEvent {
                 code: KeyCode::Up, ..
@@ -107,13 +109,13 @@ impl SubsListWidget {
             } => {
                 if (self.single_feature != Disabled) {
                     self.single_feature = Disabled;
-                    None
+                    Some(SubListQuery{feature_id: None})
                 } else {
                     self.single_feature = Triggered;
                     self.state
                         .selected()
                         .and_then(|selection| self.subs.get(selection))
-                        .map(|s| s.feature_id)
+                        .map(|s| SubListQuery{feature_id: Some(s.feature_id)})
                 }
             }
 
@@ -126,7 +128,6 @@ impl SubsListWidget {
             //     .selected()
             //     .and_then(|selection| self.subs.get(selection))
             //     .map(|s| FeatureInfo(s.feature_id)),
-
             _ => None,
         }
     }
