@@ -29,6 +29,7 @@ use crate::ui::subs_list_widget::SubsListWidget;
 use crate::ui::subtitles_fetcher::subtitles_fetch_task;
 use crate::ui::task_runner::TaskRunner;
 use crate::ui::user_widget::UserWidget;
+use KeyCode::*;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
 use gio::prelude::DBusInterfaceSkeletonExt;
@@ -284,12 +285,14 @@ impl App {
         self.active_widget().handle_key_event(event).or_else(|| {
             if let Event::Key(key_event) = event {
                 match (key_event.code, key_event.modifiers) {
-                    (KeyCode::Esc, KeyModifiers::NONE) => Some(SwitchScreen(Search)),
-                    (KeyCode::F(2), KeyModifiers::NONE) => Some(SwitchScreen(Search)),
-                    (KeyCode::F(3), KeyModifiers::NONE) => Some(SwitchScreen(Account)),
-                    (KeyCode::F(4), KeyModifiers::NONE) => Some(SwitchScreen(Language)),
-                    (KeyCode::F(10), KeyModifiers::NONE) => Some(Exit),
-                    (KeyCode::F(12), KeyModifiers::NONE) => Some(SwitchScreen(About)),
+                    (Esc, KeyModifiers::NONE) => Some(SwitchScreen(Search)),
+                    (F(2), KeyModifiers::NONE) => Some(SwitchScreen(Search)),
+                    (F(3), KeyModifiers::NONE) => Some(SwitchScreen(Account)),
+                    (F(4), KeyModifiers::NONE) => Some(SwitchScreen(Language)),
+                    (F(10), KeyModifiers::NONE) | (Char('c'), KeyModifiers::CONTROL) => {
+                        Some(Exit)
+                    }
+                    (F(12), KeyModifiers::NONE) => Some(SwitchScreen(About)),
                     _ => None,
                 }
             } else {
