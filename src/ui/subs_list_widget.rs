@@ -4,10 +4,10 @@ use crate::ui::actions::Action::{FeatureInfo, FetchSubs, SearchQueryUpdated};
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::subs_list_widget::SingleFeature::Triggered;
 use SingleFeature::{Disabled, Enabled};
-use ratatui::crossterm::event::KeyModifiers;
 use log::{debug, info};
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
+use ratatui::crossterm::event::KeyModifiers;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::{Alignment, Rect};
 use ratatui::prelude::{Style, Stylize, Text, Widget};
@@ -94,13 +94,17 @@ impl SubsListWidget {
             (KeyCode::Char('l'), KeyModifiers::CONTROL) => {
                 if (self.single_feature != Disabled) {
                     self.single_feature = Disabled;
-                    Some(Some(SubListQueryParams {feature_id: None}))
+                    Some(Some(SubListQueryParams { feature_id: None }))
                 } else {
                     self.single_feature = Triggered;
                     self.state
                         .selected()
                         .and_then(|selection| self.subs.get(selection))
-                        .map(|s| Some(SubListQueryParams {feature_id: Some(s.feature_id)}))
+                        .map(|s| {
+                            Some(SubListQueryParams {
+                                feature_id: Some(s.feature_id),
+                            })
+                        })
                 }
             }
 
@@ -133,7 +137,12 @@ impl SubsListWidget {
                 feature_id: resp.attributes.feature_details.feature_id,
                 file_id: resp.attributes.files.first().unwrap().file_id,
                 title: resp.attributes.release.clone(),
-                year: resp.attributes.feature_details.year.to_string(),
+                year: resp
+                    .attributes
+                    .feature_details
+                    .year
+                    .map(|year| year.to_string())
+                    .unwrap_or_default(),
                 language: resp.attributes.language.clone(),
                 upload_date: resp
                     .attributes

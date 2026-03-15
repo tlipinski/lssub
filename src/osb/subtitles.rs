@@ -81,7 +81,7 @@ pub struct Data {
 pub struct FeatureDetails {
     pub feature_id: i64,
     pub movie_name: String,
-    pub year: i32,
+    pub year: Option<i32>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
