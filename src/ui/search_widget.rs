@@ -124,7 +124,8 @@ impl Component for SearchWidget {
         if (self.help) {
             let body = Text::from(vec![
                 "".into(),
-                Line::from("Ctrl + L: Narrow results to the single feature currently selected"),
+                Line::from("Ctrl+L: Narrow results to the single feature currently selected"),
+                Line::from("Ctrl+T: Exclude AI translated subtitles"),
                 "".into(),
             ]);
             let popup = Popup::new(body)
