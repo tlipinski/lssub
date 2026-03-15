@@ -54,36 +54,25 @@ impl Component for SearchWidget {
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             if (self.help) {
-                match key_event {
-                    KeyEvent {
-                        code: KeyCode::Esc, ..
-                    } => {
+                match key_event.code {
+                    KeyCode::Esc => {
                         self.help = !self.help;
                         None
                     }
-                    KeyEvent {
-                        code: KeyCode::F(1),
-                        ..
-                    } => {
+                    KeyCode::F(1) => {
                         self.help = !self.help;
                         None
                     }
                     _ => None,
                 }
             } else {
-                match key_event {
-                    KeyEvent {
-                        code: KeyCode::F(1),
-                        ..
-                    } => {
+                match key_event.code {
+                    KeyCode::F(1) => {
                         self.help = !self.help;
                         None
                     }
 
-                    KeyEvent {
-                        code: KeyCode::Enter,
-                        ..
-                    } => {
+                    KeyCode::Enter => {
                         let selected_sub = self.subs_list_widget.selected();
 
                         match selected_sub {
@@ -101,7 +90,7 @@ impl Component for SearchWidget {
                         }
                     }
 
-                    other => match self.subs_list_widget.handle_key_event(other) {
+                    _ => match self.subs_list_widget.handle_key_event(key_event) {
                         Some(handled_result_opt) => {
                             handled_result_opt.map(|sub_list_query_params| {
                                 SearchQueryUpdated(SubtitlesQuery {
