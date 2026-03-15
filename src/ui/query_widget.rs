@@ -1,7 +1,6 @@
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::SearchQueryUpdated;
 use crate::ui::pad::BlockTitlePadExt;
-use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use anyhow::Result;
 use gio::glib::random_int_range;
 use ratatui::Frame;
@@ -51,7 +50,10 @@ impl QueryWidget {
         if let Some(state_changed) = self.input.handle_event(&event)
             && state_changed.value
         {
-            return Some(SearchQueryUpdated(self.input.value().into()));
+            return Some(SearchQueryUpdated(
+
+                self.input.value().into()
+            ));
         }
         None
     }

@@ -12,7 +12,6 @@ use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::{Sub, SubsListWidget};
-use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use crate::ui::task_runner::TaskRunner;
 use crate::ui::user_widget::UserWidget;
 use anyhow::Result;
@@ -172,4 +171,9 @@ impl SearchWidget {
     pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
         self.subs_list_widget.update_subtitles(subtitles_response);
     }
+}
+
+pub struct SubtitlesQuery {
+    pub query: String,
+    pub feature_id: Option<i64>,
 }

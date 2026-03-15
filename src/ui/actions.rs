@@ -3,7 +3,6 @@ use crate::osb::subtitles::SubtitlesResponse;
 use crate::osb::user_info::UserInfo;
 use crate::ui::app::Screen;
 use crate::ui::downloader::Downloaded;
-use crate::ui::subtitles_fetcher::SubtitlesQuery;
 use ratatui::crossterm::event::Event;
 use std::path::PathBuf;
 

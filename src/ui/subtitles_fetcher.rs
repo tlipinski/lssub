@@ -1,4 +1,4 @@
-use crate::osb::subtitles::{SubtitlesResponse, subtitles};
+use crate::osb::subtitles::{SubtitlesResponse, subtitles, SubtitlesRequest};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, SubsFetched};
 use crate::ui::task_runner::TaskRunner;
@@ -12,21 +12,14 @@ use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
-// todo move to subtitles.rs
-pub struct SubtitlesQuery {
-    pub query: String,
-    pub languages: Vec<String>,
-    pub id: Option<i64>,
-}
-
 pub async fn subtitles_fetch_task(
-    mut rx: Receiver<SubtitlesQuery>,
+    mut rx: Receiver<SubtitlesRequest>,
     task_runner: TaskRunner,
 ) -> Result<()> {
     'outer: loop {
         sleep(Duration::from_millis(1000)).await;
 
-        let mut last: Option<SubtitlesQuery> = None;
+        let mut last: Option<SubtitlesRequest> = None;
 
         // Receive as much as possible within outer loop cycle to reduce OSB calls.
         'debouncing: loop {
@@ -42,12 +35,12 @@ pub async fn subtitles_fetch_task(
             }
         }
 
-        if let Some(text) = last {
+        if let Some(request) = last {
             task_runner.run(async move {
-                if text.query.len() < 3 {
+                if request.query.len() < 3 {
                     Ok(SubsFetched(SubtitlesResponse { data: vec![] }))
                 } else {
-                    let result = subtitles(&text.query, text.languages, text.id).await;
+                    let result = subtitles(request).await;
                     match result {
                         Ok(subtitles) => Ok(SubsFetched(subtitles)),
                         Err(e) => {

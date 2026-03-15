@@ -22,11 +22,11 @@ use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
 use crate::ui::nav_widget::NavWidget;
 use crate::ui::query_widget::QueryWidget;
-use crate::ui::search_widget::SearchWidget;
+use crate::ui::search_widget::{SearchWidget, SubtitlesQuery};
 use crate::ui::spinner::{Spinner, spinner_task};
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::SubsListWidget;
-use crate::ui::subtitles_fetcher::{SubtitlesQuery, subtitles_fetch_task};
+use crate::ui::subtitles_fetcher::subtitles_fetch_task;
 use crate::ui::task_runner::TaskRunner;
 use crate::ui::user_widget::UserWidget;
 use anyhow::{Error, Result, bail};
@@ -48,10 +48,11 @@ use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
+use crate::osb::subtitles::SubtitlesRequest;
 
 pub struct App {
     active_screen: Screen,
-    subtitles_tx: Sender<SubtitlesQuery>,
+    subtitles_tx: Sender<SubtitlesRequest>,
     config_provider: ConfigProvider,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
     query: String,
@@ -65,7 +66,7 @@ impl App {
         file_name: Option<&str>,
     ) -> Result<()> {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
-        let (subtitles_tx, subtitles_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
+        let (subtitles_tx, subtitles_rx) = tokio::sync::mpsc::channel::<SubtitlesRequest>(100);
         let (featurex_tx, featurex_rx) = tokio::sync::mpsc::channel::<i32>(100);
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
@@ -188,7 +189,7 @@ impl App {
 
                 tokio::spawn(async move {
                     subtitles_tx
-                        .send(SubtitlesQuery {
+                        .send(SubtitlesRequest {
                             query,
                             languages,
                             id: None,
@@ -212,7 +213,7 @@ impl App {
 
                 tokio::spawn(async move {
                     subtitles_tx
-                        .send(SubtitlesQuery {
+                        .send(SubtitlesRequest {
                             query,
                             languages,
                             id: Some(id),

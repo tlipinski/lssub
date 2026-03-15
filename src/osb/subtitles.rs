@@ -5,18 +5,16 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub async fn subtitles(
-    filename: &str,
-    languages: Vec<String>,
-    id: Option<i64>,
+    request: SubtitlesRequest,
 ) -> Result<SubtitlesResponse> {
     let url = format!("{}/subtitles", API_URL);
 
     let mut params: HashMap<&'static str, String> = HashMap::new();
-    params.insert("query", filename.to_string());
-    let langs = languages.join(",");
+    params.insert("query", request.query.to_string());
+    let langs = request.languages.join(",");
     params.insert("languages", langs);
 
-    if let Some(i) = id {
+    if let Some(i) = request.id {
         params.insert("id", i.to_string());
     }
 
@@ -103,3 +101,10 @@ pub struct Attributes {
     pub release: String,
     pub files: Vec<File>,
 }
+
+pub struct SubtitlesRequest {
+    pub query: String,
+    pub languages: Vec<String>,
+    pub id: Option<i64>,
+}
+
