@@ -1,6 +1,7 @@
 use crate::config::{Config, ConfigProvider};
 use crate::osb::get_download_link::get_download_link;
 use crate::osb::login::login;
+use crate::osb::subtitles::SubtitlesRequest;
 use crate::osb::user_info;
 use crate::osb::user_info::{UserInfo, get_user_info};
 use crate::secret::{clear, retrieve, store};
@@ -48,14 +49,13 @@ use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use crate::osb::subtitles::SubtitlesRequest;
 
 pub struct App {
     active_screen: Screen,
     subtitles_tx: Sender<SubtitlesRequest>,
     config_provider: ConfigProvider,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
-    query: String,
+    query: SubtitlesQuery,
     languages: Vec<String>,
 }
 
@@ -113,7 +113,7 @@ impl App {
             config_provider,
             subtitles_tx,
             widgets: components,
-            query: "".to_string(),
+            query: SubtitlesQuery::default(),
             languages: vec![],
         };
 
@@ -153,10 +153,15 @@ impl App {
             ReceivedInput(event) => self.handle_key_event(event),
 
             Init => {
-                let query: String = self.query.clone();
-                if !query.is_empty() {
+                let query = self.query.clone();
+                if !query.query.is_empty() {
                     let languages = self.languages.clone();
-                    Some(FetchSubs(query, languages))
+                    let request = SubtitlesRequest {
+                        query: query.query.clone(),
+                        id: query.feature_id,
+                        languages: self.languages.clone(),
+                    };
+                    Some(FetchSubs(request))
                 } else {
                     None
                 }
@@ -171,30 +176,37 @@ impl App {
                     updated
                 });
 
+                let request = SubtitlesRequest {
+                    query: self.query.query.clone(),
+                    id: self.query.feature_id,
+                    languages: self.languages.clone(),
+                };
+
                 Some(Multi(vec![
                     SwitchScreen(Search),
-                    FetchSubs(self.query.clone(), self.languages.clone()),
+                    FetchSubs(request),
                 ]))
             }
 
             SearchQueryUpdated(query) => {
                 self.query = query.clone();
-                Some(FetchSubs(query.clone(), self.languages.clone()))
+
+                let request = SubtitlesRequest {
+                    query: query.query.clone(),
+                    id: query.feature_id,
+                    languages: self.languages.clone(),
+                };
+
+                Some(FetchSubs(request))
             }
 
-            FetchSubs(query, languages) => {
+            FetchSubs(request) => {
                 let subtitles_tx = self.subtitles_tx.clone();
-                let query = query.to_string();
-                let languages = languages.to_vec();
+
+                let rq = request.clone();
 
                 tokio::spawn(async move {
-                    subtitles_tx
-                        .send(SubtitlesRequest {
-                            query,
-                            languages,
-                            id: None,
-                        })
-                        .await;
+                    subtitles_tx.send(rq).await;
                 });
 
                 None
@@ -204,27 +216,6 @@ impl App {
                 self.active_screen = *screen;
                 None
             }
-
-            EnabledLimitSubsToId(id) => {
-                let languages = self.languages.clone();
-                let query = self.query.clone();
-                let id = *id;
-                let subtitles_tx = self.subtitles_tx.clone();
-
-                tokio::spawn(async move {
-                    subtitles_tx
-                        .send(SubtitlesRequest {
-                            query,
-                            languages,
-                            id: Some(id),
-                        })
-                        .await
-                });
-
-                None
-            }
-
-            DisabledLimitSubsToId => Some(FetchSubs(self.query.clone(), self.languages.clone())),
 
             Multi(actions) => {
                 let mut next_action = None;

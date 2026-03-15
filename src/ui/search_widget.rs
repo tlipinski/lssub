@@ -118,7 +118,13 @@ impl Component for SearchWidget {
                         modifiers: KeyModifiers::CONTROL,
                         ..
                     } => self.subs_list_widget.handle_key_event(key_event),
-                    _ => self.query_widget.handle_key_event(event),
+                    _ => match self.query_widget.handle_key_event(event) {
+                        Some(query) => Some(SearchQueryUpdated(SubtitlesQuery {
+                            query,
+                            feature_id: None,
+                        })),
+                        None => None,
+                    },
                 }
             }
         } else {
@@ -138,7 +144,7 @@ impl Component for SearchWidget {
         if (self.help) {
             let body = Text::from(vec![
                 "".into(),
-                Line::from("Ctrl + L: Narrow results to single feature"),
+                Line::from("Ctrl + L: Narrow results to the single feature currently selected"),
                 "".into(),
             ]);
             let popup = Popup::new(body)
@@ -164,15 +170,12 @@ impl SearchWidget {
         }
     }
 
-    pub fn query(&self) -> String {
-        self.query_widget.query()
-    }
-
     pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
         self.subs_list_widget.update_subtitles(subtitles_response);
     }
 }
 
+#[derive(Debug, Clone, Default)]
 pub struct SubtitlesQuery {
     pub query: String,
     pub feature_id: Option<i64>,

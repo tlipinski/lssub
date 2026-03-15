@@ -1,6 +1,7 @@
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::SearchQueryUpdated;
 use crate::ui::pad::BlockTitlePadExt;
+use crate::ui::search_widget::SubtitlesQuery;
 use anyhow::Result;
 use gio::glib::random_int_range;
 use ratatui::Frame;
@@ -27,8 +28,11 @@ impl QueryWidget {
         }
     }
 
-    pub fn query(&self) -> String {
-        self.input.value().into()
+    pub fn query(&self) -> SubtitlesQuery {
+        SubtitlesQuery {
+            query: self.input.value().into(),
+            feature_id: None,
+        }
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
@@ -46,15 +50,13 @@ impl QueryWidget {
         frame.render_widget(view, area);
     }
 
-    pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+    pub fn handle_key_event(&mut self, event: &Event) -> Option<String> {
         if let Some(state_changed) = self.input.handle_event(&event)
             && state_changed.value
         {
-            return Some(SearchQueryUpdated(
-
-                self.input.value().into()
-            ));
+            Some(self.input.value().into())
+        } else {
+            None
         }
-        None
     }
 }

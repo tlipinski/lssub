@@ -102,6 +102,7 @@ pub struct Attributes {
     pub files: Vec<File>,
 }
 
+#[derive(Debug, Clone)]
 pub struct SubtitlesRequest {
     pub query: String,
     pub languages: Vec<String>,

@@ -1,10 +1,11 @@
 use crate::osb::login::Credentials;
-use crate::osb::subtitles::SubtitlesResponse;
+use crate::osb::subtitles::{SubtitlesRequest, SubtitlesResponse};
 use crate::osb::user_info::UserInfo;
 use crate::ui::app::Screen;
 use crate::ui::downloader::Downloaded;
 use ratatui::crossterm::event::Event;
 use std::path::PathBuf;
+use crate::ui::search_widget::SubtitlesQuery;
 
 #[derive(Debug)]
 pub enum Action {
@@ -13,8 +14,8 @@ pub enum Action {
     LanguagesUpdated(Vec<String>),
     UserLoggedIn(UserInfo),
     UserLoggedOut,
-    SearchQueryUpdated(String),
-    FetchSubs(String, Vec<String>),
+    SearchQueryUpdated(SubtitlesQuery),
+    FetchSubs(SubtitlesRequest),
     Init,
     DownloadedSubs(Downloaded),
     SwitchScreen(Screen),
