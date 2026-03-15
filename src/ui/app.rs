@@ -199,10 +199,6 @@ impl App {
                 None
             }
 
-            DownloadedSubs(downloaded) => {
-                Some(ChangeStatus(format!("Downloaded: {:?}", downloaded.path)))
-            }
-
             SwitchScreen(screen) => {
                 self.active_screen = *screen;
                 None

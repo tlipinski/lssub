@@ -2,7 +2,7 @@ use crate::osb::download::download;
 use crate::osb::get_download_link::get_download_link;
 use crate::secret::retrieve;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs};
+use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs, Multi};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use secrecy::ExposeSecret;
@@ -62,11 +62,14 @@ impl Downloader {
                 ))
             })?;
 
-        Ok(DownloadedSubs(Downloaded {
-            path: output_file,
-            requests: download_link_response.requests,
-            remaining: download_link_response.remaining,
-        }))
+        Ok(Multi(vec![
+            DownloadedSubs(Downloaded {
+                path: output_file.clone(),
+                requests: download_link_response.requests,
+                remaining: download_link_response.remaining,
+            }),
+            ChangeStatus(format!("Downloaded: {}", output_file.as_os_str().to_str().unwrap())),
+        ]))
     }
 }
 
