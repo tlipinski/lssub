@@ -120,20 +120,20 @@ impl Component for SearchWidget {
                         code: KeyCode::Char('l'),
                         modifiers: KeyModifiers::CONTROL,
                         ..
-                    } => match self.subs_list_widget.handle_key_event(key_event) {
-                        Some(sub_list_query) => Some(SearchQueryUpdated(SubtitlesQuery {
-                            query: self.query_widget.query(),
-                            feature_id: sub_list_query.feature_id
-                        })),
-                        None => None
-                    },
-                    _ => match self.query_widget.handle_key_event(event) {
-                        Some(query) => Some(SearchQueryUpdated(SubtitlesQuery {
+                    } => self.subs_list_widget.handle_key_event(key_event).map({
+                        |sub_list_query| {
+                            SearchQueryUpdated(SubtitlesQuery {
+                                query: self.query_widget.query(),
+                                feature_id: sub_list_query.feature_id,
+                            })
+                        }
+                    }),
+                    _ => self.query_widget.handle_key_event(event).map(|query| {
+                        SearchQueryUpdated(SubtitlesQuery {
                             query,
                             feature_id: None,
-                        })),
-                        None => None,
-                    },
+                        })
+                    }),
                 }
             }
         } else {
