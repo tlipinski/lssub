@@ -4,7 +4,7 @@ use crate::ui::actions::Action::{FeatureInfo, FetchSubs, SearchQueryUpdated};
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::subs_list_widget::SingleFeature::Triggered;
 use SingleFeature::{Disabled, Enabled};
-use crossterm::event::KeyModifiers;
+use ratatui::crossterm::event::KeyModifiers;
 use log::{debug, info};
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
