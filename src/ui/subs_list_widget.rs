@@ -104,7 +104,7 @@ impl SubsListWidget {
                 Handled(None)
             }
 
-            (KeyCode::Char('l'), KeyModifiers::CONTROL) => {
+            (KeyCode::Char('s'), KeyModifiers::CONTROL) => {
                 if (self.single_feature != Disabled) {
                     self.single_feature = Disabled;
                     self.params.feature_id = None;

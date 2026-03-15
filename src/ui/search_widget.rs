@@ -124,7 +124,7 @@ impl Component for SearchWidget {
         if (self.help) {
             let body = Text::from(vec![
                 "".into(),
-                Line::from("Ctrl+L: Narrow results to the single feature currently selected"),
+                Line::from("Ctrl+S: Narrow results to the single title currently selected"),
                 Line::from("Ctrl+T: Exclude AI translated subtitles"),
                 "".into(),
             ]);
