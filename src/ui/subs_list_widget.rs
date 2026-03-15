@@ -48,7 +48,7 @@ pub struct Sub {
     votes: String,
 }
 
-pub struct SubListQuery {
+pub struct SubListQueryParams {
     pub feature_id: Option<i64>,
 }
 
@@ -59,7 +59,7 @@ impl SubsListWidget {
             .and_then(|selection| self.subs.get(selection))
     }
 
-    pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<Option<SubListQuery>> {
+    pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<Option<SubListQueryParams>> {
         match key_event {
             KeyEvent {
                 code: KeyCode::Up, ..
@@ -109,13 +109,13 @@ impl SubsListWidget {
             } => {
                 if (self.single_feature != Disabled) {
                     self.single_feature = Disabled;
-                    Some(Some(SubListQuery{feature_id: None}))
+                    Some(Some(SubListQueryParams {feature_id: None}))
                 } else {
                     self.single_feature = Triggered;
                     self.state
                         .selected()
                         .and_then(|selection| self.subs.get(selection))
-                        .map(|s| Some(SubListQuery{feature_id: Some(s.feature_id)}))
+                        .map(|s| Some(SubListQueryParams {feature_id: Some(s.feature_id)}))
                 }
             }
 

@@ -11,7 +11,7 @@ use crate::ui::downloader::{Downloaded, Downloader};
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;
 use crate::ui::status_widget::StatusWidget;
-use crate::ui::subs_list_widget::{Sub, SubListQuery, SubsListWidget};
+use crate::ui::subs_list_widget::{Sub, SubListQueryParams, SubsListWidget};
 use crate::ui::task_runner::TaskRunner;
 use crate::ui::user_widget::UserWidget;
 use anyhow::Result;
@@ -102,12 +102,14 @@ impl Component for SearchWidget {
                     }
 
                     other => match self.subs_list_widget.handle_key_event(other) {
-                        Some(params) => match params {
-                            Some(x) => Some(SearchQueryUpdated(SubtitlesQuery {
-                                query: self.query_widget.query(),
-                                feature_id: x.feature_id,
-                            })),
-                            None => None
+                        Some(handled_result_opt) => match handled_result_opt {
+                            Some(sub_list_query_params) => {
+                                Some(SearchQueryUpdated(SubtitlesQuery {
+                                    query: self.query_widget.query(),
+                                    feature_id: sub_list_query_params.feature_id,
+                                }))
+                            }
+                            None => None,
                         },
                         // if key not handled by sub_list_widget then try query_widget
                         None => self.query_widget.handle_key_event(event).map(|query| {
