@@ -27,6 +27,7 @@ pub struct SubsListWidget {
     state: TableState,
     scroll_state: ScrollbarState,
     single_feature: SingleFeature,
+    params: SubListQueryParams
 }
 
 #[derive(Debug, Default, PartialEq)]
@@ -51,6 +52,7 @@ pub struct Sub {
     votes: String,
 }
 
+#[derive(Default, Clone)]
 pub struct SubListQueryParams {
     pub feature_id: Option<i64>,
 }
@@ -104,7 +106,8 @@ impl SubsListWidget {
             (KeyCode::Char('l'), KeyModifiers::CONTROL) => {
                 if (self.single_feature != Disabled) {
                     self.single_feature = Disabled;
-                    Handled(Some(SubListQueryParams { feature_id: None }))
+                    self.params.feature_id = None;
+                    Handled(Some(self.params.clone()))
                 } else {
                     self.single_feature = Triggered;
                     match self
@@ -112,9 +115,10 @@ impl SubsListWidget {
                         .selected()
                         .and_then(|selection| self.subs.get(selection))
                     {
-                        Some(selected) => Handled(Some(SubListQueryParams {
-                            feature_id: Some(selected.feature_id),
-                        })),
+                        Some(selected) => {
+                            self.params.feature_id = Some(selected.feature_id);
+                            Handled(Some(self.params.clone()))
+                        },
                         None => Handled(None),
                     }
                 }
