@@ -112,7 +112,10 @@ impl App {
             config_provider,
             subtitles_tx,
             widgets: components,
-            query: SubtitlesQuery::default(),
+            query: SubtitlesQuery {
+                query: file_name.unwrap_or("").into(),
+                ..SubtitlesQuery::default()
+            },
             languages: vec![],
         };
 
@@ -161,7 +164,7 @@ impl App {
                             "exclude".to_string()
                         } else {
                             "include".to_string()
-                        }
+                        },
                     };
                     Some(FetchSubs(request))
                 } else {
@@ -186,7 +189,7 @@ impl App {
                         "exclude".to_string()
                     } else {
                         "include".to_string()
-                    }
+                    },
                 };
 
                 Some(Multi(vec![SwitchScreen(Search), FetchSubs(request)]))
@@ -199,11 +202,11 @@ impl App {
                     query: query.query.clone(),
                     id: query.params.feature_id,
                     languages: self.languages.clone(),
-                    ai_translated:  if (query.params.exclude_ai) {
+                    ai_translated: if (query.params.exclude_ai) {
                         "exclude".to_string()
                     } else {
                         "include".to_string()
-                    }
+                    },
                 };
 
                 Some(FetchSubs(request))
@@ -304,9 +307,7 @@ impl App {
                     (F(2), KeyModifiers::NONE) => Some(SwitchScreen(Search)),
                     (F(3), KeyModifiers::NONE) => Some(SwitchScreen(Account)),
                     (F(4), KeyModifiers::NONE) => Some(SwitchScreen(Language)),
-                    (F(10), KeyModifiers::NONE) | (Char('c'), KeyModifiers::CONTROL) => {
-                        Some(Exit)
-                    }
+                    (F(10), KeyModifiers::NONE) | (Char('c'), KeyModifiers::CONTROL) => Some(Exit),
                     (F(12), KeyModifiers::NONE) => Some(SwitchScreen(About)),
                     _ => None,
                 }
