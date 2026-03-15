@@ -12,7 +12,7 @@ pub async fn spinner_task(spinner: Arc<RwLock<Spinner>>) -> anyhow::Result<()> {
     let chars = ['|', '/', '-', '\\'];
     let mut pos = 0;
     loop {
-        sleep(Duration::from_millis(200)).await;
+        sleep(Duration::from_millis(150)).await;
         pos += 1;
         pos %= chars.len();
         spinner.write().unwrap().c = chars[pos];

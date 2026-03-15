@@ -24,5 +24,6 @@ pub enum Action {
     Multi(Vec<Action>),
     StartProgress,
     StopProgress,
+    Tick,
     Exit,
 }

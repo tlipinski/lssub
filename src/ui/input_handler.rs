@@ -1,26 +1,28 @@
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::ReceivedInput;
-use crate::ui::app::App;
+use crate::ui::actions::Action::{ReceivedInput, Tick};
 use anyhow::Result;
-use log::info;
-use ratatui::crossterm::event;
-use ratatui::crossterm::event::Event::Key;
-use ratatui::crossterm::event::Event::Resize;
-use ratatui::crossterm::event::{KeyEventKind, poll};
+use futures_util::{FutureExt, StreamExt};
+use ratatui::crossterm::event::EventStream;
 use std::time::Duration;
 use tokio::sync::broadcast::Receiver;
 use tokio::sync::mpsc::Sender;
+use tokio::time::interval;
 
-// event::read() will still block even if the application exits, so an explicit
-// shutdown message has to be sent to break the loop
-// Is there another way to stop event::read()?
 pub async fn handle_input_task(tx: Sender<Action>, mut shutdown_rx: Receiver<()>) -> Result<()> {
+    let mut tick_interval = interval(Duration::from_secs_f64(1.0 / 4.0));
+    let mut event_stream = EventStream::new();
+
     loop {
-        if poll(Duration::from_millis(100))? {
-            let ev = event::read()?;
-            tx.send(ReceivedInput(ev)).await;
-        } else if shutdown_rx.try_recv().is_ok() {
-            break Ok(());
-        }
+        let action = tokio::select! {
+            maybe_event = event_stream.next().fuse() => match maybe_event {
+                Some(Ok(event)) => ReceivedInput(event),
+                Some(Err(err)) => return Err(err.into()),
+                None => break Ok(()),
+            },
+            _ = tick_interval.tick() => Tick,
+            _ = shutdown_rx.recv() => break Ok(()),
+        };
+
+        tx.send(action).await?;
     }
 }
