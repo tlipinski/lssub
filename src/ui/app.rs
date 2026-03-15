@@ -152,26 +152,6 @@ impl App {
         let new_action = match action {
             ReceivedInput(event) => self.handle_key_event(event),
 
-            Init => {
-                let query = self.query.clone();
-                if !query.query.is_empty() {
-                    let languages = self.languages.clone();
-                    let request = SubtitlesRequest {
-                        query: query.query.clone(),
-                        id: query.params.feature_id,
-                        languages: self.languages.clone(),
-                        ai_translated: if (query.params.exclude_ai) {
-                            "exclude".to_string()
-                        } else {
-                            "include".to_string()
-                        },
-                    };
-                    Some(FetchSubs(request))
-                } else {
-                    None
-                }
-            }
-
             LanguagesUpdated(languages) => {
                 self.languages = languages.clone();
 
