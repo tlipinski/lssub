@@ -18,3 +18,4 @@ mod subs_list_widget;
 mod subtitles_fetcher;
 mod task_runner;
 mod user_widget;
+mod handled;

@@ -8,6 +8,7 @@ use crate::ui::actions::Action::{
 use crate::ui::app::Screen::Search;
 use crate::ui::component::Component;
 use crate::ui::downloader::{Downloaded, Downloader};
+use crate::ui::handled::HandleResult::{Handled, Unhandled};
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;
 use crate::ui::status_widget::StatusWidget;
@@ -91,16 +92,15 @@ impl Component for SearchWidget {
                     }
 
                     _ => match self.subs_list_widget.handle_key_event(key_event) {
-                        Some(handled_result_opt) => {
-                            handled_result_opt.map(|sub_list_query_params| {
+                        Handled(result) => {
+                            result.map(|sub_list_query_params| {
                                 SearchQueryUpdated(SubtitlesQuery {
                                     query: self.query_widget.query(),
                                     feature_id: sub_list_query_params.feature_id,
                                 })
                             })
                         }
-                        // if key not handled by sub_list_widget then try query_widget
-                        None => self.query_widget.handle_key_event(event).map(|query| {
+                        Unhandled => self.query_widget.handle_key_event(event).map(|query| {
                             SearchQueryUpdated(SubtitlesQuery {
                                 query,
                                 feature_id: None,

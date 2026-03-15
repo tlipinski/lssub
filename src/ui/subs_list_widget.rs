@@ -1,8 +1,11 @@
 use crate::osb::subtitles::SubtitlesResponse;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{FeatureInfo, FetchSubs, SearchQueryUpdated};
+use crate::ui::handled::HandleResult;
+use crate::ui::handled::HandleResult::Unhandled;
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::subs_list_widget::SingleFeature::Triggered;
+use HandleResult::Handled;
 use SingleFeature::{Disabled, Enabled};
 use log::{debug, info};
 use ratatui::Frame;
@@ -59,18 +62,23 @@ impl SubsListWidget {
             .and_then(|selection| self.subs.get(selection))
     }
 
-    pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<Option<SubListQueryParams>> {
+    pub fn handle_key_event(
+        &mut self,
+        key_event: &KeyEvent,
+    ) -> HandleResult<Option<SubListQueryParams>> {
         match (key_event.code, key_event.modifiers) {
             (KeyCode::Up, KeyModifiers::NONE) => {
                 self.state.select_previous();
                 self.scroll_state.prev();
-                Some(None)
+
+                Handled(None)
             }
 
             (KeyCode::Down, KeyModifiers::NONE) => {
                 self.state.select_next();
                 self.scroll_state.next();
-                Some(None)
+
+                Handled(None)
             }
 
             (KeyCode::PageUp, KeyModifiers::NONE) => {
@@ -79,7 +87,8 @@ impl SubsListWidget {
                 for i in 1..10 {
                     self.scroll_state.scroll(ScrollDirection::Backward)
                 }
-                Some(None)
+
+                Handled(None)
             }
 
             (KeyCode::PageDown, KeyModifiers::NONE) => {
@@ -88,23 +97,26 @@ impl SubsListWidget {
                 for i in 1..10 {
                     self.scroll_state.scroll(ScrollDirection::Forward)
                 }
-                Some(None)
+
+                Handled(None)
             }
 
             (KeyCode::Char('l'), KeyModifiers::CONTROL) => {
                 if (self.single_feature != Disabled) {
                     self.single_feature = Disabled;
-                    Some(Some(SubListQueryParams { feature_id: None }))
+                    Handled(Some(SubListQueryParams { feature_id: None }))
                 } else {
                     self.single_feature = Triggered;
-                    self.state
+                    match self
+                        .state
                         .selected()
                         .and_then(|selection| self.subs.get(selection))
-                        .map(|s| {
-                            Some(SubListQueryParams {
-                                feature_id: Some(s.feature_id),
-                            })
-                        })
+                    {
+                        Some(selected) => Handled(Some(SubListQueryParams {
+                            feature_id: Some(selected.feature_id),
+                        })),
+                        None => Handled(None),
+                    }
                 }
             }
 
@@ -113,7 +125,7 @@ impl SubsListWidget {
             //     .selected()
             //     .and_then(|selection| self.subs.get(selection))
             //     .map(|s| FeatureInfo(s.feature_id)),
-            _ => None,
+            _ => Unhandled,
         }
     }
 
