@@ -74,7 +74,7 @@ impl App {
         let spinner_clone = spinner.clone();
 
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
-        tokio::spawn(subtitles_fetch_task(subtitles_rx, task_runner.clone()));
+        tokio::spawn(subtitles_fetch_task(subtitles_rx, ui_tx.clone()));
         tokio::spawn(spinner_task(spinner_clone));
 
         let config_provider = ConfigProvider::default();

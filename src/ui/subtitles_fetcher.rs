@@ -1,6 +1,6 @@
 use crate::osb::subtitles::{SubtitlesResponse, subtitles, SubtitlesRequest};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, SubsFetched};
+use crate::ui::actions::Action::{ChangeStatus, RunTask, SubsFetched};
 use crate::ui::task_runner::{Task, TaskRunner};
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, error, info};
@@ -13,7 +13,7 @@ use tokio::time::sleep;
 
 pub async fn subtitles_fetch_task(
     mut rx: Receiver<SubtitlesRequest>,
-    task_runner: TaskRunner,
+    ui_tx: Sender<Action>,
 ) -> Result<()> {
     'outer: loop {
         sleep(Duration::from_millis(1000)).await;
@@ -35,7 +35,7 @@ pub async fn subtitles_fetch_task(
         }
 
         if let Some(request) = last {
-            task_runner.run(Task::new(async move {
+            let task = Task::new(async move {
                 if request.query.len() < 3 {
                     Ok(SubsFetched(SubtitlesResponse { data: vec![] }))
                 } else {
@@ -48,7 +48,9 @@ pub async fn subtitles_fetch_task(
                         }
                     }
                 }
-            }))
+            });
+
+            ui_tx.send(RunTask(task)).await;
         }
     }
 }

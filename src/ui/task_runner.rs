@@ -8,6 +8,33 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use tokio::sync::mpsc::Sender;
 
+pub struct TaskRunner {
+    ui_tx: Sender<Action>,
+}
+
+impl TaskRunner {
+    pub fn new(ui_tx: Sender<Action>) -> Self {
+        Self { ui_tx }
+    }
+
+    pub fn run(&self, task: Task) {
+        let ui_tx = self.ui_tx.clone();
+        tokio::spawn(async move {
+            ui_tx.send(StartProgress).await;
+            match task.run().await {
+                Ok(action) => {
+                    ui_tx.send(action).await;
+                    ui_tx.send(StopProgress).await;
+                }
+                Err(err) => {
+                    ui_tx.send(ChangeStatus(err.to_string())).await;
+                    ui_tx.send(StopProgress).await;
+                }
+            }
+        });
+    }
+}
+
 #[derive(Clone)]
 pub struct Task {
     make_future: Arc<dyn Fn() -> BoxFuture<'static, anyhow::Result<Action>> + Send + Sync>,
@@ -35,33 +62,5 @@ impl Task {
 impl Debug for Task {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "Task")
-    }
-}
-
-#[derive(Clone)]
-pub struct TaskRunner {
-    ui_tx: Sender<Action>,
-}
-
-impl TaskRunner {
-    pub fn new(ui_tx: Sender<Action>) -> Self {
-        Self { ui_tx }
-    }
-
-    pub fn run(&self, task: Task) {
-        let ui_tx = self.ui_tx.clone();
-        tokio::spawn(async move {
-            ui_tx.send(StartProgress).await;
-            match task.run().await {
-                Ok(action) => {
-                    ui_tx.send(action).await;
-                    ui_tx.send(StopProgress).await;
-                }
-                Err(err) => {
-                    ui_tx.send(ChangeStatus(err.to_string())).await;
-                    ui_tx.send(StopProgress).await;
-                }
-            }
-        });
     }
 }
