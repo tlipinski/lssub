@@ -81,7 +81,7 @@ impl Component for SearchWidget {
                                 let language = s.language.clone();
 
                                 let task =
-                                    Task::new(async move { dn.download(file_id, &language).await });
+                                    Task::new("download subs", async move { dn.download(file_id, &language).await });
 
                                 Some(Multi(vec![
                                     ChangeStatus(format!("Downloading {}", s.title)),

@@ -120,7 +120,7 @@ impl LoginWidget {
 
                     Some(Multi(vec![
                         ChangeStatus("Logging in...".into()),
-                        RunTask(Task::new(LoginWidget::login_user(credentials))),
+                        RunTask(Task::new("log in", LoginWidget::login_user(credentials))),
                     ]))
                 }
                 (KeyCode::Up, KeyModifiers::NONE) => {

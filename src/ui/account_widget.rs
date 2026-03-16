@@ -2,18 +2,20 @@ use crate::osb::login::login;
 use crate::osb::user_info::{UserInfo, get_user_info};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, ReceivedInput, RunTask, SwitchScreen, UserLoggedIn, UserLoggedOut};
+use crate::ui::actions::Action::{
+    ChangeStatus, ReceivedInput, RunTask, SwitchScreen, UserLoggedIn, UserLoggedOut,
+};
 use crate::ui::component::Component;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
 use crate::ui::task_runner::{Task, TaskRunner};
+use Action::Init;
 use anyhow::{Error, Result};
 use crossterm::event::Event;
 use log::{error, info};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::text::ToSpan;
-use Action::Init;
 
 pub struct AccountWidget {
     login_widget: LoginWidget,
@@ -25,7 +27,7 @@ impl Component for AccountWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
             Init => {
-                Some(RunTask(Task::new(async move {
+                Some(RunTask(Task::new("init account", async move {
                     match retrieve().await {
                         Ok(Some(jwt)) => match get_user_info(&jwt).await {
                             Ok(user_info) => Ok(UserLoggedIn(user_info)),
@@ -52,9 +54,7 @@ impl Component for AccountWidget {
                 self.logged_in_widget.user_info = UserInfo::default();
                 None
             }
-            _ => {
-                None
-            }
+            _ => None,
         }
     }
 
@@ -79,11 +79,9 @@ impl AccountWidget {
     pub fn new() -> Self {
         Self {
             login_widget: LoginWidget::from(),
-            logged_in_widget: LoggedInWidget::from(
-                UserInfo {
-                    data: Default::default(),
-                },
-            ),
+            logged_in_widget: LoggedInWidget::from(UserInfo {
+                data: Default::default(),
+            }),
             logged_in: false,
         }
     }
@@ -95,5 +93,4 @@ impl AccountWidget {
             None
         }
     }
-
 }

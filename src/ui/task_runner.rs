@@ -37,14 +37,16 @@ impl TaskRunner {
 
 #[derive(Clone)]
 pub struct Task {
+    name: &'static str,
     make_future: Arc<dyn Fn() -> BoxFuture<'static, anyhow::Result<Action>> + Send + Sync>,
 }
 
 impl Task {
-    pub(crate) fn new(f: impl Future<Output = anyhow::Result<Action>> + Send + 'static) -> Self {
+    pub(crate) fn new(name: &'static str, f: impl Future<Output = anyhow::Result<Action>> + Send + 'static) -> Self {
         let future = Arc::new(Mutex::new(Some(Box::pin(f) as BoxFuture<'static, anyhow::Result<Action>>)));
 
         Self {
+            name,
             make_future: Arc::new(move || {
                 let mut guard = future.lock().expect("Task future lock poisoned");
                 guard.take().unwrap_or_else(|| {
@@ -61,6 +63,6 @@ impl Task {
 
 impl Debug for Task {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Task")
+        write!(f, "Task(\"{}\")", self.name)
     }
 }

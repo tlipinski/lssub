@@ -84,7 +84,7 @@ impl LoggedInWidget {
         if let Event::Key(key_event) = event {
             match (key_event.code, key_event.modifiers) {
                 (KeyCode::Char('o'), KeyModifiers::CONTROL) => {
-                    Some(RunTask(Task::new(async move {
+                    Some(RunTask(Task::new("log out", async move {
                         clear().await;
                         Ok(Multi(vec![
                             UserLoggedOut,

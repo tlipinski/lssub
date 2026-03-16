@@ -5,10 +5,7 @@ use crate::osb::subtitles::SubtitlesRequest;
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{
-    ChangeStatus, DownloadedSubs, Exit, FeatureInfo, FetchSubs, Init, LanguagesUpdated, Multi,
-    SearchQueryUpdated, StartProgress, StopProgress, SwitchScreen, UserLoggedIn, UserLoggedOut,
-};
+use crate::ui::actions::Action::{ChangeStatus, DownloadedSubs, Exit, FeatureInfo, FetchSubs, Init, LanguagesUpdated, Multi, SearchQueryUpdated, StartProgress, StopProgress, SwitchScreen, Tick, UserLoggedIn, UserLoggedOut};
 use crate::ui::app::Action::{ReceivedInput, SubsFetched};
 use crate::ui::app::Screen::{About, Account, Language, Search};
 use crate::ui::component::Component;
@@ -26,6 +23,7 @@ use crate::ui::subs_list_widget::SubsListWidget;
 use crate::ui::subtitles_fetcher::subtitles_fetch_task;
 use crate::ui::task_runner::TaskRunner;
 use crate::ui::user_widget::UserWidget;
+use Action::RunTask;
 use KeyCode::*;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
@@ -45,7 +43,6 @@ use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use Action::RunTask;
 
 pub struct App {
     active_screen: Screen,
@@ -83,16 +80,10 @@ impl App {
         components.insert(WidgetName::Nav, Box::new(NavWidget::new()));
         components.insert(WidgetName::User, Box::new(UserWidget::from()));
         components.insert(WidgetName::About, Box::new(AboutWidget::new()));
-        components.insert(
-            WidgetName::Account,
-            Box::new(AccountWidget::new()),
-        );
+        components.insert(WidgetName::Account, Box::new(AccountWidget::new()));
         components.insert(
             WidgetName::Search,
-            Box::new(SearchWidget::from(
-                base_path,
-                file_name,
-            )),
+            Box::new(SearchWidget::from(base_path, file_name)),
         );
         components.insert(
             WidgetName::Languages,
@@ -141,7 +132,11 @@ impl App {
     }
 
     fn update(&mut self, action: &Action) -> Option<Action> {
-        debug!("action: {:?}", action);
+        match action {
+            Tick => {},
+            _ => debug!("action: {:?}", action)
+        };
+
         let mut widget_actions = self
             .widgets
             .values_mut()
@@ -218,7 +213,7 @@ impl App {
 
                 next_action
             }
-            
+
             RunTask(task) => {
                 self.task_runner.run(task.clone());
                 None
