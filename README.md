@@ -39,10 +39,10 @@ You can also use the built binary:
 Example:
 
 ```bash
-lssub "/media/movies/Dune.Part.Two.2024.mkv"
+lssub "/media/videos/Example.Movie.2014.mkv"
 ```
 
-This pre-fills search with `Dune.Part.Two.2024` and saves subtitles under `/media/movies`.
+This pre-fills search with `Example.Movie.2014` and saves subtitles under `/media/videos`.
 
 ## How to use
 Main navigation:
