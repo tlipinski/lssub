@@ -13,9 +13,8 @@ use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::{Sub, SubListQueryParams, SubsListWidget};
-use crate::ui::task_runner::TaskRunner;
+use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
-use anyhow::Result;
 use crossterm::event::{KeyEvent, KeyModifiers};
 use log::error;
 use ratatui::Frame;
@@ -82,8 +81,9 @@ impl Component for SearchWidget {
                                 let file_id = s.file_id;
                                 let language = s.language.clone();
 
-                                self.task_runner
-                                    .run(async move { dn.download(file_id, &language).await });
+                                let task = Task::new(async move { dn.download(file_id, &language).await });
+                                self.task_runner.run(task);
+
 
                                 Some(ChangeStatus(format!("Downloading {}", s.title)))
                             }

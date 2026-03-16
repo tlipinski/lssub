@@ -5,7 +5,7 @@ use crate::secret::store;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, Multi, UserLoggedIn};
 use crate::ui::pad::BlockTitlePadExt;
-use crate::ui::task_runner::TaskRunner;
+use crate::ui::task_runner::{Task, TaskRunner};
 use anyhow::{Error, Result};
 use log::{error, info, warn};
 use ratatui::Frame;
@@ -120,7 +120,8 @@ impl LoginWidget {
                         password: self.password.value().to_owned(),
                     };
 
-                    self.task_runner.run(LoginWidget::login_user(credentials));
+                    self.task_runner
+                        .run(Task::new(LoginWidget::login_user(credentials)));
 
                     Some(ChangeStatus("Logging in...".into()))
                 }

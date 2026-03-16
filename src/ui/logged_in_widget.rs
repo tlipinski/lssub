@@ -4,7 +4,7 @@ use crate::secret::clear;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, Multi, UserLoggedOut};
 use crate::ui::pad::BlockTitlePadExt;
-use crate::ui::task_runner::TaskRunner;
+use crate::ui::task_runner::{Task, TaskRunner};
 use anyhow::Result;
 use crossterm::event::KeyModifiers;
 use log::info;
@@ -88,13 +88,13 @@ impl LoggedInWidget {
         if let Event::Key(key_event) = event {
             match (key_event.code, key_event.modifiers) {
                 (KeyCode::Char('o'), KeyModifiers::CONTROL) => {
-                    self.task_runner.run(async move {
+                    self.task_runner.run(Task::new(async move {
                         clear().await;
                         Ok(Multi(vec![
                             UserLoggedOut,
                             ChangeStatus("Logged out".to_string())
                         ]))
-                    });
+                    }));
                     None
                 }
                 _ => None,

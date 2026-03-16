@@ -1,9 +1,8 @@
 use crate::osb::subtitles::{SubtitlesResponse, subtitles, SubtitlesRequest};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, SubsFetched};
-use crate::ui::task_runner::TaskRunner;
+use crate::ui::task_runner::{Task, TaskRunner};
 use anyhow::{Context, Error, Result, bail};
-use gio::Task;
 use log::{debug, error, info};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
@@ -36,7 +35,7 @@ pub async fn subtitles_fetch_task(
         }
 
         if let Some(request) = last {
-            task_runner.run(async move {
+            task_runner.run(Task::new(async move {
                 if request.query.len() < 3 {
                     Ok(SubsFetched(SubtitlesResponse { data: vec![] }))
                 } else {
@@ -49,7 +48,7 @@ pub async fn subtitles_fetch_task(
                         }
                     }
                 }
-            })
+            }))
         }
     }
 }

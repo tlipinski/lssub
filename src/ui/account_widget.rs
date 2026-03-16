@@ -8,7 +8,7 @@ use crate::ui::actions::Action::{
 use crate::ui::component::Component;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
-use crate::ui::task_runner::TaskRunner;
+use crate::ui::task_runner::{Task, TaskRunner};
 use anyhow::{Error, Result};
 use crossterm::event::Event;
 use log::{error, info};
@@ -84,7 +84,7 @@ impl AccountWidget {
     }
 
     pub fn refresh(&mut self) {
-        self.task_runner.run(async move {
+        self.task_runner.run(Task::new(async move {
             match retrieve().await {
                 Ok(Some(jwt)) => match get_user_info(&jwt).await {
                     Ok(user_info) => Ok(UserLoggedIn(user_info)),
@@ -99,6 +99,6 @@ impl AccountWidget {
                     Err(Error::msg(e.to_string()))
                 }
             }
-        });
+        }));
     }
 }
