@@ -30,7 +30,7 @@ enum Focus {
 }
 
 impl LoginWidget {
-    pub fn from(task_runner: TaskRunner) -> Self {
+    pub fn from() -> Self {
         LoginWidget {
             username: Input::new("".into()),
             password: Input::new("".into()),

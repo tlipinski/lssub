@@ -2,7 +2,7 @@ use crate::osb::login::Credentials;
 use crate::osb::user_info::UserInfo;
 use crate::secret::clear;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, Multi, UserLoggedOut};
+use crate::ui::actions::Action::{ChangeStatus, Multi, RunTask, UserLoggedOut};
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::task_runner::{Task, TaskRunner};
 use anyhow::Result;
@@ -20,15 +20,11 @@ use tui_input::backend::crossterm::EventHandler;
 
 pub struct LoggedInWidget {
     pub user_info: UserInfo,
-    task_runner: TaskRunner,
 }
 
 impl LoggedInWidget {
-    pub fn from(user_info: UserInfo, task_runner: TaskRunner) -> Self {
-        LoggedInWidget {
-            user_info,
-            task_runner,
-        }
+    pub fn from(user_info: UserInfo) -> Self {
+        LoggedInWidget { user_info }
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
@@ -88,14 +84,13 @@ impl LoggedInWidget {
         if let Event::Key(key_event) = event {
             match (key_event.code, key_event.modifiers) {
                 (KeyCode::Char('o'), KeyModifiers::CONTROL) => {
-                    self.task_runner.run(Task::new(async move {
+                    Some(RunTask(Task::new(async move {
                         clear().await;
                         Ok(Multi(vec![
                             UserLoggedOut,
-                            ChangeStatus("Logged out".to_string())
+                            ChangeStatus("Logged out".to_string()),
                         ]))
-                    }));
-                    None
+                    })))
                 }
                 _ => None,
             }

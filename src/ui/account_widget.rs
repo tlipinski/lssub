@@ -78,12 +78,11 @@ impl Component for AccountWidget {
 impl AccountWidget {
     pub fn new(task_runner: TaskRunner) -> Self {
         Self {
-            login_widget: LoginWidget::from(task_runner.clone()),
+            login_widget: LoginWidget::from(),
             logged_in_widget: LoggedInWidget::from(
                 UserInfo {
                     data: Default::default(),
                 },
-                task_runner.clone(),
             ),
             logged_in: false,
         }
