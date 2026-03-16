@@ -12,7 +12,7 @@ use crate::ui::handled::HandleResult::{Handled, Unhandled};
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;
 use crate::ui::status_widget::StatusWidget;
-use crate::ui::subs_list_widget::{Sub, SubListQueryParams, SubsListWidget};
+use crate::ui::subs_list_widget::{QueryParams, SubsListWidget, Subtitle};
 use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
 use crossterm::event::{KeyEvent, KeyModifiers};
@@ -40,7 +40,7 @@ impl Component for SearchWidget {
         match action {
             Init => Some(SearchQueryUpdated(SubtitlesQuery {
                 query: self.query_widget.query(),
-                params: SubListQueryParams::default(),
+                params: QueryParams::default(),
             })),
             SubsFetched(subtitles) => {
                 self.update_subtitles(&subtitles);
@@ -72,23 +72,18 @@ impl Component for SearchWidget {
                     }
 
                     (KeyCode::Enter, KeyModifiers::NONE) => {
-                        let selected_sub = self.subs_list_widget.selected();
+                        self.subs_list_widget.selected().map(|selected_sub| {
+                            let downloader = self.downloader.clone();
+                            let file_id = selected_sub.file_id;
+                            let language = selected_sub.language.clone();
 
-                        match selected_sub {
-                            Some(s) => {
-                                let dn = self.downloader.clone();
-                                let file_id = s.file_id;
-                                let language = s.language.clone();
-
-                                Some(Multi(vec![
-                                    ChangeStatus(format!("Downloading {}", s.title)),
-                                    RunTask(Task::new("download subs", async move {
-                                        dn.download(file_id, &language).await
-                                    })),
-                                ]))
-                            }
-                            None => None,
-                        }
+                            Multi(vec![
+                                ChangeStatus(format!("Downloading {}", selected_sub.title)),
+                                RunTask(Task::new("download subs", async move {
+                                    downloader.download(file_id, &language).await
+                                })),
+                            ])
+                        })
                     }
 
                     _ => match self.subs_list_widget.handle_key_event(key_event) {
@@ -154,5 +149,5 @@ impl SearchWidget {
 #[derive(Debug, Clone, Default)]
 pub struct SubtitlesQuery {
     pub query: String,
-    pub params: SubListQueryParams,
+    pub params: QueryParams,
 }

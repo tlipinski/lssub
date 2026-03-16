@@ -23,11 +23,11 @@ use ratatui::widgets::{
 
 #[derive(Default)]
 pub struct SubsListWidget {
-    subs: Vec<Sub>,
+    subs: Vec<Subtitle>,
     state: TableState,
     scroll_state: ScrollbarState,
     single_feature: SingleFeature,
-    pub params: SubListQueryParams,
+    pub params: QueryParams,
 }
 
 #[derive(Debug, Default, PartialEq)]
@@ -40,7 +40,7 @@ enum SingleFeature {
 
 // todo reduce pubs
 #[derive(Debug, Default)]
-pub struct Sub {
+pub struct Subtitle {
     feature_id: i64,
     pub file_id: i64,
     pub title: String,
@@ -53,13 +53,13 @@ pub struct Sub {
 }
 
 #[derive(Default, Clone, Debug)]
-pub struct SubListQueryParams {
+pub struct QueryParams {
     pub feature_id: Option<i64>,
     pub exclude_ai: bool,
 }
 
 impl SubsListWidget {
-    pub fn selected(&self) -> Option<&Sub> {
+    pub fn selected(&self) -> Option<&Subtitle> {
         self.state
             .selected()
             .and_then(|selection| self.subs.get(selection))
@@ -68,7 +68,7 @@ impl SubsListWidget {
     pub fn handle_key_event(
         &mut self,
         key_event: &KeyEvent,
-    ) -> HandleResult<Option<SubListQueryParams>> {
+    ) -> HandleResult<Option<QueryParams>> {
         match (key_event.code, key_event.modifiers) {
             (KeyCode::Up, KeyModifiers::NONE) => {
                 self.state.select_previous();
@@ -157,7 +157,7 @@ impl SubsListWidget {
         let subs = subtitles_response
             .data
             .iter()
-            .map(|resp| Sub {
+            .map(|resp| Subtitle {
                 feature_id: resp.attributes.feature_details.feature_id,
                 file_id: resp.attributes.files.first().unwrap().file_id,
                 title: resp.attributes.release.clone(),
@@ -185,7 +185,7 @@ impl SubsListWidget {
                     x => x.to_string(),
                 },
             })
-            .collect::<Vec<Sub>>();
+            .collect::<Vec<Subtitle>>();
 
         self.subs = subs;
     }
