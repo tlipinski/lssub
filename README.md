@@ -54,7 +54,7 @@ Main navigation:
 - `Esc` Back to Search
 
 Search screen:
-- Type to search (queries shorter than 3 chars do not return results)
+- Type to search
 - `Up` / `Down` / `PageUp` / `PageDown` to move in results
 - `Enter` to download selected subtitle
 - `F1` to open/close search help popup
