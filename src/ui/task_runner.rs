@@ -42,8 +42,13 @@ pub struct Task {
 }
 
 impl Task {
-    pub(crate) fn new(name: &'static str, f: impl Future<Output = anyhow::Result<Action>> + Send + 'static) -> Self {
-        let future = Arc::new(Mutex::new(Some(Box::pin(f) as BoxFuture<'static, anyhow::Result<Action>>)));
+    pub(crate) fn new(
+        name: &'static str,
+        f: impl Future<Output = anyhow::Result<Action>> + Send + 'static,
+    ) -> Self {
+        let future = Arc::new(Mutex::new(Some(
+            Box::pin(f) as BoxFuture<'static, anyhow::Result<Action>>
+        )));
 
         Self {
             name,

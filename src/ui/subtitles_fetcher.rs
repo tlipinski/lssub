@@ -1,4 +1,4 @@
-use crate::osb::subtitles::{SubtitlesResponse, subtitles, SubtitlesRequest};
+use crate::osb::subtitles::{SubtitlesRequest, SubtitlesResponse, subtitles};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, RunTask, SubsFetched};
 use crate::ui::task_runner::{Task, TaskRunner};

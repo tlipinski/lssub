@@ -27,7 +27,7 @@ pub struct SubsListWidget {
     state: TableState,
     scroll_state: ScrollbarState,
     single_feature: SingleFeature,
-    pub params: SubListQueryParams
+    pub params: SubListQueryParams,
 }
 
 #[derive(Debug, Default, PartialEq)]
@@ -55,7 +55,7 @@ pub struct Sub {
 #[derive(Default, Clone, Debug)]
 pub struct SubListQueryParams {
     pub feature_id: Option<i64>,
-    pub exclude_ai: bool
+    pub exclude_ai: bool,
 }
 
 impl SubsListWidget {
@@ -119,7 +119,7 @@ impl SubsListWidget {
                         Some(selected) => {
                             self.params.feature_id = Some(selected.feature_id);
                             Handled(Some(self.params.clone()))
-                        },
+                        }
                         None => Handled(None),
                     }
                 }

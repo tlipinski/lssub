@@ -80,12 +80,11 @@ impl Component for SearchWidget {
                                 let file_id = s.file_id;
                                 let language = s.language.clone();
 
-                                let task =
-                                    Task::new("download subs", async move { dn.download(file_id, &language).await });
-
                                 Some(Multi(vec![
                                     ChangeStatus(format!("Downloading {}", s.title)),
-                                    RunTask(task),
+                                    RunTask(Task::new("download subs", async move {
+                                        dn.download(file_id, &language).await
+                                    })),
                                 ]))
                             }
                             None => None,
@@ -138,10 +137,7 @@ impl Component for SearchWidget {
 }
 
 impl SearchWidget {
-    pub fn from(
-        base_path: &Path,
-        file_name: Option<&str>,
-    ) -> SearchWidget {
+    pub fn from(base_path: &Path, file_name: Option<&str>) -> SearchWidget {
         Self {
             query_widget: QueryWidget::from(file_name.unwrap_or("").into()),
             subs_list_widget: SubsListWidget::default(),

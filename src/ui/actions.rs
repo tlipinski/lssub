@@ -3,10 +3,10 @@ use crate::osb::subtitles::{SubtitlesRequest, SubtitlesResponse};
 use crate::osb::user_info::UserInfo;
 use crate::ui::app::Screen;
 use crate::ui::downloader::Downloaded;
-use ratatui::crossterm::event::Event;
-use std::path::PathBuf;
 use crate::ui::search_widget::SubtitlesQuery;
 use crate::ui::task_runner::Task;
+use ratatui::crossterm::event::Event;
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub enum Action {
