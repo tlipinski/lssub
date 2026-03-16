@@ -1,5 +1,5 @@
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::DownloadedSubs;
+use crate::ui::actions::Action::SubtitleDownloaded;
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
 use Action::{UserLoggedIn, UserLoggedOut};
@@ -30,7 +30,7 @@ impl Component for UserWidget {
                 self.requests = 0;
                 self.remaining = 0;
             }
-            DownloadedSubs(downloaded) => {
+            SubtitleDownloaded(downloaded) => {
                 self.requests = downloaded.requests;
                 self.remaining = downloaded.remaining;
             }

@@ -1,6 +1,6 @@
 use crate::osb::subtitles::SubtitlesResponse;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{FeatureInfo, FetchSubs, SearchQueryUpdated};
+use crate::ui::actions::Action::{FeatureInfo, FetchSubtitles, SearchQueryUpdated};
 use crate::ui::handled::HandleResult;
 use crate::ui::handled::HandleResult::Unhandled;
 use crate::ui::pad::BlockTitlePadExt;
@@ -65,10 +65,7 @@ impl SubsListWidget {
             .and_then(|selection| self.subs.get(selection))
     }
 
-    pub fn handle_key_event(
-        &mut self,
-        key_event: &KeyEvent,
-    ) -> HandleResult<Option<QueryParams>> {
+    pub fn handle_key_event(&mut self, key_event: &KeyEvent) -> HandleResult<Option<QueryParams>> {
         match (key_event.code, key_event.modifiers) {
             (KeyCode::Up, KeyModifiers::NONE) => {
                 self.state.select_previous();

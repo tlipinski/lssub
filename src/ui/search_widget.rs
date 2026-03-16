@@ -2,8 +2,8 @@ use crate::osb::subtitles::SubtitlesResponse;
 use crate::secret::retrieve;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, Multi, RunTask,
-    SearchQueryUpdated, StartProgress, SubsFetched, SwitchScreen, UserLoggedOut,
+    ChangeStatus, Exit, FetchSubtitles, Init, LanguagesUpdated, Multi, RunTask, SearchQueryUpdated,
+    StartProgress, SubtitleDownloaded, SubtitlesFetched, SwitchScreen, UserLoggedOut,
 };
 use crate::ui::app::Screen::Search;
 use crate::ui::component::Component;
@@ -42,7 +42,7 @@ impl Component for SearchWidget {
                 query: self.query_widget.query(),
                 params: QueryParams::default(),
             })),
-            SubsFetched(subtitles) => {
+            SubtitlesFetched(subtitles) => {
                 self.update_subtitles(&subtitles);
                 None
             }

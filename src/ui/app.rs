@@ -6,11 +6,11 @@ use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus, DownloadedSubs, Exit, FeatureInfo, FetchSubs, Init, LanguagesUpdated, Multi,
-    SearchQueryUpdated, StartProgress, StopProgress, SwitchScreen, Tick, UserLoggedIn,
-    UserLoggedOut,
+    ChangeStatus, Exit, FeatureInfo, FetchSubtitles, Init, LanguagesUpdated, Multi,
+    SearchQueryUpdated, StartProgress, StopProgress, SubtitleDownloaded, SwitchScreen, Tick,
+    UserLoggedIn, UserLoggedOut,
 };
-use crate::ui::app::Action::{ReceivedInput, SubsFetched};
+use crate::ui::app::Action::{InputReceived, SubtitlesFetched};
 use crate::ui::app::Screen::{About, Account, Language, Search};
 use crate::ui::component::Component;
 use crate::ui::downloader::Downloader;
@@ -148,7 +148,7 @@ impl App {
             .collect::<Vec<Option<Action>>>();
 
         let new_action = match action {
-            ReceivedInput(event) => self.handle_key_event(event),
+            InputReceived(event) => self.handle_key_event(event),
 
             LanguagesUpdated(languages) => {
                 self.languages = languages.clone();
@@ -170,7 +170,7 @@ impl App {
                     },
                 };
 
-                Some(Multi(vec![SwitchScreen(Search), FetchSubs(request)]))
+                Some(Multi(vec![SwitchScreen(Search), FetchSubtitles(request)]))
             }
 
             SearchQueryUpdated(query) => {
@@ -187,10 +187,10 @@ impl App {
                     },
                 };
 
-                Some(FetchSubs(request))
+                Some(FetchSubtitles(request))
             }
 
-            FetchSubs(request) => {
+            FetchSubtitles(request) => {
                 let subtitles_tx = self.subtitles_tx.clone();
 
                 let rq = request.clone();

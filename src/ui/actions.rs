@@ -10,22 +10,27 @@ use std::path::PathBuf;
 
 #[derive(Debug)]
 pub enum Action {
-    ReceivedInput(Event),
-    SubsFetched(SubtitlesResponse),
+    Init,
+    Exit,
+    Tick,
+    Multi(Vec<Action>),
+
+    InputReceived(Event),
+    SwitchScreen(Screen),
+
+    SearchQueryUpdated(SubtitlesQuery),
     LanguagesUpdated(Vec<String>),
+    FetchSubtitles(SubtitlesRequest),
+    SubtitlesFetched(SubtitlesResponse),
+    SubtitleDownloaded(Downloaded),
+    FeatureInfo(i64),
+
     UserLoggedIn(UserInfo),
     UserLoggedOut,
-    SearchQueryUpdated(SubtitlesQuery),
-    FetchSubs(SubtitlesRequest),
-    Init,
-    DownloadedSubs(Downloaded),
-    SwitchScreen(Screen),
-    FeatureInfo(i64),
+
     ChangeStatus(String),
-    Multi(Vec<Action>),
+
+    RunTask(Task),
     StartProgress,
     StopProgress,
-    RunTask(Task),
-    Tick,
-    Exit,
 }

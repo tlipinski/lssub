@@ -1,6 +1,6 @@
 use crate::osb::subtitles::{SubtitlesRequest, SubtitlesResponse, subtitles};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, RunTask, SubsFetched};
+use crate::ui::actions::Action::{ChangeStatus, RunTask, SubtitlesFetched};
 use crate::ui::task_runner::{Task, TaskRunner};
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, error, info};
@@ -37,11 +37,11 @@ pub async fn subtitles_fetch_task(
         if let Some(request) = last {
             let task = Task::new("fetch subs", async move {
                 if request.query.len() < 3 {
-                    Ok(SubsFetched(SubtitlesResponse { data: vec![] }))
+                    Ok(SubtitlesFetched(SubtitlesResponse { data: vec![] }))
                 } else {
                     let result = subtitles(request).await;
                     match result {
-                        Ok(subtitles) => Ok(SubsFetched(subtitles)),
+                        Ok(subtitles) => Ok(SubtitlesFetched(subtitles)),
                         Err(e) => {
                             error!("Error fetching subtitles {e}");
                             Err(Error::msg("Error fetching subtitles list, check logs"))

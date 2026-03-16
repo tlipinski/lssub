@@ -3,7 +3,7 @@ use crate::osb::user_info::{UserInfo, get_user_info};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus, ReceivedInput, RunTask, SwitchScreen, UserLoggedIn, UserLoggedOut,
+    ChangeStatus, InputReceived, RunTask, SwitchScreen, UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::component::Component;
 use crate::ui::logged_in_widget::LoggedInWidget;
