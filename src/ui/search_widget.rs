@@ -2,7 +2,7 @@ use crate::osb::subtitles::SubtitlesResponse;
 use crate::secret::retrieve;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, Multi,
+    ChangeStatus, DownloadedSubs, Exit, FetchSubs, Init, LanguagesUpdated, Multi, RunTask,
     SearchQueryUpdated, StartProgress, SubsFetched, SwitchScreen, UserLoggedOut,
 };
 use crate::ui::app::Screen::Search;
@@ -32,7 +32,6 @@ pub struct SearchWidget {
     query_widget: QueryWidget,
     subs_list_widget: SubsListWidget,
     downloader: Downloader,
-    task_runner: TaskRunner,
     help: bool,
 }
 
@@ -81,11 +80,13 @@ impl Component for SearchWidget {
                                 let file_id = s.file_id;
                                 let language = s.language.clone();
 
-                                let task = Task::new(async move { dn.download(file_id, &language).await });
-                                self.task_runner.run(task);
+                                let task =
+                                    Task::new(async move { dn.download(file_id, &language).await });
 
-
-                                Some(ChangeStatus(format!("Downloading {}", s.title)))
+                                Some(Multi(vec![
+                                    ChangeStatus(format!("Downloading {}", s.title)),
+                                    RunTask(task),
+                                ]))
                             }
                             None => None,
                         }
@@ -146,7 +147,6 @@ impl SearchWidget {
             query_widget: QueryWidget::from(file_name.unwrap_or("").into()),
             subs_list_widget: SubsListWidget::default(),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
-            task_runner,
             help: false,
         }
     }

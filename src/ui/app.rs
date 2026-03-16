@@ -48,12 +48,14 @@ use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
+use Action::RunTask;
 
 pub struct App {
     active_screen: Screen,
     subtitles_tx: Sender<SubtitlesRequest>,
     config_provider: ConfigProvider,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
+    task_runner: TaskRunner,
     query: SubtitlesQuery,
     languages: Vec<String>,
 }
@@ -112,6 +114,7 @@ impl App {
             config_provider,
             subtitles_tx,
             widgets: components,
+            task_runner,
             query: SubtitlesQuery {
                 query: file_name.unwrap_or("").into(),
                 ..SubtitlesQuery::default()
@@ -218,6 +221,11 @@ impl App {
                 }
 
                 next_action
+            }
+            
+            RunTask(task) => {
+                self.task_runner.run(task.clone());
+                None
             }
 
             _ => None,

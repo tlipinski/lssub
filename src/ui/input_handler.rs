@@ -23,6 +23,6 @@ pub async fn handle_input_task(tx: Sender<Action>, mut shutdown_rx: Receiver<()>
             _ = shutdown_rx.recv() => break Ok(()),
         };
 
-        tx.send(action).await?;
+        tx.send(action).await;
     }
 }

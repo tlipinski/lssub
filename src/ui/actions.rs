@@ -6,6 +6,7 @@ use crate::ui::downloader::Downloaded;
 use ratatui::crossterm::event::Event;
 use std::path::PathBuf;
 use crate::ui::search_widget::SubtitlesQuery;
+use crate::ui::task_runner::Task;
 
 #[derive(Debug)]
 pub enum Action {
@@ -24,6 +25,7 @@ pub enum Action {
     Multi(Vec<Action>),
     StartProgress,
     StopProgress,
+    RunTask(Task),
     Tick,
     Exit,
 }
