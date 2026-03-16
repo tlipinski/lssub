@@ -3,7 +3,7 @@ use crate::osb::user_info;
 use crate::osb::user_info::get_user_info;
 use crate::secret::store;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, Multi, UserLoggedIn};
+use crate::ui::actions::Action::{ChangeStatus, Multi, RunTask, UserLoggedIn};
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::task_runner::{Task, TaskRunner};
 use anyhow::{Error, Result};
@@ -22,7 +22,6 @@ pub struct LoginWidget {
     username: Input,
     password: Input,
     focus: Focus,
-    task_runner: TaskRunner,
 }
 
 enum Focus {
@@ -36,7 +35,6 @@ impl LoginWidget {
             username: Input::new("".into()),
             password: Input::new("".into()),
             focus: Focus::Username,
-            task_runner,
         }
     }
 
@@ -120,10 +118,10 @@ impl LoginWidget {
                         password: self.password.value().to_owned(),
                     };
 
-                    self.task_runner
-                        .run(Task::new(LoginWidget::login_user(credentials)));
-
-                    Some(ChangeStatus("Logging in...".into()))
+                    Some(Multi(vec![
+                        ChangeStatus("Logging in...".into()),
+                        RunTask(Task::new(LoginWidget::login_user(credentials))),
+                    ]))
                 }
                 (KeyCode::Up, KeyModifiers::NONE) => {
                     self.focus = Focus::Username;
