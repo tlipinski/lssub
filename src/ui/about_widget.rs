@@ -1,4 +1,4 @@
-use crate::osb::values::{APP_NAME, VERSION};
+use crate::osb::values::{APP_NAME, REPO_URL, VERSION};
 use crate::ui::actions::Action;
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
@@ -36,7 +36,7 @@ impl Component for AboutWidget {
                 "".into(),
                 Line::from(format!("{APP_NAME} {VERSION}")).bold(),
                 "".into(),
-                Line::from("https://github.com/tlipinski/lssub"),
+                Line::from(REPO_URL),
             ])
             .block(block)
             .centered()
