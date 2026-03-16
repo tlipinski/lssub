@@ -1,49 +1,102 @@
 # lssub
 
-Rust TUI for searching and downloading subtitles via the OpenSubtitles API.
+`lssub` is a terminal app for finding and downloading movie/TV subtitles from OpenSubtitles.
 
-What it does:
-- Search subtitles by typing a query (debounced; queries shorter than 3 characters return no results).
-- Configure languages (persisted to a config file).
-- Log in/out and show basic account/download quota info (token stored via Secret Service / libsecret).
-- Download the selected subtitle to disk.
-
+## What it does
+- Search subtitles by title
+- Filter by language(s)
+- Optionally log in to your OpenSubtitles account (for account details and quota info)
+- Save selected subtitles directly to disk
 
 ## Requirements
-- Rust toolchain (rustup, cargo)
-- Network access to OpenSubtitles
-- Secret Service + libsecret (for login/logout and user info)
-  - Linux: e.g., GNOME Keyring or KeePassXC Secret Service, plus libsecret development headers to compile
-  - Other OSes: unverified
+- Linux terminal
+- Rust toolchain (`cargo`, `rustc`) to build
+- Internet connection
+- Secret Service available on your desktop session (for login token storage), for example:
+  - GNOME Keyring
+  - KeePassXC with Secret Service integration
+- `libsecret` development package installed to compile
 
+## Install and run
+From the project directory:
 
-## Build And Run
+```bash
+cargo build --release
+cargo run --release -- [PATH]
+```
 
-```sh
-cargo build
+You can also use the built binary:
 
-# Run the TUI
-cargo run -- [PATH]
+```bash
+./target/release/lssub [PATH]
 ```
 
 `PATH` is optional:
-- If `PATH` is a directory: downloads are saved into that directory.
-- If `PATH` is a file: downloads are saved into the file’s parent directory and the file stem is used as:
-  - the initial search query
-  - the output subtitle base name (extension is derived from the downloaded subtitle file name; falls back to `.srt`)
-- If `PATH` is omitted: the current working directory is used for downloads.
+- no `PATH`: subtitles are downloaded to your current directory
+- `PATH` is a directory: subtitles are downloaded there
+- `PATH` is a file path: its parent directory is used as download directory, and file stem is used as initial search query and output base name
 
+Example:
+
+```bash
+lssub "/media/movies/Dune.Part.Two.2024.mkv"
+```
+
+This pre-fills search with `Dune.Part.Two.2024` and saves subtitles under `/media/movies`.
+
+## How to use
+Main navigation:
+- `F2` Search
+- `F3` Account
+- `F4` Languages
+- `F12` About
+- `F10` or `Ctrl+C` Exit
+- `Esc` Back to Search
+
+Search screen:
+- Type to search (queries shorter than 3 chars do not return results)
+- `Up` / `Down` / `PageUp` / `PageDown` to move in results
+- `Enter` to download selected subtitle
+- `F1` to open/close search help popup
+- `Ctrl+S` toggle "single title" narrowing (based on selected row)
+- `Ctrl+T` include/exclude AI-translated subtitles
+
+Languages screen:
+- Enter comma-separated language codes (for example: `en,es`)
+- Press `Enter` to apply and save
+
+Account screen:
+- If logged out: enter OpenSubtitles username/password, press `Enter` to log in
+- If logged in: press `Ctrl+O` to log out
+
+## Downloaded file names
+Downloaded subtitles include the subtitle language in file name.
+
+Examples:
+- base name from input file: `Movie.en.srt`
+- base name from subtitle result title: `Some.Release.en.srt`
+
+Final extension is taken from OpenSubtitles response when available; otherwise `.srt` is used.
 
 ## Configuration
-Config is stored at `~/.config/lssub/config.toml` (XDG base dirs with prefix `lssub`).
+Config file is created automatically at:
 
-If the file does not exist, it is created automatically with defaults.
+`~/.config/lssub/config.toml`
 
-Current schema:
+Current format:
+
 ```toml
 languages = ["en"]
 ```
 
+## Logs
+Run log is written to:
 
-## Logging
-Logs are written to `/tmp/lssub.log` and truncated on each run.
+`/tmp/lssub.log`
+
+The file is overwritten on each start.
+
+## Troubleshooting
+- Login/token errors: ensure a Secret Service provider is running in your session.
+- Build fails on `libsecret`: install your distro's `libsecret` dev package.
+- No results: check internet connection and use at least 3 characters in search query.
