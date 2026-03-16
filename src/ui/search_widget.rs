@@ -141,7 +141,6 @@ impl SearchWidget {
     pub fn from(
         base_path: &Path,
         file_name: Option<&str>,
-        task_runner: TaskRunner,
     ) -> SearchWidget {
         Self {
             query_widget: QueryWidget::from(file_name.unwrap_or("").into()),

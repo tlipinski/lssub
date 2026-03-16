@@ -76,7 +76,7 @@ impl Component for AccountWidget {
 }
 
 impl AccountWidget {
-    pub fn new(task_runner: TaskRunner) -> Self {
+    pub fn new() -> Self {
         Self {
             login_widget: LoginWidget::from(),
             logged_in_widget: LoggedInWidget::from(

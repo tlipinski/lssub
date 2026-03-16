@@ -85,14 +85,13 @@ impl App {
         components.insert(WidgetName::About, Box::new(AboutWidget::new()));
         components.insert(
             WidgetName::Account,
-            Box::new(AccountWidget::new(task_runner.clone())),
+            Box::new(AccountWidget::new()),
         );
         components.insert(
             WidgetName::Search,
             Box::new(SearchWidget::from(
                 base_path,
                 file_name,
-                task_runner.clone(),
             )),
         );
         components.insert(
