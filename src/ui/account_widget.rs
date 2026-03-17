@@ -2,9 +2,7 @@ use crate::osb::login::login;
 use crate::osb::user_info::{UserInfo, get_user_info};
 use crate::secret::{clear, retrieve, store};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{
-    ChangeStatus, InputReceived, RunTask, SwitchScreen, UserLoggedIn, UserLoggedOut,
-};
+use crate::ui::actions::Action::{ChangeStatus, InputReceived, NoOp, RunTask, SwitchScreen, UserLoggedIn, UserLoggedOut};
 use crate::ui::component::Component;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
@@ -38,9 +36,12 @@ impl Component for AccountWidget {
                                 Ok(UserLoggedOut)
                             }
                         },
-                        Ok(None) => Ok(ChangeStatus("".into())), // todo
+                        Ok(None) => {
+                            info!("User token not found");
+                            Ok(NoOp)
+                        },
                         Err(e) => {
-                            error!("Error retrieving jwt: {e}");
+                            error!("Error retrieving user token: {e}");
                             Err(Error::msg(e.to_string()))
                         }
                     }

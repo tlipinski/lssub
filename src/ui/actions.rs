@@ -13,6 +13,7 @@ pub enum Action {
     Init,
     Exit,
     Tick,
+    NoOp,
     Multi(Vec<Action>),
 
     InputReceived(Event),
