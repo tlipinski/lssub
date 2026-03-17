@@ -69,7 +69,7 @@ impl Downloader {
                 remaining: download_link_response.remaining,
             }),
             ChangeStatus(format!(
-                "Downloaded: {}",
+                "Downloaded to {}",
                 output_file.as_os_str().to_str().unwrap()
             )),
         ]))
