@@ -138,7 +138,7 @@ impl App {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
             Tick => {}
-            _ => debug!("action: {:?}", action),
+            _ => debug!("--- {:?}", action),
         };
 
         let mut widget_actions = self
