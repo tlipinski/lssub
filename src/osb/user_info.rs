@@ -5,31 +5,14 @@ use anyhow::Result;
 use log::{debug, error};
 use secrecy::ExposeSecret;
 use serde::Deserialize;
+use crate::osb::osb_request::osb_request;
 
 pub async fn get_user_info(token: &JwtToken) -> Result<UserInfo> {
-    let url = format!("{}/infos/user", API_URL);
-    let resp = reqwest::Client::new()
-        .get(url)
-        .bearer_auth(token.0.expose_secret())
-        .header("Api-Key", AK)
-        .header("User-Agent", USER_AGENT)
-        .send()
-        .await?;
+    let request = reqwest::Client::new()
+        .get(format!("{}/infos/user", API_URL))
+        .bearer_auth(token.0.expose_secret());
 
-    let text_body = resp.text().await?;
-
-    let json: Result<UserInfo, _> = serde_json::from_str(&text_body);
-
-    match json {
-        Ok(user_info_response) => {
-            debug!("{:?}", user_info_response);
-            Ok(user_info_response)
-        }
-        Err(e) => {
-            error!("Failed decoding body {:?} {}", e, text_body);
-            Err(e.into())
-        }
-    }
+    osb_request(request).await
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]
