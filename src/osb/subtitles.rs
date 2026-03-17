@@ -1,3 +1,4 @@
+use crate::osb::osb_request::osb_request;
 use crate::osb::values::{AK, API_URL, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info, trace};
@@ -5,8 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub async fn subtitles(request: SubtitlesRequest) -> Result<SubtitlesResponse> {
-    let url = format!("{}/subtitles", API_URL);
-
     let mut params: HashMap<&'static str, String> = HashMap::new();
     params.insert("query", request.query.to_string());
     let langs = request.languages.join(",");
@@ -18,49 +17,11 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<SubtitlesResponse> {
         params.insert("id", i.to_string());
     }
 
-    let req = reqwest::Client::new()
-        .get(url)
-        .timeout(std::time::Duration::from_secs(5))
-        .header("Api-Key", AK)
-        .header("User-Agent", USER_AGENT)
+    let request = reqwest::Client::new()
+        .get(format!("{}/subtitles", API_URL))
         .query(&params);
 
-    debug!("{:?}", req);
-
-    let response = req.send().await?;
-
-    let status = response.status();
-
-    let text_body = response.text().await?;
-
-    debug!("{}", text_body);
-
-    match status {
-        s if s.is_success() || s.is_redirection() => {
-            debug!("Response {}", text_body);
-            let json: Result<SubtitlesResponse, _> = serde_json::from_str(&text_body);
-            match json {
-                Ok(subtitles_response) => {
-                    // debug!("{}", serde_json::to_string_pretty(&subtitles_response)?);
-                    Ok(subtitles_response)
-                }
-                Err(e) => {
-                    error!("Failed decoding body {:?} {}", e, text_body);
-                    Err(Error::from(e))
-                }
-            }
-        }
-        s if s.is_client_error() => {
-            let error_response: crate::osb::login::ErrorResponse =
-                serde_json::from_str(&text_body)?;
-            info!("Client error [{}]: {:?}", s.as_u16(), error_response);
-            Err(Error::msg(error_response))
-        }
-        s => {
-            error!("Server error [{}]: {}", s.as_u16(), text_body);
-            Err(Error::msg("Server error"))
-        }
-    }
+    osb_request(request).await
 }
 
 #[derive(Deserialize, Serialize, Debug)]

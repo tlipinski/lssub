@@ -1,0 +1,49 @@
+use crate::osb::values::{AK, API_URL, USER_AGENT};
+use anyhow::Error;
+use log::{debug, error, info};
+use reqwest::RequestBuilder;
+use std::collections::HashMap;
+use serde::de::DeserializeOwned;
+use serde::Deserialize;
+
+pub async fn osb_request<A: DeserializeOwned>(mut request: RequestBuilder) -> anyhow::Result<A> {
+    let request = request
+        .timeout(std::time::Duration::from_secs(5))
+        .header("Api-Key", AK)
+        .header("User-Agent", USER_AGENT);
+
+    debug!("Request {:?}", request);
+
+    let http_response = request.send().await?;
+    let status = http_response.status();
+    let text_body = http_response.text().await?;
+
+    debug!("Response: {}", text_body);
+
+    match status {
+        s if s.is_success() || s.is_redirection() => {
+            let body = text_body.clone();
+            let json: Result<A, _> = serde_json::from_str(&body);
+            match json {
+                Ok(subtitles_response) => {
+                    // debug!("{}", serde_json::to_string_pretty(&subtitles_response)?);
+                    Ok(subtitles_response)
+                }
+                Err(e) => {
+                    error!("Failed decoding body {:?} {}", e, text_body);
+                    Err(Error::from(e))
+                }
+            }
+        }
+        s if s.is_client_error() => {
+            let error_response: crate::osb::login::ErrorResponse =
+                serde_json::from_str(&text_body)?;
+            info!("Client error [{}]: {:?}", s.as_u16(), error_response);
+            Err(Error::msg(error_response))
+        }
+        s => {
+            error!("Server error [{}]: {}", s.as_u16(), text_body);
+            Err(Error::msg("Server error"))
+        }
+    }
+}
