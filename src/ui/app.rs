@@ -137,8 +137,7 @@ impl App {
 
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
-            Tick => {}
-            Multi(_) => {}
+            Tick | Multi(_) | InputReceived(_) => {}
             _ => debug!("--- {:?}", action),
         };
 
