@@ -43,7 +43,7 @@ pub async fn osb_request<A: DeserializeOwned>(mut request: RequestBuilder) -> an
         }
         s => {
             error!("Server error [{}]: {}", s.as_u16(), text_body);
-            Err(Error::msg("Server error"))
+            Err(Error::msg("Server error, check logs"))
         }
     }
 }

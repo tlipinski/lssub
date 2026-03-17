@@ -12,7 +12,7 @@ use crate::ui::task_runner::{Task, TaskRunner};
 use Action::Init;
 use anyhow::{Error, Result};
 use crossterm::event::Event;
-use log::{error, info};
+use log::{error, info, warn};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::text::ToSpan;
@@ -33,7 +33,9 @@ impl Component for AccountWidget {
                             Ok(user_info) => Ok(UserLoggedIn(user_info)),
                             Err(e) => {
                                 error!("Error getting user info: {e}");
-                                Err(Error::msg(e.to_string()))
+                                warn!("Logging out because token might have expired");
+                                clear().await;
+                                Ok(UserLoggedOut)
                             }
                         },
                         Ok(None) => Ok(ChangeStatus("".into())), // todo
