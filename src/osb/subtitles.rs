@@ -59,39 +59,39 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct SubtitlesResponse {
-    pub data: Vec<Data>,
+    data: Vec<Data>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Data {
-    pub id: String,
-    pub r#type: String,
-    pub attributes: Attributes,
+    id: String,
+    r#type: String,
+    attributes: Attributes,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct FeatureDetails {
-    pub feature_id: i64,
-    pub movie_name: String,
-    pub year: Option<i32>,
+    feature_id: i64,
+    movie_name: String,
+    year: Option<i32>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct File {
-    pub file_id: i64,
+    file_id: i64,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Attributes {
-    pub feature_details: FeatureDetails,
-    pub language: String,
-    pub download_count: i32,
-    pub new_download_count: i32,
-    pub ai_translated: bool,
-    pub votes: i32,
-    pub upload_date: String,
-    pub release: String,
-    pub files: Vec<File>,
+    feature_details: FeatureDetails,
+    language: String,
+    download_count: i32,
+    new_download_count: i32,
+    ai_translated: bool,
+    votes: i32,
+    upload_date: String,
+    release: String,
+    files: Vec<File>,
 }
 
 #[derive(Debug, Clone)]
