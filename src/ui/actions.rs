@@ -1,5 +1,5 @@
 use crate::osb::login::Credentials;
-use crate::osb::subtitles::{SubtitlesRequest, SubtitlesResponse};
+use crate::osb::subtitles::{Subtitle, SubtitlesRequest, SubtitlesResponse};
 use crate::osb::user_info::UserInfo;
 use crate::ui::app::Screen;
 use crate::ui::downloader::Downloaded;
@@ -22,7 +22,7 @@ pub enum Action {
     SearchQueryUpdated(SubtitlesQuery),
     LanguagesUpdated(Vec<String>),
     FetchSubtitles(SubtitlesRequest),
-    SubtitlesFetched(SubtitlesResponse),
+    SubtitlesFetched(Vec<Subtitle>),
     SubtitleDownloaded(Downloaded),
     FeatureInfo(i64),
 

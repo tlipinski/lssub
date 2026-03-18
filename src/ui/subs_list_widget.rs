@@ -1,4 +1,4 @@
-use crate::osb::subtitles::SubtitlesResponse;
+use crate::osb::subtitles::{Subtitle, SubtitlesResponse};
 use crate::ui::handled::HandleResult;
 use crate::ui::handled::HandleResult::Unhandled;
 use crate::ui::pad::BlockTitlePadExt;
@@ -20,21 +20,8 @@ pub struct SubsListWidget {
     subs: Vec<Subtitle>,
     state: TableState,
     scroll_state: ScrollbarState,
+    single_title: Option<String>,
     pub params: QueryParams,
-}
-
-// todo reduce pubs
-#[derive(Debug, Default)]
-pub struct Subtitle {
-    feature_id: i64,
-    pub file_id: i64,
-    pub title: String,
-    year: String,
-    pub language: String,
-    upload_date: String,
-    downloads: i32,
-    ai_translated: String,
-    votes: String,
 }
 
 #[derive(Default, Clone, Debug)]
@@ -120,43 +107,10 @@ impl SubsListWidget {
         }
     }
 
-    pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
+    pub fn update_subtitles(&mut self, subs: Vec<Subtitle>) {
         self.scroll_state = self
             .scroll_state
-            .content_length(subtitles_response.data.len());
-
-        let subs = subtitles_response
-            .data
-            .iter()
-            .map(|resp| Subtitle {
-                feature_id: resp.attributes.feature_details.feature_id,
-                file_id: resp.attributes.files.first().unwrap().file_id,
-                title: resp.attributes.release.clone(),
-                year: resp
-                    .attributes
-                    .feature_details
-                    .year
-                    .map(|year| year.to_string())
-                    .unwrap_or_default(),
-                language: resp.attributes.language.clone(),
-                upload_date: resp
-                    .attributes
-                    .upload_date
-                    .split('T')
-                    .next()
-                    .unwrap_or(&resp.attributes.upload_date)
-                    .to_string(),
-                downloads: (resp.attributes.download_count + resp.attributes.new_download_count),
-                ai_translated: match resp.attributes.ai_translated {
-                    true => "✓".to_string(),
-                    false => "".to_string(),
-                },
-                votes: match resp.attributes.votes {
-                    0 => "".to_string(),
-                    x => x.to_string(),
-                },
-            })
-            .collect::<Vec<Subtitle>>();
+            .content_length(subs.len());
 
         self.subs = subs;
     }

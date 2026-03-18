@@ -37,7 +37,7 @@ pub async fn subtitles_fetch_task(
         if let Some(request) = last {
             let task = Task::new("fetch subs", async move {
                 if request.query.len() < 3 {
-                    Ok(SubtitlesFetched(SubtitlesResponse { data: vec![] }))
+                    Ok(SubtitlesFetched(vec![]))
                 } else {
                     let result = subtitles(request).await;
                     match result {

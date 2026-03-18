@@ -1,4 +1,4 @@
-use crate::osb::subtitles::SubtitlesResponse;
+use crate::osb::subtitles::{Subtitle, SubtitlesResponse};
 use crate::secret::retrieve;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
@@ -12,7 +12,7 @@ use crate::ui::handled::HandleResult::{Handled, Unhandled};
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;
 use crate::ui::status_widget::StatusWidget;
-use crate::ui::subs_list_widget::{QueryParams, SubsListWidget, Subtitle};
+use crate::ui::subs_list_widget::{QueryParams, SubsListWidget};
 use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
 use crossterm::event::{KeyEvent, KeyModifiers};
@@ -43,7 +43,7 @@ impl Component for SearchWidget {
                 params: QueryParams::default(),
             })),
             SubtitlesFetched(subtitles) => {
-                self.update_subtitles(&subtitles);
+                self.update_subtitles(subtitles.to_vec());
                 None
             }
             _ => None,
@@ -141,8 +141,8 @@ impl SearchWidget {
         }
     }
 
-    pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
-        self.subs_list_widget.update_subtitles(subtitles_response);
+    pub fn update_subtitles(&mut self, subtitles: Vec<Subtitle>) {
+        self.subs_list_widget.update_subtitles(subtitles);
     }
 }
 
