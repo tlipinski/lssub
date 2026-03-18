@@ -1,24 +1,18 @@
 use crate::osb::subtitles::SubtitlesResponse;
-use crate::ui::actions::Action;
-use crate::ui::actions::Action::{FeatureInfo, FetchSubtitles, SearchQueryUpdated};
 use crate::ui::handled::HandleResult;
 use crate::ui::handled::HandleResult::Unhandled;
 use crate::ui::pad::BlockTitlePadExt;
-use crate::ui::subs_list_widget::SingleFeature::Triggered;
 use HandleResult::Handled;
-use SingleFeature::{Disabled, Enabled};
-use log::{debug, info};
 use ratatui::Frame;
-use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::KeyModifiers;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
-use ratatui::layout::{Alignment, Rect};
-use ratatui::prelude::{Style, Stylize, Text, Widget};
+use ratatui::layout::Rect;
+use ratatui::prelude::{Style, Stylize, Text};
 use ratatui::style::Color;
 use ratatui::symbols::border;
 use ratatui::widgets::{
-    Block, Cell, Row, ScrollDirection, Scrollbar, ScrollbarOrientation, ScrollbarState,
-    StatefulWidget, Table, TableState,
+    Block, Cell, Row, ScrollDirection, Scrollbar, ScrollbarOrientation, ScrollbarState, Table,
+    TableState,
 };
 
 #[derive(Default)]
@@ -26,16 +20,7 @@ pub struct SubsListWidget {
     subs: Vec<Subtitle>,
     state: TableState,
     scroll_state: ScrollbarState,
-    single_feature: SingleFeature,
     pub params: QueryParams,
-}
-
-#[derive(Debug, Default, PartialEq)]
-enum SingleFeature {
-    #[default]
-    Disabled,
-    Triggered,
-    Enabled,
 }
 
 // todo reduce pubs
@@ -102,12 +87,10 @@ impl SubsListWidget {
             }
 
             (KeyCode::Char('s'), KeyModifiers::CONTROL) => {
-                if (self.single_feature != Disabled) {
-                    self.single_feature = Disabled;
+                if (self.params.feature_id.is_some()) {
                     self.params.feature_id = None;
                     Handled(Some(self.params.clone()))
                 } else {
-                    self.single_feature = Triggered;
                     match self
                         .state
                         .selected()
@@ -138,15 +121,6 @@ impl SubsListWidget {
     }
 
     pub fn update_subtitles(&mut self, subtitles_response: &SubtitlesResponse) {
-        // SingleFeature option is enabled only for *single* subs update
-        // after another update it gets disabled again
-        if (self.single_feature == Triggered) {
-            self.single_feature = Enabled;
-        } else {
-            self.single_feature = Disabled;
-            self.params.feature_id = None;
-        }
-
         self.scroll_state = self
             .scroll_state
             .content_length(subtitles_response.data.len());
@@ -212,8 +186,8 @@ impl SubsListWidget {
         });
 
         let mut title = format!("Results: {}", self.subs.len());
-        if (self.single_feature == Enabled) {
-            title.push_str(" (single feature)");
+        if (self.params.feature_id.is_some()) {
+            title.push_str(" (single title)");
         }
         if (self.params.exclude_ai) {
             title.push_str(" (AI excluded)");
