@@ -2,9 +2,9 @@ use crate::osb::values::{AK, API_URL, USER_AGENT};
 use anyhow::Error;
 use log::{debug, error, info};
 use reqwest::RequestBuilder;
-use std::collections::HashMap;
-use serde::de::DeserializeOwned;
 use serde::Deserialize;
+use serde::de::DeserializeOwned;
+use std::collections::HashMap;
 
 pub async fn osb_request<A: DeserializeOwned>(mut request: RequestBuilder) -> anyhow::Result<A> {
     let request = request

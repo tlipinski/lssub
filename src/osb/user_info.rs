@@ -1,11 +1,11 @@
 use crate::osb::login::JwtToken;
+use crate::osb::osb_request::osb_request;
 use crate::osb::values::API_URL;
 use crate::osb::values::{AK, USER_AGENT};
 use anyhow::Result;
 use log::{debug, error};
 use secrecy::ExposeSecret;
 use serde::Deserialize;
-use crate::osb::osb_request::osb_request;
 
 pub async fn get_user_info(token: &JwtToken) -> Result<User> {
     let request = reqwest::Client::new()

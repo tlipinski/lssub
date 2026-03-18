@@ -4,7 +4,7 @@ pub mod get_download_link;
 pub mod guess;
 pub mod guess_search;
 pub mod login;
+mod osb_request;
 pub mod subtitles;
 pub mod user_info;
 pub mod values;
-mod osb_request;

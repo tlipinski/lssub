@@ -63,10 +63,7 @@ impl LoggedInWidget {
                 "Allowed downloads: {}",
                 self.user.allowed_downloads
             )),
-            Line::from(format!(
-                "Downloads count: {}",
-                self.user.downloads_count
-            )),
+            Line::from(format!("Downloads count: {}", self.user.downloads_count)),
             Line::from(format!(
                 "Remaining downloads: {}",
                 self.user.remaining_downloads
