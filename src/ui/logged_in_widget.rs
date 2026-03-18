@@ -1,5 +1,5 @@
 use crate::osb::login::Credentials;
-use crate::osb::user_info::UserInfo;
+use crate::osb::user_info::User;
 use crate::secret::clear;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, Multi, RunTask, UserLoggedOut};
@@ -19,12 +19,12 @@ use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 
 pub struct LoggedInWidget {
-    pub user_info: UserInfo,
+    pub user: User,
 }
 
 impl LoggedInWidget {
-    pub fn from(user_info: UserInfo) -> Self {
-        LoggedInWidget { user_info }
+    pub fn from(user: User) -> Self {
+        LoggedInWidget { user }
     }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
@@ -57,19 +57,19 @@ impl LoggedInWidget {
         );
 
         let already_logged = Paragraph::new(vec![
-            Line::from(format!("Username: {}", self.user_info.data.username)),
-            Line::from(format!("Level: {}", self.user_info.data.level)),
+            Line::from(format!("Username: {}", self.user.username)),
+            Line::from(format!("Level: {}", self.user.level)),
             Line::from(format!(
                 "Allowed downloads: {}",
-                self.user_info.data.allowed_downloads
+                self.user.allowed_downloads
             )),
             Line::from(format!(
                 "Downloads count: {}",
-                self.user_info.data.downloads_count
+                self.user.downloads_count
             )),
             Line::from(format!(
                 "Remaining downloads: {}",
-                self.user_info.data.remaining_downloads
+                self.user.remaining_downloads
             )),
         ])
         .block(Block::bordered());

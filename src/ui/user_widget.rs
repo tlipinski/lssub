@@ -23,8 +23,8 @@ impl Component for UserWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
             UserLoggedIn(user_info) => {
-                self.requests = user_info.data.downloads_count;
-                self.remaining = user_info.data.remaining_downloads;
+                self.requests = user_info.downloads_count;
+                self.remaining = user_info.remaining_downloads;
             }
             UserLoggedOut => {
                 self.requests = 0;

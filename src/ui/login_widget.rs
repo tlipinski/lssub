@@ -162,7 +162,7 @@ impl LoginWidget {
                 let user_info = get_user_info(&jwt).await?;
                 Ok(Multi(vec![
                     UserLoggedIn(user_info.clone()),
-                    ChangeStatus(format!("Logged in as {}", user_info.data.username)),
+                    ChangeStatus(format!("Logged in as {}", user_info.username)),
                 ]))
             }
             Err(e) => {

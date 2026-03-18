@@ -7,21 +7,23 @@ use secrecy::ExposeSecret;
 use serde::Deserialize;
 use crate::osb::osb_request::osb_request;
 
-pub async fn get_user_info(token: &JwtToken) -> Result<UserInfo> {
+pub async fn get_user_info(token: &JwtToken) -> Result<User> {
     let request = reqwest::Client::new()
         .get(format!("{}/infos/user", API_URL))
         .bearer_auth(token.0.expose_secret());
 
-    osb_request(request).await
+    let user_info: UserInfo = osb_request(request).await?;
+
+    Ok(user_info.data)
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct UserInfo {
-    pub data: UserData,
+    pub data: User,
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]
-pub struct UserData {
+pub struct User {
     pub username: String,
     pub downloads_count: i32,
     pub remaining_downloads: i32,
