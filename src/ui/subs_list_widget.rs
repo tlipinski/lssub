@@ -20,8 +20,10 @@ pub struct SubsListWidget {
     subs: Vec<Subtitle>,
     state: TableState,
     scroll_state: ScrollbarState,
-    single_title: String,
     pub params: QueryParams,
+    // todo group
+    single_title: String,
+    single_year: String,
 }
 
 #[derive(Default, Clone, Debug)]
@@ -85,7 +87,8 @@ impl SubsListWidget {
                     {
                         Some(selected) => {
                             self.params.feature_id = Some(selected.feature_id);
-                            self.single_title = selected.feature_movie_name.clone();
+                            self.single_title = selected.feature_title.clone();
+                            self.single_year = selected.year.clone();
                             Handled(Some(self.params.clone()))
                         }
                         None => Handled(None),
@@ -110,6 +113,8 @@ impl SubsListWidget {
 
     pub fn update_subtitles(&mut self, subs: Vec<Subtitle>) {
         self.scroll_state = self.scroll_state.content_length(subs.len());
+        self.scroll_state.first();
+        self.state.select_first();
 
         self.subs = subs;
     }
@@ -140,7 +145,10 @@ impl SubsListWidget {
 
         let mut title = format!("Results: {}", self.subs.len());
         if (self.params.feature_id.is_some()) {
-            title.push_str(&format!(" (single title: {})", self.single_title));
+            title.push_str(&format!(
+                " (single title: '{} ({})')",
+                self.single_title, self.single_year
+            ));
         }
         if (self.params.exclude_ai) {
             title.push_str(" (AI excluded)");
