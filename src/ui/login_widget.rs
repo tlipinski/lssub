@@ -159,10 +159,10 @@ impl LoginWidget {
         match login(&credentials).await {
             Ok(jwt) => {
                 store(&jwt, &credentials.username).await?;
-                let user_info = get_user_info(&jwt).await?;
+                let user = get_user_info(&jwt).await?;
                 Ok(Multi(vec![
-                    UserLoggedIn(user_info.clone()),
-                    ChangeStatus(format!("Logged in as {}", user_info.username)),
+                    UserLoggedIn(user.clone()),
+                    ChangeStatus(format!("Logged in as {}", user.username)),
                 ]))
             }
             Err(e) => {

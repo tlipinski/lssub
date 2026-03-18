@@ -29,7 +29,7 @@ impl Component for AccountWidget {
             Init => Some(RunTask(Task::new("init account", async move {
                 match retrieve().await {
                     Ok(Some(jwt)) => match get_user_info(&jwt).await {
-                        Ok(user_info) => Ok(UserLoggedIn(user_info)),
+                        Ok(user) => Ok(UserLoggedIn(user)),
                         Err(e) => {
                             error!("Error getting user info: {e}");
                             warn!("Logging out because token might have expired");
@@ -47,9 +47,9 @@ impl Component for AccountWidget {
                     }
                 }
             }))),
-            UserLoggedIn(user_info) => {
+            UserLoggedIn(user) => {
                 self.logged_in = true;
-                self.logged_in_widget.user = user_info.clone();
+                self.logged_in_widget.user = user.clone();
                 None
             }
             UserLoggedOut => {

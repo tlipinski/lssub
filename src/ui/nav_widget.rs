@@ -16,8 +16,8 @@ pub struct NavWidget {
 impl Component for NavWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
-            UserLoggedIn(user_info) => {
-                self.username = Some(user_info.username.clone());
+            UserLoggedIn(user) => {
+                self.username = Some(user.username.clone());
             }
             UserLoggedOut => {
                 self.username = None;

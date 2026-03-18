@@ -22,9 +22,9 @@ pub struct UserWidget {
 impl Component for UserWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
-            UserLoggedIn(user_info) => {
-                self.requests = user_info.downloads_count;
-                self.remaining = user_info.remaining_downloads;
+            UserLoggedIn(user) => {
+                self.requests = user.downloads_count;
+                self.remaining = user.remaining_downloads;
             }
             UserLoggedOut => {
                 self.requests = 0;
