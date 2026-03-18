@@ -7,7 +7,6 @@ use std::collections::HashMap;
 
 pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
     let mut params: HashMap<&'static str, String> = HashMap::new();
-    params.insert("query", request.query.to_string());
     let langs = request.languages.join(",");
     params.insert("languages", langs);
 
@@ -15,6 +14,8 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
 
     if let Some(i) = request.id {
         params.insert("id", i.to_string());
+    } else {
+        params.insert("query", request.query.to_string());
     }
 
     let request = reqwest::Client::new()
@@ -28,7 +29,7 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
         .iter()
         .map(|resp| Subtitle {
             feature_id: resp.attributes.feature_details.feature_id,
-            feature_title: resp.attributes.feature_details.title.clone(),
+            feature_title: resp.attributes.feature_details.movie_name.clone(),
             file_id: resp.attributes.files.first().unwrap().file_id,
             title: resp.attributes.release.clone(),
             year: resp
@@ -74,6 +75,7 @@ pub struct Data {
 pub struct FeatureDetails {
     feature_id: i64,
     title: String,
+    movie_name: String,
     year: Option<i32>,
 }
 

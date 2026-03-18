@@ -21,9 +21,7 @@ pub struct SubsListWidget {
     state: TableState,
     scroll_state: ScrollbarState,
     pub params: QueryParams,
-    // todo group
     single_title: String,
-    single_year: String,
 }
 
 #[derive(Default, Clone, Debug)]
@@ -88,7 +86,6 @@ impl SubsListWidget {
                         Some(selected) => {
                             self.params.feature_id = Some(selected.feature_id);
                             self.single_title = selected.feature_title.clone();
-                            self.single_year = selected.year.clone();
                             Handled(Some(self.params.clone()))
                         }
                         None => Handled(None),
@@ -145,10 +142,7 @@ impl SubsListWidget {
 
         let mut title = format!("Results: {}", self.subs.len());
         if (self.params.feature_id.is_some()) {
-            title.push_str(&format!(
-                " (single title: '{} ({})')",
-                self.single_title, self.single_year
-            ));
+            title.push_str(&format!(" (single title: '{}')", self.single_title));
         }
         if (self.params.exclude_ai) {
             title.push_str(" (AI excluded)");
