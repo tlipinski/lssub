@@ -28,6 +28,7 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
         .iter()
         .map(|resp| Subtitle {
             feature_id: resp.attributes.feature_details.feature_id,
+            feature_movie_name: resp.attributes.feature_details.movie_name.clone(),
             file_id: resp.attributes.files.first().unwrap().file_id,
             title: resp.attributes.release.clone(),
             year: resp
@@ -105,6 +106,7 @@ pub struct SubtitlesRequest {
 #[derive(Debug, Default, Clone)]
 pub struct Subtitle {
     pub feature_id: i64,
+    pub feature_movie_name: String,
     pub file_id: i64,
     pub title: String,
     pub year: String,
