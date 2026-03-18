@@ -1,3 +1,4 @@
+// todo move values out from osb mod
 pub const API_URL: &str = "https://api.opensubtitles.com/api/v1";
 pub const VIP_API_URL: &str = "https://vip-api.opensubtitles.com/api/v1";
 pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
