@@ -108,34 +108,32 @@ impl SubsListWidget {
     }
 
     pub fn update_subtitles(&mut self, subs: Vec<Subtitle>) {
-        self.scroll_state = self
-            .scroll_state
-            .content_length(subs.len());
+        self.scroll_state = self.scroll_state.content_length(subs.len());
 
         self.subs = subs;
     }
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
         let wide = area.width > 90;
-        let rows = self.subs.iter().map(|item| {
+        let rows = self.subs.iter().map(|sub| {
             Row::from_iter(vec![
-                Cell::from(Text::from(item.title.as_str())),
-                Cell::from(Text::from(item.language.as_str())),
-                Cell::from(Text::from(item.year.as_str())),
-                Cell::from(Text::from(item.upload_date.as_str())),
+                Cell::from(Text::from(sub.title.as_str())),
+                Cell::from(Text::from(sub.language.as_str())),
+                Cell::from(Text::from(sub.year.as_str())),
+                Cell::from(Text::from(sub.upload_date.as_str())),
                 if (wide) {
-                    Cell::from(Text::from(item.downloads.to_string()).right_aligned())
+                    Cell::from(Text::from(sub.downloads.to_string()).right_aligned())
                 } else {
-                    if (item.downloads >= 1000) {
+                    if (sub.downloads >= 1000) {
                         Cell::from(
-                            Text::from((item.downloads / 1000).to_string() + "k").right_aligned(),
+                            Text::from((sub.downloads / 1000).to_string() + "k").right_aligned(),
                         )
                     } else {
-                        Cell::from(Text::from(item.downloads.to_string()).right_aligned())
+                        Cell::from(Text::from(sub.downloads.to_string()).right_aligned())
                     }
                 },
-                Cell::from(Text::from(item.ai_translated.as_str())),
-                Cell::from(Text::from(item.votes.as_str()).right_aligned()),
+                Cell::from(Text::from(sub.ai_translated.as_str())),
+                Cell::from(Text::from(sub.votes.as_str()).right_aligned()),
             ])
         });
 
