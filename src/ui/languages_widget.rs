@@ -219,13 +219,7 @@ impl Component for LanguagesWidget {
 
             if idx == self.focused_idx {
                 checkbox = checkbox
-                    .checkbox_style(
-                        Style::default()
-                            .fg(Color::White)
-                            .bg(Color::DarkGray)
-                            .add_modifier(Modifier::BOLD),
-                    )
-                    .label_style(
+                    .style(
                         Style::default()
                             .fg(Color::White)
                             .bg(Color::DarkGray)
