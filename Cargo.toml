@@ -21,6 +21,7 @@ ratatui = "0.30.0"
 xdg = "2.5.2"
 tui-input = "0.15.0"
 tui-popup = "0.7.2"
+tui-checkbox = "0.4.3"
 crossterm = { version = "0.29.0", features = ["event-stream"] }
 futures-util = "0.3.31"
 reqwest = { version = "0.12.12", features = ["json"] }
