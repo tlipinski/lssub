@@ -10,12 +10,13 @@ use tokio::join;
 use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
+use crate::ui::search_widget::SubtitlesQuery;
 
-pub async fn debouncer_task(mut rx: Receiver<SubtitlesRequest>, ui_tx: Sender<Action>) -> Result<()> {
+pub async fn debouncer_task(mut rx: Receiver<SubtitlesQuery>, ui_tx: Sender<Action>) -> Result<()> {
     'outer: loop {
         sleep(Duration::from_millis(1000)).await;
 
-        let mut last: Option<SubtitlesRequest> = None;
+        let mut last: Option<SubtitlesQuery> = None;
 
         // Receive as much as possible within outer loop cycle to reduce OSB calls.
         'debouncing: loop {
@@ -33,7 +34,7 @@ pub async fn debouncer_task(mut rx: Receiver<SubtitlesRequest>, ui_tx: Sender<Ac
 
         if let Some(debounced) = last {
             info!("Debounced {:?}", debounced);
-            ui_tx.send(FetchSubtitles(debounced)).await;
+            ui_tx.send(FetchSubtitles).await;
         }
     }
 }

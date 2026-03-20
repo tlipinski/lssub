@@ -50,7 +50,7 @@ use tokio::task::JoinHandle;
 
 pub struct App {
     active_screen: Screen,
-    debouncer_tx: Sender<SubtitlesRequest>,
+    debouncer_tx: Sender<SubtitlesQuery>,
     config_provider: ConfigProvider,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
     task_runner: TaskRunner,
@@ -66,7 +66,7 @@ impl App {
         file_name: Option<&str>,
     ) -> Result<()> {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
-        let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<SubtitlesRequest>(100);
+        let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
         let task_runner = TaskRunner::new(ui_tx.clone());
@@ -157,24 +157,23 @@ impl App {
 
                 let request = self.subtitles_request();
 
-                Some(Multi(vec![SwitchScreen(Search), FetchSubtitles(request)]))
+                Some(Multi(vec![SwitchScreen(Search), FetchSubtitles]))
             }
 
             SearchQueryUpdated(query) => {
                 if (self.initialized) {
                     if (self.query.query != query.query) {
                         self.query = query.clone();
-                        let request = self.subtitles_request();
+                        let q = query.clone();
                         let debouncer = self.debouncer_tx.clone();
                         tokio::spawn(async move {
-                            debouncer.send(request).await;
+                            debouncer.send(q).await;
                         });
                         None
                     } else {
                         self.query = query.clone();
-                        let request = self.subtitles_request();
 
-                        Some(FetchSubtitles(request))
+                        Some(FetchSubtitles)
                     }
                 } else {
                     self.query = query.clone();
@@ -182,13 +181,13 @@ impl App {
                 }
             }
 
-            FetchSubtitles(request) => {
-                let rq = request.clone();
+            FetchSubtitles => {
+                let request = self.subtitles_request();
                 let task = Task::new("fetch subs", async move {
-                    if rq.query.len() < 3 {
+                    if request.query.len() < 3 {
                         Ok(SubtitlesFetched(vec![]))
                     } else {
-                        let result = subtitles(rq).await;
+                        let result = subtitles(request).await;
                         match result {
                             Ok(subtitles) => Ok(SubtitlesFetched(subtitles)),
                             Err(e) => {

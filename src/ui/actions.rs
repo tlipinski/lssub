@@ -22,12 +22,13 @@ pub enum Action {
     SwitchScreen(Screen),
 
     SearchQueryUpdated(SubtitlesQuery),
+    FetchSubtitles,
+    SubtitlesFetched(Vec<Subtitle>),
+    SubtitleDownloaded(Downloaded),
+
     LanguagesUpdated(Vec<String>),
     LanguagesFetched(Vec<Language>),
     LanguagesAndConfigFetched(Vec<Language>, Vec<String>),
-    FetchSubtitles(SubtitlesRequest),
-    SubtitlesFetched(Vec<Subtitle>),
-    SubtitleDownloaded(Downloaded),
     FeatureInfo(i64),
 
     UserLoggedIn(User),
