@@ -129,7 +129,7 @@ mod tests {
     fn no_input_file() {
         assert_eq!(
             output_file(&PathBuf::from("/home/user"), &None, "default.ext", "en"),
-            PathBuf::from("/home/user/default_en.ext")
+            PathBuf::from("/home/user/default.en.ext")
         );
     }
 
@@ -142,7 +142,7 @@ mod tests {
                 "default.ext",
                 "en"
             ),
-            PathBuf::from("/home/user/file_en.ext")
+            PathBuf::from("/home/user/file.en.ext")
         );
     }
 
@@ -155,7 +155,7 @@ mod tests {
                 "default.ext",
                 "en"
             ),
-            PathBuf::from("/home/user/file.multiple_en.ext")
+            PathBuf::from("/home/user/file.multiple.en.ext")
         );
     }
 
@@ -168,7 +168,7 @@ mod tests {
                 "default",
                 "en"
             ),
-            PathBuf::from("/home/user/file_en.srt")
+            PathBuf::from("/home/user/file.en.srt")
         );
     }
 }
