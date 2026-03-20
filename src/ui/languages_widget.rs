@@ -43,7 +43,7 @@ impl Component for LanguagesWidget {
                     .map(|lang| (lang.clone(), user_languages.contains(&lang.language_code)))
                     .collect::<Vec<(Language, bool)>>();
 
-                None
+                Some(LanguagesUpdated(self.languages()))
             }
             _ => None,
         }

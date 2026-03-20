@@ -56,6 +56,7 @@ pub struct App {
     task_runner: TaskRunner,
     query: SubtitlesQuery,
     languages: Vec<String>,
+    initialized: bool,
 }
 
 impl App {
@@ -89,10 +90,7 @@ impl App {
             WidgetName::Search,
             Box::new(SearchWidget::from(base_path, file_name)),
         );
-        components.insert(
-            WidgetName::Languages,
-            Box::new(LanguagesWidget::new()),
-        );
+        components.insert(WidgetName::Languages, Box::new(LanguagesWidget::new()));
         components.insert(
             WidgetName::Status,
             Box::new(StatusWidget::from(spinner.clone())),
@@ -109,6 +107,7 @@ impl App {
                 ..SubtitlesQuery::default()
             },
             languages: vec![],
+            initialized: false,
         };
 
         let mut message_opt = Some(Init);
@@ -174,18 +173,22 @@ impl App {
             SearchQueryUpdated(query) => {
                 self.query = query.clone();
 
-                let request = SubtitlesRequest {
-                    query: query.query.clone(),
-                    id: query.params.feature_id,
-                    languages: self.languages.clone(),
-                    ai_translated: if (query.params.exclude_ai) {
-                        "exclude".to_string()
-                    } else {
-                        "include".to_string()
-                    },
-                };
+                if (self.initialized) {
+                    let request = SubtitlesRequest {
+                        query: query.query.clone(),
+                        id: query.params.feature_id,
+                        languages: self.languages.clone(),
+                        ai_translated: if (query.params.exclude_ai) {
+                            "exclude".to_string()
+                        } else {
+                            "include".to_string()
+                        },
+                    };
 
-                Some(FetchSubtitles(request))
+                    Some(FetchSubtitles(request))
+                } else {
+                    None
+                }
             }
 
             FetchSubtitles(request) => {
@@ -202,6 +205,7 @@ impl App {
 
             LanguagesFetched(languages) => {
                 let user_languages = self.config_provider.get_config().unwrap().languages;
+                self.initialized = true; // todo rework it
 
                 Some(LanguagesAndConfigFetched(languages.clone(), user_languages))
             }
