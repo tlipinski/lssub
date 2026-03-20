@@ -92,7 +92,7 @@ impl App {
         components.insert(
             WidgetName::Languages,
             Box::new(LanguagesWidget::new(
-                config_provider.get_config()?.languages,
+                // config_provider.get_config()?.languages,
             )),
         );
         components.insert(

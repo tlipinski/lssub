@@ -7,6 +7,7 @@ use crate::ui::search_widget::SubtitlesQuery;
 use crate::ui::task_runner::Task;
 use ratatui::crossterm::event::Event;
 use std::path::PathBuf;
+use crate::osb::languages::Language;
 
 #[derive(Debug)]
 pub enum Action {
@@ -21,6 +22,7 @@ pub enum Action {
 
     SearchQueryUpdated(SubtitlesQuery),
     LanguagesUpdated(Vec<String>),
+    LanguagesFetched(Vec<Language>),
     FetchSubtitles(SubtitlesRequest),
     SubtitlesFetched(Vec<Subtitle>),
     SubtitleDownloaded(Downloaded),

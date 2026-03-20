@@ -1,8 +1,11 @@
+use crate::osb::languages::{Language, get_languages};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::LanguagesUpdated;
+use crate::ui::actions::Action::{LanguagesFetched, LanguagesUpdated, RunTask};
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
+use crate::ui::task_runner::Task;
 use Action::Init;
+use KeyCode::*;
 use crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::Frame;
 use ratatui::layout::Rect;
@@ -13,111 +16,9 @@ use ratatui::widgets::{Block, Paragraph};
 use tui_checkbox::Checkbox;
 
 const GRID_CELL_WIDTH: u16 = 26;
-const ALL_LANGUAGES: [(&str, &str); 100] = [
-    ("English", "en"),
-    ("Spanish", "es"),
-    ("French", "fr"),
-    ("German", "de"),
-    ("Italian", "it"),
-    ("Portuguese", "pt"),
-    ("Russian", "ru"),
-    ("Chinese", "zh"),
-    ("Japanese", "ja"),
-    ("Korean", "ko"),
-    ("Arabic", "ar"),
-    ("Hindi", "hi"),
-    ("Bengali", "bn"),
-    ("Urdu", "ur"),
-    ("Turkish", "tr"),
-    ("Polish", "pl"),
-    ("Dutch", "nl"),
-    ("Swedish", "sv"),
-    ("Norwegian", "no"),
-    ("Danish", "da"),
-    ("Finnish", "fi"),
-    ("Greek", "el"),
-    ("Hebrew", "he"),
-    ("Thai", "th"),
-    ("Vietnamese", "vi"),
-    ("Indonesian", "id"),
-    ("Malay", "ms"),
-    ("Filipino", "tl"),
-    ("Czech", "cs"),
-    ("Slovak", "sk"),
-    ("Hungarian", "hu"),
-    ("Romanian", "ro"),
-    ("Bulgarian", "bg"),
-    ("Croatian", "hr"),
-    ("Serbian", "sr"),
-    ("Slovenian", "sl"),
-    ("Estonian", "et"),
-    ("Latvian", "lv"),
-    ("Lithuanian", "lt"),
-    ("Ukrainian", "uk"),
-    ("Belarusian", "be"),
-    ("Catalan", "ca"),
-    ("Galician", "gl"),
-    ("Basque", "eu"),
-    ("Icelandic", "is"),
-    ("Irish", "ga"),
-    ("Welsh", "cy"),
-    ("Scottish Gaelic", "gd"),
-    ("Maltese", "mt"),
-    ("Albanian", "sq"),
-    ("Macedonian", "mk"),
-    ("Bosnian", "bs"),
-    ("Faroese", "fo"),
-    ("Persian", "fa"),
-    ("Pashto", "ps"),
-    ("Kurdish", "ku"),
-    ("Armenian", "hy"),
-    ("Georgian", "ka"),
-    ("Azerbaijani", "az"),
-    ("Kazakh", "kk"),
-    ("Uzbek", "uz"),
-    ("Turkmen", "tk"),
-    ("Kyrgyz", "ky"),
-    ("Tajik", "tg"),
-    ("Mongolian", "mn"),
-    ("Nepali", "ne"),
-    ("Sinhala", "si"),
-    ("Tamil", "ta"),
-    ("Telugu", "te"),
-    ("Kannada", "kn"),
-    ("Malayalam", "ml"),
-    ("Marathi", "mr"),
-    ("Gujarati", "gu"),
-    ("Punjabi", "pa"),
-    ("Assamese", "as"),
-    ("Odia", "or"),
-    ("Burmese", "my"),
-    ("Khmer", "km"),
-    ("Lao", "lo"),
-    ("Swahili", "sw"),
-    ("Amharic", "am"),
-    ("Somali", "so"),
-    ("Hausa", "ha"),
-    ("Yoruba", "yo"),
-    ("Igbo", "ig"),
-    ("Zulu", "zu"),
-    ("Afrikaans", "af"),
-    ("Xhosa", "xh"),
-    ("Maori", "mi"),
-    ("Samoan", "sm"),
-    ("Tongan", "to"),
-    ("Haitian Creole", "ht"),
-    ("Latin", "la"),
-    ("Esperanto", "eo"),
-    ("Luxembourgish", "lb"),
-    ("Frisian", "fy"),
-    ("Yiddish", "yi"),
-    ("Javanese", "jv"),
-    ("Sundanese", "su"),
-    ("Malagasy", "mg"),
-];
 
 pub struct LanguagesWidget {
-    selected: Vec<bool>,
+    languages: Vec<(Language, bool)>,
     focused_idx: usize,
     grid_columns: usize,
 }
@@ -125,7 +26,23 @@ pub struct LanguagesWidget {
 impl Component for LanguagesWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
-            Init => Some(LanguagesUpdated(self.languages())),
+            Init => {
+                let task = Task::new("init languages", async {
+                    let languages = get_languages().await?;
+
+                    Ok(LanguagesFetched(languages))
+                });
+
+                Some(RunTask(task))
+            }
+            LanguagesFetched(languages) => {
+                self.languages = languages
+                    .iter()
+                    .map(|lang| (lang.clone(), false))
+                    .collect::<Vec<(Language, bool)>>();
+
+                None
+            }
             _ => None,
         }
     }
@@ -133,26 +50,24 @@ impl Component for LanguagesWidget {
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
             match (key_event.code, key_event.modifiers) {
-                (KeyCode::Enter, KeyModifiers::NONE) => Some(LanguagesUpdated(self.languages())),
-                (KeyCode::Char(' '), KeyModifiers::NONE) => {
+                (Enter, KeyModifiers::NONE) => Some(LanguagesUpdated(self.languages())),
+                (Char(' '), KeyModifiers::NONE) => {
                     self.toggle_focused();
                     None
                 }
-                (KeyCode::Left, KeyModifiers::NONE) | (KeyCode::Char('h'), KeyModifiers::NONE) => {
+                (Left, KeyModifiers::NONE) | (Char('h'), KeyModifiers::NONE) => {
                     self.move_left();
                     None
                 }
-                (KeyCode::Right, KeyModifiers::NONE)
-                | (KeyCode::Char('l'), KeyModifiers::NONE) => {
+                (Right, KeyModifiers::NONE) | (Char('l'), KeyModifiers::NONE) => {
                     self.move_right();
                     None
                 }
-                (KeyCode::Up, KeyModifiers::NONE) | (KeyCode::Char('k'), KeyModifiers::NONE) => {
+                (Up, KeyModifiers::NONE) | (Char('k'), KeyModifiers::NONE) => {
                     self.move_up();
                     None
                 }
-                (KeyCode::Down, KeyModifiers::NONE)
-                | (KeyCode::Char('j'), KeyModifiers::NONE) => {
+                (Down, KeyModifiers::NONE) | (Char('j'), KeyModifiers::NONE) => {
                     self.move_down();
                     None
                 }
@@ -178,10 +93,7 @@ impl Component for LanguagesWidget {
             "Use arrow keys (or h/j/k/l) to move, Space to select/unselect.",
         ));
         let hint_height = 1u16.min(inner.height);
-        frame.render_widget(
-            hint,
-            Rect::new(inner.x, inner.y, inner.width, hint_height),
-        );
+        frame.render_widget(hint, Rect::new(inner.x, inner.y, inner.width, hint_height));
 
         if inner.height <= hint_height {
             return;
@@ -198,7 +110,7 @@ impl Component for LanguagesWidget {
         let columns = self.grid_columns as u16;
         let cell_width = (grid_area.width / columns).max(1);
 
-        for idx in 0..ALL_LANGUAGES.len() {
+        for idx in 0..self.languages.len() {
             let row = idx / self.grid_columns;
             let col = idx % self.grid_columns;
             let y = grid_area.y + row as u16;
@@ -213,18 +125,25 @@ impl Component for LanguagesWidget {
                 cell_width
             };
 
-            let (name, code) = ALL_LANGUAGES[idx];
-            let mut checkbox =
-                Checkbox::new(format!("{name} ({code})"), self.selected[idx]).style(Style::default()).checked_symbol("[x]").unchecked_symbol("[ ]");
+            let language = &self.languages[idx];
+            let mut checkbox = Checkbox::new(
+                format!(
+                    "{} ({})",
+                    language.0.language_name, language.0.language_code
+                ),
+                language.1,
+            )
+            .style(Style::default())
+            .checked_symbol("[x]")
+            .unchecked_symbol("[ ]");
 
             if idx == self.focused_idx {
-                checkbox = checkbox
-                    .style(
-                        Style::default()
-                            .fg(Color::White)
-                            .bg(Color::DarkGray)
-                            .add_modifier(Modifier::BOLD),
-                    );
+                checkbox = checkbox.style(
+                    Style::default()
+                        .fg(Color::White)
+                        .bg(Color::DarkGray)
+                        .add_modifier(Modifier::BOLD),
+                );
             }
 
             frame.render_widget(checkbox, Rect::new(x, y, width, 1));
@@ -233,24 +152,36 @@ impl Component for LanguagesWidget {
 }
 
 impl LanguagesWidget {
-    pub fn new(languages: Vec<String>) -> LanguagesWidget {
-        let selected = ALL_LANGUAGES
-            .iter()
-            .map(|(_, code)| languages.iter().any(|selected_code| selected_code == code))
-            .collect();
-
+    pub fn new() -> LanguagesWidget {
         Self {
-            selected,
+            languages: vec![(
+                Language {
+                    language_name: "English".to_string(),
+                    language_code: "en".to_string(),
+                },
+                false,
+            )],
             focused_idx: 0,
             grid_columns: 4,
         }
     }
 
     pub fn languages(&self) -> Vec<String> {
-        ALL_LANGUAGES
+        self.languages
             .iter()
             .enumerate()
-            .filter_map(|(idx, (_, code))| self.selected[idx].then(|| (*code).to_string()))
+            .filter_map(
+                |(
+                    idx,
+                    (
+                        Language {
+                            language_name,
+                            language_code,
+                        },
+                        selected,
+                    ),
+                )| selected.then(|| (*language_code).to_string()),
+            )
             .collect()
     }
 
@@ -259,8 +190,8 @@ impl LanguagesWidget {
     }
 
     fn toggle_focused(&mut self) {
-        if let Some(item) = self.selected.get_mut(self.focused_idx) {
-            *item = !*item;
+        if let Some(item) = self.languages.get_mut(self.focused_idx) {
+            item.1 = !item.1;
         }
     }
 
@@ -271,7 +202,7 @@ impl LanguagesWidget {
     }
 
     fn move_right(&mut self) {
-        if self.focused_idx + 1 < ALL_LANGUAGES.len() {
+        if self.focused_idx + 1 < self.languages.len() {
             self.focused_idx += 1;
         }
     }
@@ -284,7 +215,7 @@ impl LanguagesWidget {
 
     fn move_down(&mut self) {
         let next = self.focused_idx + self.grid_columns;
-        if next < ALL_LANGUAGES.len() {
+        if next < self.languages.len() {
             self.focused_idx = next;
         }
     }
