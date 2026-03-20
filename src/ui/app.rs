@@ -155,8 +155,6 @@ impl App {
                     updated
                 });
 
-                let request = self.subtitles_request();
-
                 Some(Multi(vec![SwitchScreen(Search), FetchSubtitles]))
             }
 
