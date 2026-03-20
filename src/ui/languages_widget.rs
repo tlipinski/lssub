@@ -17,7 +17,7 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
 use tui_checkbox::Checkbox;
 
-const GRID_CELL_WIDTH: u16 = 26;
+const GRID_CELL_WIDTH: u16 = 36;
 
 pub struct LanguagesWidget {
     languages: Vec<(Language, bool)>,
@@ -136,8 +136,12 @@ impl Component for LanguagesWidget {
                 language.1,
             )
             .style(Style::default())
-            .checked_symbol("[x]")
+            .checked_symbol("[X]")
             .unchecked_symbol("[ ]");
+
+            if (language.1) {
+                checkbox = checkbox.style(Style::default().bg(Color::Gray));
+            }
 
             if idx == self.focused_idx {
                 checkbox = checkbox.style(
@@ -156,13 +160,7 @@ impl Component for LanguagesWidget {
 impl LanguagesWidget {
     pub fn new() -> LanguagesWidget {
         Self {
-            languages: vec![(
-                Language {
-                    language_name: "English".to_string(),
-                    language_code: "en".to_string(),
-                },
-                false,
-            )],
+            languages: vec![],
             focused_idx: 0,
             grid_columns: 4,
         }
