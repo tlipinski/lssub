@@ -247,6 +247,7 @@ impl App {
         SubtitlesRequest {
             query: self.query.query.clone(),
             id: self.query.params.feature_id,
+            parent_id: self.query.params.parent_feature_id,
             languages: self.languages.clone(),
             ai_translated: if (self.query.params.exclude_ai) {
                 "exclude".to_string()

@@ -14,6 +14,8 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
 
     if let Some(i) = request.id {
         params.insert("id", i.to_string());
+    } else if let Some(i) = request.parent_id {
+        params.insert("parent_feature_id", i.to_string());
     } else {
         params.insert("query", request.query.to_string());
     }
@@ -30,6 +32,8 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
         .map(|resp| Subtitle {
             feature_id: resp.attributes.feature_details.feature_id,
             feature_title: resp.attributes.feature_details.movie_name.clone(),
+            parent_feature_id: resp.attributes.feature_details.parent_feature_id,
+            parent_feature_title: resp.attributes.feature_details.parent_title.clone(),
             file_id: resp.attributes.files.first().unwrap().file_id,
             title: resp.attributes.release.clone(),
             year: resp
@@ -77,6 +81,8 @@ pub struct FeatureDetails {
     title: String,
     movie_name: String,
     year: Option<i32>,
+    parent_feature_id: Option<i64>,
+    parent_title: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -102,6 +108,7 @@ pub struct SubtitlesRequest {
     pub query: String,
     pub languages: Vec<String>,
     pub id: Option<i64>,
+    pub parent_id: Option<i64>,
     pub ai_translated: String,
 }
 
@@ -109,6 +116,8 @@ pub struct SubtitlesRequest {
 pub struct Subtitle {
     pub feature_id: i64,
     pub feature_title: String,
+    pub parent_feature_id: Option<i64>,
+    pub parent_feature_title: Option<String>,
     pub file_id: i64,
     pub title: String,
     pub year: String,

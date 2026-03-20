@@ -27,6 +27,7 @@ pub struct SubsListWidget {
 #[derive(Default, Clone, Debug)]
 pub struct QueryParams {
     pub feature_id: Option<i64>,
+    pub parent_feature_id: Option<i64>,
     pub exclude_ai: bool,
 }
 
@@ -93,6 +94,31 @@ impl SubsListWidget {
                 }
             }
 
+            (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
+                if (self.params.parent_feature_id.is_some()) {
+                    self.params.parent_feature_id = None;
+                    Handled(Some(self.params.clone()))
+                } else {
+                    match self
+                        .state
+                        .selected()
+                        .and_then(|selection| self.subs.get(selection))
+                    {
+                        Some(selected) => {
+                            if let Some(pfid) = selected.parent_feature_id {
+                                self.params.parent_feature_id = Some(pfid);
+                                self.single_title =
+                                    selected.parent_feature_title.clone().unwrap_or("".into());
+                                Handled(Some(self.params.clone()))
+                            } else {
+                                Handled(None)
+                            }
+                        }
+                        None => Handled(None),
+                    }
+                }
+            }
+
             (KeyCode::Char('t'), KeyModifiers::CONTROL) => {
                 self.params.exclude_ai = !self.params.exclude_ai;
 
@@ -141,7 +167,7 @@ impl SubsListWidget {
         });
 
         let mut title = format!("Results: {}", self.subs.len());
-        if (self.params.feature_id.is_some()) {
+        if (self.params.feature_id.is_some() || self.params.parent_feature_id.is_some()) {
             title.push_str(&format!(" (single title: '{}')", self.single_title));
         }
         if (self.params.exclude_ai) {
