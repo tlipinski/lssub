@@ -1,6 +1,8 @@
 use crate::osb::languages::{Language, get_languages};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{LanguagesFetched, LanguagesUpdated, RunTask};
+use crate::ui::actions::Action::{
+    LanguagesAndConfigFetched, LanguagesFetched, LanguagesUpdated, RunTask,
+};
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::task_runner::Task;
@@ -27,7 +29,7 @@ impl Component for LanguagesWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
             Init => {
-                let task = Task::new("init languages", async {
+                let task = Task::new("fetch languages", async {
                     let languages = get_languages().await?;
 
                     Ok(LanguagesFetched(languages))
@@ -35,10 +37,10 @@ impl Component for LanguagesWidget {
 
                 Some(RunTask(task))
             }
-            LanguagesFetched(languages) => {
+            LanguagesAndConfigFetched(languages, user_languages) => {
                 self.languages = languages
                     .iter()
-                    .map(|lang| (lang.clone(), false))
+                    .map(|lang| (lang.clone(), user_languages.contains(&lang.language_code)))
                     .collect::<Vec<(Language, bool)>>();
 
                 None

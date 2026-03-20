@@ -6,9 +6,9 @@ use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus, Exit, FeatureInfo, FetchSubtitles, Init, LanguagesUpdated, Multi,
-    SearchQueryUpdated, StartProgress, StopProgress, SubtitleDownloaded, SwitchScreen, Tick,
-    UserLoggedIn, UserLoggedOut,
+    ChangeStatus, Exit, FeatureInfo, FetchSubtitles, Init, LanguagesAndConfigFetched,
+    LanguagesFetched, LanguagesUpdated, Multi, SearchQueryUpdated, StartProgress, StopProgress,
+    SubtitleDownloaded, SwitchScreen, Tick, UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::app::Action::{InputReceived, SubtitlesFetched};
 use crate::ui::app::Screen::{About, Account, Language, Search};
@@ -91,9 +91,7 @@ impl App {
         );
         components.insert(
             WidgetName::Languages,
-            Box::new(LanguagesWidget::new(
-                // config_provider.get_config()?.languages,
-            )),
+            Box::new(LanguagesWidget::new()),
         );
         components.insert(
             WidgetName::Status,
@@ -200,6 +198,12 @@ impl App {
                 });
 
                 None
+            }
+
+            LanguagesFetched(languages) => {
+                let user_languages = self.config_provider.get_config().unwrap().languages;
+
+                Some(LanguagesAndConfigFetched(languages.clone(), user_languages))
             }
 
             SwitchScreen(screen) => {

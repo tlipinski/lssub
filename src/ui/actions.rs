@@ -23,6 +23,7 @@ pub enum Action {
     SearchQueryUpdated(SubtitlesQuery),
     LanguagesUpdated(Vec<String>),
     LanguagesFetched(Vec<Language>),
+    LanguagesAndConfigFetched(Vec<Language>, Vec<String>),
     FetchSubtitles(SubtitlesRequest),
     SubtitlesFetched(Vec<Subtitle>),
     SubtitleDownloaded(Downloaded),
