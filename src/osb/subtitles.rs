@@ -16,6 +16,7 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
         params.insert("id", i.to_string());
     } else if let Some(i) = request.parent_id {
         params.insert("parent_feature_id", i.to_string());
+        params.insert("order_by", "title".to_string());
     } else {
         params.insert("query", request.query.to_string());
     }
