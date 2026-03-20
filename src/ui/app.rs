@@ -67,7 +67,6 @@ impl App {
     ) -> Result<()> {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
         let (subtitles_tx, subtitles_rx) = tokio::sync::mpsc::channel::<SubtitlesRequest>(100);
-        let (featurex_tx, featurex_rx) = tokio::sync::mpsc::channel::<i32>(100);
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
         let task_runner = TaskRunner::new(ui_tx.clone());
@@ -156,16 +155,7 @@ impl App {
                     updated
                 });
 
-                let request = SubtitlesRequest {
-                    query: self.query.query.clone(),
-                    id: self.query.params.feature_id,
-                    languages: self.languages.clone(),
-                    ai_translated: if (self.query.params.exclude_ai) {
-                        "exclude".to_string()
-                    } else {
-                        "include".to_string()
-                    },
-                };
+                let request = self.subtitles_request();
 
                 Some(Multi(vec![SwitchScreen(Search), FetchSubtitles(request)]))
             }
@@ -174,16 +164,7 @@ impl App {
                 self.query = query.clone();
 
                 if (self.initialized) {
-                    let request = SubtitlesRequest {
-                        query: query.query.clone(),
-                        id: query.params.feature_id,
-                        languages: self.languages.clone(),
-                        ai_translated: if (query.params.exclude_ai) {
-                            "exclude".to_string()
-                        } else {
-                            "include".to_string()
-                        },
-                    };
+                    let request = self.subtitles_request();
 
                     Some(FetchSubtitles(request))
                 } else {
@@ -244,6 +225,19 @@ impl App {
             0 => None,
             1 => actions.into_iter().next(),
             _ => Some(Multi(actions)),
+        }
+    }
+
+    fn subtitles_request(&self) -> SubtitlesRequest {
+        SubtitlesRequest {
+            query: self.query.query.clone(),
+            id: self.query.params.feature_id,
+            languages: self.languages.clone(),
+            ai_translated: if (self.query.params.exclude_ai) {
+                "exclude".to_string()
+            } else {
+                "include".to_string()
+            },
         }
     }
 
