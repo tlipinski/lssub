@@ -1,6 +1,6 @@
 use crate::osb::subtitles::{SubtitlesRequest, SubtitlesResponse, subtitles};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, RunTask, SubtitlesFetched};
+use crate::ui::actions::Action::{ChangeStatus, FetchSubtitles, RunTask, SubtitlesFetched};
 use crate::ui::task_runner::{Task, TaskRunner};
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, error, info};
@@ -11,10 +11,7 @@ use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
-pub async fn subtitles_fetch_task(
-    mut rx: Receiver<SubtitlesRequest>,
-    ui_tx: Sender<Action>,
-) -> Result<()> {
+pub async fn debouncer_task(mut rx: Receiver<SubtitlesRequest>, ui_tx: Sender<Action>) -> Result<()> {
     'outer: loop {
         sleep(Duration::from_millis(1000)).await;
 
@@ -23,7 +20,7 @@ pub async fn subtitles_fetch_task(
         // Receive as much as possible within outer loop cycle to reduce OSB calls.
         'debouncing: loop {
             match rx.try_recv() {
-                Ok(ev) => last = Some(ev),
+                Ok(request) => last = Some(request),
 
                 Err(TryRecvError::Empty) => break 'debouncing,
 
@@ -34,23 +31,9 @@ pub async fn subtitles_fetch_task(
             }
         }
 
-        if let Some(request) = last {
-            let task = Task::new("fetch subs", async move {
-                if request.query.len() < 3 {
-                    Ok(SubtitlesFetched(vec![]))
-                } else {
-                    let result = subtitles(request).await;
-                    match result {
-                        Ok(subtitles) => Ok(SubtitlesFetched(subtitles)),
-                        Err(e) => {
-                            error!("Error fetching subtitles {e}");
-                            Err(Error::msg("Error fetching subtitles list, check logs"))
-                        }
-                    }
-                }
-            });
-
-            ui_tx.send(RunTask(task)).await;
+        if let Some(debounced) = last {
+            info!("Debounced {:?}", debounced);
+            ui_tx.send(FetchSubtitles(debounced)).await;
         }
     }
 }

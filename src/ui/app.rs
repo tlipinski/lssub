@@ -1,7 +1,7 @@
 use crate::config::{Config, ConfigProvider};
 use crate::osb::get_download_link::get_download_link;
 use crate::osb::login::login;
-use crate::osb::subtitles::SubtitlesRequest;
+use crate::osb::subtitles::{SubtitlesRequest, subtitles};
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
@@ -24,10 +24,10 @@ use crate::ui::search_widget::{SearchWidget, SubtitlesQuery};
 use crate::ui::spinner::{Spinner, spinner_task};
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::SubsListWidget;
-use crate::ui::subtitles_fetcher::subtitles_fetch_task;
-use crate::ui::task_runner::TaskRunner;
+use crate::ui::debouncer::debouncer_task;
+use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
-use Action::RunTask;
+use Action::{ RunTask};
 use KeyCode::*;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
@@ -50,7 +50,7 @@ use tokio::task::JoinHandle;
 
 pub struct App {
     active_screen: Screen,
-    subtitles_tx: Sender<SubtitlesRequest>,
+    debouncer_tx: Sender<SubtitlesRequest>,
     config_provider: ConfigProvider,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
     task_runner: TaskRunner,
@@ -66,7 +66,7 @@ impl App {
         file_name: Option<&str>,
     ) -> Result<()> {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
-        let (subtitles_tx, subtitles_rx) = tokio::sync::mpsc::channel::<SubtitlesRequest>(100);
+        let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<SubtitlesRequest>(100);
 
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
         let task_runner = TaskRunner::new(ui_tx.clone());
@@ -75,7 +75,7 @@ impl App {
         let spinner_clone = spinner.clone();
 
         tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
-        tokio::spawn(subtitles_fetch_task(subtitles_rx, ui_tx.clone()));
+        tokio::spawn(debouncer_task(debouncer_rx, ui_tx.clone()));
         tokio::spawn(spinner_task(spinner_clone));
 
         let config_provider = ConfigProvider::default();
@@ -98,7 +98,7 @@ impl App {
         let mut app = App {
             active_screen: Screen::default(),
             config_provider,
-            subtitles_tx,
+            debouncer_tx,
             widgets: components,
             task_runner,
             query: SubtitlesQuery {
@@ -161,27 +161,45 @@ impl App {
             }
 
             SearchQueryUpdated(query) => {
-                self.query = query.clone();
-
                 if (self.initialized) {
-                    let request = self.subtitles_request();
+                    if (self.query.query != query.query) {
+                        self.query = query.clone();
+                        let request = self.subtitles_request();
+                        let debouncer = self.debouncer_tx.clone();
+                        tokio::spawn(async move {
+                            debouncer.send(request).await;
+                        });
+                        None
+                    } else {
+                        self.query = query.clone();
+                        let request = self.subtitles_request();
 
-                    Some(FetchSubtitles(request))
+                        Some(FetchSubtitles(request))
+                    }
                 } else {
+                    self.query = query.clone();
                     None
                 }
             }
 
             FetchSubtitles(request) => {
-                let subtitles_tx = self.subtitles_tx.clone();
-
                 let rq = request.clone();
-
-                tokio::spawn(async move {
-                    subtitles_tx.send(rq).await;
+                let task = Task::new("fetch subs", async move {
+                    if rq.query.len() < 3 {
+                        Ok(SubtitlesFetched(vec![]))
+                    } else {
+                        let result = subtitles(rq).await;
+                        match result {
+                            Ok(subtitles) => Ok(SubtitlesFetched(subtitles)),
+                            Err(e) => {
+                                error!("Error fetching subtitles {e}");
+                                Err(Error::msg("Error fetching subtitles list, check logs"))
+                            }
+                        }
+                    }
                 });
 
-                None
+                Some(RunTask(task))
             }
 
             LanguagesFetched(languages) => {

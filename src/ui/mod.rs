@@ -16,6 +16,6 @@ mod search_widget;
 mod spinner;
 mod status_widget;
 mod subs_list_widget;
-mod subtitles_fetcher;
+mod debouncer;
 mod task_runner;
 mod user_widget;
