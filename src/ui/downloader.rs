@@ -93,17 +93,13 @@ fn output_file(
     if let Some(ext) = default_ext_opt {
         if let Some(file_name) = file_name_opt {
             output_file = OsString::from(file_name);
-            output_file.push(".");
-            output_file.push(language);
-            output_file.push(".");
-            output_file.push(ext);
         } else {
             output_file = OsString::from(&default_stem);
-            output_file.push(".");
-            output_file.push(language);
-            output_file.push(".");
-            output_file.push(ext);
         }
+        output_file.push(".");
+        output_file.push(language);
+        output_file.push(".");
+        output_file.push(ext);
     } else {
         output_file = OsString::from(file_name_opt.as_deref().unwrap_or(&default_stem));
         output_file.push(".");
@@ -162,12 +158,7 @@ mod tests {
     #[test]
     fn fallback_to_srt_if_default_has_no_extension() {
         assert_eq!(
-            output_file(
-                &PathBuf::from("/home/user"),
-                Some("file"),
-                "default",
-                "en"
-            ),
+            output_file(&PathBuf::from("/home/user"), Some("file"), "default", "en"),
             PathBuf::from("/home/user/file.en.srt")
         );
     }
