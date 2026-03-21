@@ -6,6 +6,7 @@ use std::fmt::{Debug, Formatter};
 use std::future::Future;
 use std::sync::Arc;
 use std::sync::Mutex;
+use log::error;
 use tokio::sync::mpsc::Sender;
 
 pub struct TaskRunner {
@@ -27,6 +28,7 @@ impl TaskRunner {
                     ui_tx.send(StopProgress).await;
                 }
                 Err(err) => {
+                    error!("Task failed: {}", err);
                     ui_tx.send(ChangeStatus(err.to_string())).await;
                     ui_tx.send(StopProgress).await;
                 }

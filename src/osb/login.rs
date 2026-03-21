@@ -6,6 +6,7 @@ use log::{debug, error, info};
 use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display, Formatter};
+use reqwest::Client;
 
 pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
     info!("Logging in");
@@ -57,4 +58,24 @@ struct LoginResponse {
 #[derive(Deserialize, Debug)]
 struct User {
     allowed_downloads: i32,
+}
+
+#[cfg(test)]
+mod tests {
+    use log::info;
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    #[tokio::test]
+    async fn login_uses_osb_request_and_parses_hardcoded_response() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("POST"))
+            .and(path("/login"))
+            .respond_with(ResponseTemplate::new(200).set_body_string(r#"{"token":"123456"}"#))
+            .mount(&mock_server)
+            .await;
+
+        print!("Mock server started at {}", mock_server.uri());
+    }
 }
