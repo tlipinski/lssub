@@ -78,7 +78,10 @@ impl Component for SearchWidget {
                             let language = selected_sub.attributes.language.clone();
 
                             Multi(vec![
-                                ChangeStatus(format!("Downloading {}", selected_sub.attributes.feature_details.title)),
+                                ChangeStatus(format!(
+                                    "Downloading {}",
+                                    selected_sub.attributes.release
+                                )),
                                 RunTask(Task::new("download subs", async move {
                                     downloader.download(file_id, &language).await
                                 })),

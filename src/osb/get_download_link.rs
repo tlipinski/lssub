@@ -16,7 +16,7 @@ pub async fn get_download_link(
         format!("{}/download", API_URL)
     };
 
-    let req = if let Some(token) = token_opt {
+    let request = if let Some(token) = token_opt {
         reqwest::Client::new()
             .post(url)
             .bearer_auth(token.0.expose_secret())
@@ -27,7 +27,7 @@ pub async fn get_download_link(
             .json(&DownloadRequest { file_id })
     };
 
-    osb_request(req).await
+    osb_request(request).await
 }
 
 #[derive(Serialize, Debug)]

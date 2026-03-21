@@ -5,6 +5,7 @@ use reqwest::RequestBuilder;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 
 pub async fn osb_request<A: DeserializeOwned>(mut request: RequestBuilder) -> anyhow::Result<A> {
     let request = request
@@ -12,7 +13,7 @@ pub async fn osb_request<A: DeserializeOwned>(mut request: RequestBuilder) -> an
         .header("Api-Key", AK)
         .header("User-Agent", USER_AGENT);
 
-    debug!("Request {:?}", request);
+    // debug!("Request {:?}", request);
 
     let http_response = request.send().await?;
     let status = http_response.status();
@@ -36,7 +37,7 @@ pub async fn osb_request<A: DeserializeOwned>(mut request: RequestBuilder) -> an
             }
         }
         s if s.is_client_error() => {
-            let error_response: crate::osb::login::ErrorResponse =
+            let error_response: ErrorResponse =
                 serde_json::from_str(&text_body)?;
             info!("Client error [{}]: {:?}", s.as_u16(), error_response);
             Err(Error::msg(error_response))
@@ -45,5 +46,31 @@ pub async fn osb_request<A: DeserializeOwned>(mut request: RequestBuilder) -> an
             error!("Server error [{}]: {}", s.as_u16(), text_body);
             Err(Error::msg("Server error, check logs"))
         }
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct ErrorResponse {
+    pub message: Option<String>,
+    pub errors: Option<Vec<String>>,
+    pub error: Option<String>,
+    pub status: Option<u32>,
+}
+
+impl Display for ErrorResponse {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        if let Some(msg) = &self.message {
+            write!(f, "{}", msg)?;
+        } else if let Some(errors) = &self.errors {
+            write!(f, "{}", errors.join(", "))?;
+        } else if let Some(error) = &self.error {
+            write!(f, "{}", error)?;
+        }
+
+        if let Some(status) = self.status {
+            write!(f, " (status: {})", status)?;
+        }
+
+        Ok(())
     }
 }

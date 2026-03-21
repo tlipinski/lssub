@@ -17,11 +17,9 @@ pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
         password: &credentials.password,
     };
 
-    let req = reqwest::Client::new()
-        .post(url)
-        .json(&login);
+    let request = reqwest::Client::new().post(url).json(&login);
 
-    osb_request(req).await
+    osb_request(request).await
 }
 
 #[derive(Clone)]
@@ -54,30 +52,4 @@ struct LoginResponse {
 #[derive(Deserialize, Debug)]
 struct User {
     allowed_downloads: i32,
-}
-
-#[derive(Deserialize, Debug)]
-pub(crate) struct ErrorResponse {
-    pub message: Option<String>,
-    pub errors: Option<Vec<String>>,
-    pub error: Option<String>,
-    pub status: Option<u32>,
-}
-
-impl Display for ErrorResponse {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        if let Some(msg) = &self.message {
-            write!(f, "{}", msg)?;
-        } else if let Some(errors) = &self.errors {
-            write!(f, "{}", errors.join(", "))?;
-        } else if let Some(error) = &self.error {
-            write!(f, "{}", error)?;
-        }
-
-        if let Some(status) = self.status {
-            write!(f, " (status: {})", status)?;
-        }
-
-        Ok(())
-    }
 }
