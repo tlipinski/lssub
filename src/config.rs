@@ -30,7 +30,7 @@ impl ConfigProvider {
     }
 
     pub fn get_config(&self) -> Result<Config> {
-        info!("Loading config from: {:?}", self.config_path());
+        info!("Loading config from: {}", self.config_path().display());
         if self.config_path().exists() {
             let contents = match fs::read_to_string(self.config_path()) {
                 Ok(raw) => raw,

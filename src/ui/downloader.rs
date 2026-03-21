@@ -35,7 +35,7 @@ impl Downloader {
         })?;
 
         debug!("Download link response: {:?}", download_link_response);
-        debug!("Base path: {:?}", self.base_path);
+        debug!("Base path: {}", self.base_path.display());
         debug!("File name: {:?}", self.file_name_opt);
 
         let content = download(download_link_response.link).await.map_err(|e| {
@@ -45,12 +45,12 @@ impl Downloader {
 
         let output_file = output_file(
             &self.base_path,
-            &self.file_name_opt,
+            self.file_name_opt.as_deref(),
             download_link_response.file_name.as_str(),
             language,
         );
 
-        debug!("Output file: {:?}", output_file);
+        debug!("Output file: {}", output_file.display());
 
         tokio::fs::write(output_file.clone(), content)
             .await
@@ -78,7 +78,7 @@ impl Downloader {
 
 fn output_file(
     base_path: &Path,
-    file_name_opt: &Option<String>,
+    file_name_opt: Option<&str>,
     default_file_name: &str,
     language: &str,
 ) -> PathBuf {
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn no_input_file() {
         assert_eq!(
-            output_file(&PathBuf::from("/home/user"), &None, "default.ext", "en"),
+            output_file(&PathBuf::from("/home/user"), None, "default.ext", "en"),
             PathBuf::from("/home/user/default.en.ext")
         );
     }
@@ -138,7 +138,7 @@ mod tests {
         assert_eq!(
             output_file(
                 &PathBuf::from("/home/user"),
-                &Some(String::from("file")),
+                Some("file"),
                 "default.ext",
                 "en"
             ),
@@ -151,7 +151,7 @@ mod tests {
         assert_eq!(
             output_file(
                 &PathBuf::from("/home/user"),
-                &Some(String::from("file.multiple")),
+                Some("file.multiple"),
                 "default.ext",
                 "en"
             ),
@@ -164,7 +164,7 @@ mod tests {
         assert_eq!(
             output_file(
                 &PathBuf::from("/home/user"),
-                &Some(String::from("file")),
+                Some("file"),
                 "default",
                 "en"
             ),

@@ -28,7 +28,7 @@ use crate::ui::subs_list_widget::SubsListWidget;
 use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
 use Action::RunTask;
-use KeyCode::{Esc, F, Char};
+use KeyCode::{Char, Esc, F};
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
 use log::{debug, error, info};
@@ -146,11 +146,11 @@ impl App {
             InputReceived(event) => self.handle_key_event(event),
 
             LanguagesUpdated(languages) => {
-                self.languages = languages.clone();
+                self.languages.clone_from(languages);
 
                 self.config_provider.modify(|c: &Config| {
                     let mut updated = c.clone();
-                    updated.languages = self.languages.clone();
+                    updated.languages.clone_from(&self.languages);
                     updated
                 });
 
@@ -303,8 +303,7 @@ impl App {
         self.active_widget().handle_key_event(event).or_else(|| {
             if let Event::Key(key_event) = event {
                 match (key_event.code, key_event.modifiers) {
-                    (Esc, KeyModifiers::NONE) => Some(SwitchScreen(Search)),
-                    (F(2), KeyModifiers::NONE) => Some(SwitchScreen(Search)),
+                    (Esc | F(2), KeyModifiers::NONE) => Some(SwitchScreen(Search)),
                     (F(3), KeyModifiers::NONE) => Some(SwitchScreen(Account)),
                     (F(4), KeyModifiers::NONE) => Some(SwitchScreen(Language)),
                     (F(10), KeyModifiers::NONE) | (Char('c'), KeyModifiers::CONTROL) => Some(Exit),
