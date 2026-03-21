@@ -1,6 +1,6 @@
 use crate::osb::download::download;
 use crate::osb::get_download_link::get_download_link;
-use crate::secret::retrieve;
+use crate::secret::retrieve_token;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, Multi, SubtitleDownloaded};
 use anyhow::{Error, Result};
@@ -27,7 +27,7 @@ impl Downloader {
     pub async fn download(&self, file_id: i64, language: &str) -> Result<Action> {
         info!("Downloading subs file: {file_id:?}");
 
-        let token_opt = retrieve().await?;
+        let token_opt = retrieve_token().await?;
 
         let download_link_response = get_download_link(token_opt, file_id).await.map_err(|e| {
             error!("Downloading subs failed: {e}");

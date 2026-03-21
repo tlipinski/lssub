@@ -1,6 +1,6 @@
 use crate::osb::login::login;
 use crate::osb::user_info::{User, get_user_info};
-use crate::secret::{clear, retrieve, retrieve_credentials, store_token};
+use crate::secret::{clear_token, retrieve_token, retrieve_credentials, store_token};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, InputReceived, NoOp, RunTask, SwitchScreen, UserLoggedIn, UserLoggedOut,
@@ -30,7 +30,7 @@ impl Component for AccountWidget {
                 let c = retrieve_credentials().await;
                 warn!("Credentials retrieved: {:?}", c);
 
-                match retrieve().await {
+                match retrieve_token().await {
                     Ok(Some(jwt)) => match get_user_info(&jwt).await {
                         Ok(user) => Ok(UserLoggedIn(user)),
                         Err(e) => {

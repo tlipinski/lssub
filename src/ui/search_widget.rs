@@ -1,5 +1,5 @@
 use crate::osb::subtitles::{Subtitle, SubtitlesResponse};
-use crate::secret::retrieve;
+use crate::secret::retrieve_token;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, Exit, FetchSubtitles, Init, LanguagesUpdated, Multi, RunTask, SearchQueryUpdated,

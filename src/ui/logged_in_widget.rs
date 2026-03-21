@@ -1,6 +1,6 @@
 use crate::osb::login::Credentials;
 use crate::osb::user_info::User;
-use crate::secret::clear;
+use crate::secret::{clear_credentials, clear_token};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, Multi, RunTask, UserLoggedOut};
 use crate::ui::pad::BlockTitlePadExt;
@@ -82,7 +82,8 @@ impl LoggedInWidget {
             match (key_event.code, key_event.modifiers) {
                 (KeyCode::Char('o'), KeyModifiers::CONTROL) => {
                     Some(RunTask(Task::new("log out", async move {
-                        clear().await;
+                        clear_token().await;
+                        clear_credentials().await;
                         Ok(Multi(vec![
                             UserLoggedOut,
                             ChangeStatus("Logged out".to_string()),

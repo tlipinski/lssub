@@ -8,7 +8,7 @@ mod ui;
 use crate::config::{Config, ConfigProvider};
 use crate::osb::user_info::get_user_info;
 use crate::osb::values::APP_NAME;
-use crate::secret::retrieve;
+use crate::secret::retrieve_token;
 use anyhow::{Error, Result};
 use clap::Parser;
 use env_logger::{Builder, Target};
