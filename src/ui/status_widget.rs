@@ -5,7 +5,6 @@ use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::spinner::Spinner;
 use Action::StartProgress;
 use anyhow::Result;
-use gio::glib::random_int_range;
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};

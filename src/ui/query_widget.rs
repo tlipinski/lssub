@@ -3,7 +3,6 @@ use crate::ui::actions::Action::SearchQueryUpdated;
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::search_widget::SubtitlesQuery;
 use anyhow::Result;
-use gio::glib::random_int_range;
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};

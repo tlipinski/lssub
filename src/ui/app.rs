@@ -31,7 +31,6 @@ use Action::{ RunTask};
 use KeyCode::*;
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
-use gio::prelude::DBusInterfaceSkeletonExt;
 use log::{debug, error, info};
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
