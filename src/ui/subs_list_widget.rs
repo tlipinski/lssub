@@ -151,42 +151,7 @@ impl SubsListWidget {
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
         let wide = area.width > 90;
-        let rows = self.subs.iter().map(|sub| {
-            Row::from_iter(vec![
-                Cell::from(Text::from(sub.attributes.release.as_str())),
-                Cell::from(Text::from(sub.attributes.language.as_str())),
-                Cell::from(Text::from(
-                    sub.attributes
-                        .feature_details
-                        .year
-                        .map(|a| a.to_string())
-                        .unwrap_or("".into()),
-                )),
-                Cell::from(Text::from(sub.upload_date())),
-                if (wide) {
-                    Cell::from(Text::from(sub.downloads().to_string()).right_aligned())
-                } else {
-                    if (sub.downloads() >= 1000) {
-                        Cell::from(
-                            Text::from((sub.downloads() / 1000).to_string() + "k").right_aligned(),
-                        )
-                    } else {
-                        Cell::from(Text::from(sub.downloads().to_string()).right_aligned())
-                    }
-                },
-                Cell::from(Text::from(match sub.attributes.ai_translated {
-                    true => "✓".to_string(),
-                    false => "".to_string(),
-                })),
-                Cell::from(
-                    Text::from(match sub.attributes.votes {
-                        0 => "".to_string(),
-                        other => other.to_string(),
-                    })
-                    .right_aligned(),
-                ),
-            ])
-        });
+        let rows: Vec<Row> = self.subs.iter().map(|sub| sub.into()).collect();
 
         let mut title = format!("Results: {}", self.subs.len());
         if (self.params.feature_id.is_some() || self.params.parent_feature_id.is_some()) {
@@ -234,5 +199,40 @@ impl SubsListWidget {
             area,
             &mut self.scroll_state,
         );
+    }
+}
+
+impl<'a> From<&'a Subtitle> for Row<'a> {
+    fn from(sub: &'a Subtitle) -> Row<'a> {
+        Row::from_iter(vec![
+            Cell::from(Text::from(sub.attributes.release.as_str())),
+            Cell::from(Text::from(sub.attributes.language.as_str())),
+            Cell::from(Text::from(
+                sub.attributes
+                    .feature_details
+                    .year
+                    .map(|a| a.to_string())
+                    .unwrap_or("".into()),
+            )),
+            Cell::from(Text::from(sub.upload_date())),
+            if (sub.downloads() >= 1000) {
+                Cell::from(
+                    Text::from((sub.downloads() / 1000).to_string() + "k").right_aligned(),
+                )
+            } else {
+                Cell::from(Text::from(sub.downloads().to_string()).right_aligned())
+            },
+            Cell::from(Text::from(match sub.attributes.ai_translated {
+                true => "✓".to_string(),
+                false => "".to_string(),
+            })),
+            Cell::from(
+                Text::from(match sub.attributes.votes {
+                    0 => "".to_string(),
+                    other => other.to_string(),
+                })
+                .right_aligned(),
+            ),
+        ])
     }
 }
