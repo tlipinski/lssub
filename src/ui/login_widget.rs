@@ -33,8 +33,8 @@ enum Focus {
 impl LoginWidget {
     pub fn from() -> Self {
         LoginWidget {
-            username: Input::new("".into()),
-            password: Input::new("".into()),
+            username: Input::new(String::new()),
+            password: Input::new(String::new()),
             focus: Focus::Username,
         }
     }
@@ -107,7 +107,7 @@ impl LoginWidget {
                 layout[1].x + (self.password.visual_cursor() + 1) as u16,
                 layout[1].y + 1,
             )),
-        };
+        }
     }
 
     pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {

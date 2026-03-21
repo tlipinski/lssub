@@ -58,7 +58,7 @@ impl SubsListWidget {
                 let next = self.state.selected().map_or(0, |i| i.saturating_sub(10));
                 self.state.select(Some(next));
                 for i in 1..10 {
-                    self.scroll_state.scroll(ScrollDirection::Backward)
+                    self.scroll_state.scroll(ScrollDirection::Backward);
                 }
 
                 Handled(None)
@@ -68,7 +68,7 @@ impl SubsListWidget {
                 let next = self.state.selected().map_or(0, |i| i.saturating_add(10));
                 self.state.select(Some(next));
                 for i in 1..10 {
-                    self.scroll_state.scroll(ScrollDirection::Forward)
+                    self.scroll_state.scroll(ScrollDirection::Forward);
                 }
 
                 Handled(None)
@@ -115,7 +115,7 @@ impl SubsListWidget {
                                     .feature_details
                                     .parent_title
                                     .clone()
-                                    .unwrap_or("".into());
+                                    .unwrap_or(String::new());
                                 Handled(Some(self.params.clone()))
                             } else {
                                 Handled(None)
@@ -212,7 +212,7 @@ impl<'a> From<&'a Subtitle> for Row<'a> {
                     .feature_details
                     .year
                     .map(|a| a.to_string())
-                    .unwrap_or("".into()),
+                    .unwrap_or(String::new()),
             )),
             Cell::from(Text::from(sub.upload_date())),
             Cell::from(Text::from(sub.downloads().to_string())),

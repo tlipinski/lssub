@@ -57,19 +57,19 @@ impl Component for LanguagesWidget {
                     self.toggle_focused();
                     None
                 }
-                (Left, KeyModifiers::NONE) | (Char('h'), KeyModifiers::NONE) => {
+                (Left | Char('h'), KeyModifiers::NONE) => {
                     self.move_left();
                     None
                 }
-                (Right, KeyModifiers::NONE) | (Char('l'), KeyModifiers::NONE) => {
+                (Right | Char('l'), KeyModifiers::NONE) => {
                     self.move_right();
                     None
                 }
-                (Up, KeyModifiers::NONE) | (Char('k'), KeyModifiers::NONE) => {
+                (Up | Char('k'), KeyModifiers::NONE) => {
                     self.move_up();
                     None
                 }
-                (Down, KeyModifiers::NONE) | (Char('j'), KeyModifiers::NONE) => {
+                (Down | Char('j'), KeyModifiers::NONE) => {
                     self.move_down();
                     None
                 }

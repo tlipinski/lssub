@@ -40,11 +40,11 @@ async fn main() {
     info!("{args:?}");
 
     match run(args).await {
-        Ok(_) => {}
+        Ok(()) => {}
         Err(e) => {
             error!("{e}");
         }
-    };
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -82,7 +82,7 @@ async fn run(args: Args) -> Result<()> {
         current_dir
     };
 
-    info!("Input path: {:?}", p);
+    info!("Input path: {}", p.display());
 
     let (base_path, file_name) = if (p.is_dir()) {
         (Some(p.as_path()), None)

@@ -25,6 +25,7 @@ use ratatui::style::Style;
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use std::path::Path;
+use KeyCode::{Enter, Esc, F};
 use tokio::sync::mpsc::Sender;
 use tui_popup::Popup;
 
@@ -54,11 +55,7 @@ impl Component for SearchWidget {
         if let Event::Key(key_event) = event {
             if (self.help) {
                 match (key_event.code, key_event.modifiers) {
-                    (KeyCode::Esc, KeyModifiers::NONE) => {
-                        self.help = !self.help;
-                        None
-                    }
-                    (KeyCode::F(1), KeyModifiers::NONE) => {
+                    (Esc | F(1), KeyModifiers::NONE) => {
                         self.help = !self.help;
                         None
                     }
@@ -66,12 +63,12 @@ impl Component for SearchWidget {
                 }
             } else {
                 match (key_event.code, key_event.modifiers) {
-                    (KeyCode::F(1), KeyModifiers::NONE) => {
+                    (F(1), KeyModifiers::NONE) => {
                         self.help = !self.help;
                         None
                     }
 
-                    (KeyCode::Enter, KeyModifiers::NONE) => {
+                    (Enter, KeyModifiers::NONE) => {
                         self.subs_list_widget.selected().map(|selected_sub| {
                             let downloader = self.downloader.clone();
                             let file_id = selected_sub.attributes.files.first().unwrap().file_id;

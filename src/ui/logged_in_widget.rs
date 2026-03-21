@@ -77,7 +77,6 @@ impl LoggedInWidget {
     }
 
     pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
-        info!("key event: {:?}", event);
         if let Event::Key(key_event) = event {
             match (key_event.code, key_event.modifiers) {
                 (KeyCode::Char('o'), KeyModifiers::CONTROL) => {

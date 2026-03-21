@@ -10,7 +10,7 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
     let langs = request.languages.join(",");
     params.insert("languages", langs);
 
-    params.insert("ai_translated", request.ai_translated.to_string());
+    params.insert("ai_translated", request.ai_translated.clone());
 
     if let Some(i) = request.id {
         params.insert("id", i.to_string());
@@ -18,7 +18,7 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
         params.insert("parent_feature_id", i.to_string());
         params.insert("order_by", "title".to_string());
     } else {
-        params.insert("query", request.query.to_string());
+        params.insert("query", request.query.clone());
     }
 
     let request = reqwest::Client::new()

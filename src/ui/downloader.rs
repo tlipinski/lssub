@@ -96,19 +96,19 @@ fn output_file(
             output_file.push(".");
             output_file.push(language);
             output_file.push(".");
-            output_file.push(ext)
+            output_file.push(ext);
         } else {
             output_file = OsString::from(&default_stem);
             output_file.push(".");
             output_file.push(language);
             output_file.push(".");
-            output_file.push(ext)
+            output_file.push(ext);
         }
     } else {
         output_file = OsString::from(file_name_opt.as_deref().unwrap_or(&default_stem));
         output_file.push(".");
         output_file.push(language);
-        output_file.push(".srt")
+        output_file.push(".srt");
     };
 
     base_path.join(output_file)
