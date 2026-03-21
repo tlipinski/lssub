@@ -4,7 +4,7 @@ use anyhow::{Error, Result};
 use log::{debug, error, info};
 use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 
 pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
     info!("Logging in");
@@ -55,10 +55,16 @@ pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Credentials {
     pub username: String,
     pub password: String,
+}
+
+impl Debug for Credentials {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Credentials {{ username: {}, password: ******** }}", self.username)
+    }
 }
 
 #[derive(Debug)]

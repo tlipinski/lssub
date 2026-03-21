@@ -27,7 +27,8 @@ impl Component for AccountWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
             Init => Some(RunTask(Task::new("init account", async move {
-                retrieve_credentials().await;
+                let c = retrieve_credentials().await;
+                warn!("Credentials retrieved: {:?}", c);
 
                 match retrieve().await {
                     Ok(Some(jwt)) => match get_user_info(&jwt).await {

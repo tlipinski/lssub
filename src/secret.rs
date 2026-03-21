@@ -1,10 +1,12 @@
 use crate::APP_NAME;
 use crate::osb::login::{Credentials, JwtToken};
 use anyhow::{Error, Result};
-use libsecret::{Schema, SchemaAttributeType, SchemaFlags};
+use libsecret::prelude::{RetrievableExt, RetrievableExtManual};
+use libsecret::{Schema, SchemaAttributeType, SchemaFlags, SearchFlags};
 use log::{debug, error, info};
 use secrecy::{ExposeSecret, SecretBox};
 use std::collections::HashMap;
+use gio::prelude::ToSendValue;
 use tokio::task;
 
 pub async fn store_token(api_token: &JwtToken, username: &str) -> Result<()> {
@@ -103,16 +105,22 @@ pub async fn store_credentials(credentials: Credentials) -> Result<()> {
 pub async fn retrieve_credentials() -> Result<Option<Credentials>> {
     task::spawn_blocking(move || {
         let schema = create_schema_credentials();
-        match libsecret::password_lookup_sync(
+        match libsecret::password_search_sync(
             Some(&schema),
             HashMap::new(),
+            SearchFlags::ALL,
             None::<&gio::Cancellable>,
         ) {
-            Ok(Some(password)) => Ok(Some(Credentials {
-                username: "username".to_string(),
-                password: password.to_string(),
-            })),
-            Ok(None) => Ok(None),
+            Ok(vec) => {
+                let result = vec.first().map(|head| {
+                    let secret = head.retrieve_secret_sync(None::<&gio::Cancellable>).unwrap().unwrap().text().unwrap().to_string();
+                    let username_opt = head.attributes().get("username").cloned().unwrap();
+                    Credentials {
+                        username: username_opt, password: secret,
+                    }
+                });
+                Ok(result)
+            }
             Err(e) => {
                 error!("Error retrieving token: {}", e);
                 Err(Error::msg("Error retrieving token"))
