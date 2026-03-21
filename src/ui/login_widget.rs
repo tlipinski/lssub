@@ -160,7 +160,7 @@ impl LoginWidget {
         match login(&credentials).await {
             Ok(jwt) => {
                 store_credentials(credentials.clone()).await?;
-                store_token(&jwt, &credentials.username).await?;
+                store_token(&jwt).await?;
                 let user = get_user_info(&jwt).await?;
                 Ok(Multi(vec![
                     UserLoggedIn(user.clone()),

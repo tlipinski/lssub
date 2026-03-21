@@ -1,6 +1,6 @@
-use crate::osb::login::login;
+use crate::osb::login::{Credentials, login};
 use crate::osb::user_info::{User, get_user_info};
-use crate::secret::{clear_token, retrieve_token, retrieve_credentials, store_token};
+use crate::secret::{clear_token, retrieve_credentials, retrieve_token, store_token};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, InputReceived, NoOp, RunTask, SwitchScreen, UserLoggedIn, UserLoggedOut,
@@ -35,10 +35,19 @@ impl Component for AccountWidget {
                         Ok(user) => Ok(UserLoggedIn(user)),
                         Err(e) => {
                             error!("Error getting user info: {e}");
-                            // todo refresh token
-                            // warn!("Logging out because token might have expired");
-                            // clear().await;
-                            Ok(ChangeStatus(e.to_string()))
+                            info!("Refreshing token");
+                            let credentials_opt = retrieve_credentials().await?;
+                            match credentials_opt {
+                                None => Ok(NoOp),
+                                Some(credentials) => {
+                                    let token = login(&credentials).await?;
+                                    store_token(&token).await;
+                                    info!("Token refreshed");
+                                    
+                                    let user = get_user_info(&token).await?;
+                                    Ok(UserLoggedIn(user))
+                                }
+                            }
                         }
                     },
                     Ok(None) => {

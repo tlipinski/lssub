@@ -9,10 +9,9 @@ use std::collections::HashMap;
 use gio::prelude::ToSendValue;
 use tokio::task;
 
-pub async fn store_token(api_token: &JwtToken, username: &str) -> Result<()> {
+pub async fn store_token(api_token: &JwtToken) -> Result<()> {
     info!("Storing api token");
     let token = api_token.0.expose_secret().clone();
-    let un = username.to_string();
     task::spawn_blocking(move || {
         let schema = create_schema_token();
 
