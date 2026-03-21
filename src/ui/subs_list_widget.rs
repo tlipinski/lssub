@@ -216,11 +216,9 @@ impl<'a> From<&'a Subtitle> for Row<'a> {
             )),
             Cell::from(Text::from(sub.upload_date())),
             if (sub.downloads() >= 1000) {
-                Cell::from(
-                    Text::from((sub.downloads() / 1000).to_string() + "k").right_aligned(),
-                )
+                Cell::from(Text::from(sub.downloads().to_string()))
             } else {
-                Cell::from(Text::from(sub.downloads().to_string()).right_aligned())
+                Cell::from(Text::from(sub.downloads().to_string()))
             },
             Cell::from(Text::from(match sub.attributes.ai_translated {
                 true => "✓".to_string(),
@@ -231,7 +229,6 @@ impl<'a> From<&'a Subtitle> for Row<'a> {
                     0 => "".to_string(),
                     other => other.to_string(),
                 })
-                .right_aligned(),
             ),
         ])
     }
