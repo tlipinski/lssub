@@ -1,4 +1,5 @@
 use crate::osb::login::JwtToken;
+use crate::osb::osb_request::osb_request;
 use crate::osb::values::{AK, API_URL, USER_AGENT, VIP_API_URL};
 use anyhow::{Error, Result};
 use log::{error, info, trace};
@@ -15,58 +16,18 @@ pub async fn get_download_link(
         format!("{}/download", API_URL)
     };
 
-    let req = DownloadRequest { file_id };
-
     let req = if let Some(token) = token_opt {
         reqwest::Client::new()
             .post(url)
-            .header("Api-Key", AK)
-            .header("User-Agent", USER_AGENT)
             .bearer_auth(token.0.expose_secret())
-            .json(&req)
+            .json(&DownloadRequest { file_id })
     } else {
         reqwest::Client::new()
             .post(url)
-            .header("Api-Key", AK)
-            .header("User-Agent", USER_AGENT)
-            .json(&req)
+            .json(&DownloadRequest { file_id })
     };
 
-    // debug!("{:?}", req);
-
-    let response = req.send().await?;
-
-    // debug!("{:?}", response);
-
-    let status = response.status();
-
-    let text_body = response.text().await?;
-
-    match status {
-        s if s.is_success() || s.is_redirection() => {
-            let json: Result<DownloadLinkResponse, _> = serde_json::from_str(&text_body);
-            match json {
-                Ok(features_response) => {
-                    trace!("{}", serde_json::to_string_pretty(&features_response)?);
-                    Ok(features_response)
-                }
-                Err(e) => {
-                    error!("Failed decoding body {:?} {}", e, text_body);
-                    Err(Error::from(e))
-                }
-            }
-        }
-        s if s.is_client_error() => {
-            let error_response: crate::osb::login::ErrorResponse =
-                serde_json::from_str(&text_body)?;
-            info!("Client error {:?}", error_response);
-            Err(Error::msg(error_response))
-        }
-        s => {
-            error!("Server error [{}]: {}", s.as_u16(), text_body);
-            Err(Error::msg("Server error"))
-        }
-    }
+    osb_request(req).await
 }
 
 #[derive(Serialize, Debug)]

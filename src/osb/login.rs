@@ -17,7 +17,6 @@ pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
         password: &credentials.password,
     };
 
-
     let req = reqwest::Client::new()
         .post(url)
         .json(&login);

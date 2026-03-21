@@ -1,8 +1,6 @@
 pub mod download;
 pub mod features;
 pub mod get_download_link;
-pub mod guess;
-pub mod guess_search;
 pub mod languages;
 pub mod login;
 mod osb_request;
