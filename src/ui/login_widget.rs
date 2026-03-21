@@ -1,7 +1,8 @@
+use crate::secret::store_credentials;
 use crate::osb::login::{Credentials, login};
 use crate::osb::user_info;
 use crate::osb::user_info::get_user_info;
-use crate::secret::store;
+use crate::secret::store_token;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, Multi, RunTask, UserLoggedIn};
 use crate::ui::pad::BlockTitlePadExt;
@@ -158,7 +159,8 @@ impl LoginWidget {
     async fn login_user(credentials: Credentials) -> Result<Action> {
         match login(&credentials).await {
             Ok(jwt) => {
-                store(&jwt, &credentials.username).await?;
+                store_credentials(credentials.clone()).await?;
+                store_token(&jwt, &credentials.username).await?;
                 let user = get_user_info(&jwt).await?;
                 Ok(Multi(vec![
                     UserLoggedIn(user.clone()),

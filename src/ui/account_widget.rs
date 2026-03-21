@@ -1,6 +1,6 @@
 use crate::osb::login::login;
 use crate::osb::user_info::{User, get_user_info};
-use crate::secret::{clear, retrieve, store};
+use crate::secret::{clear, retrieve, retrieve_credentials, store_token};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, InputReceived, NoOp, RunTask, SwitchScreen, UserLoggedIn, UserLoggedOut,
@@ -27,14 +27,17 @@ impl Component for AccountWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
             Init => Some(RunTask(Task::new("init account", async move {
+                retrieve_credentials().await;
+
                 match retrieve().await {
                     Ok(Some(jwt)) => match get_user_info(&jwt).await {
                         Ok(user) => Ok(UserLoggedIn(user)),
                         Err(e) => {
                             error!("Error getting user info: {e}");
-                            warn!("Logging out because token might have expired");
-                            clear().await;
-                            Ok(UserLoggedOut)
+                            // todo refresh token
+                            // warn!("Logging out because token might have expired");
+                            // clear().await;
+                            Ok(ChangeStatus(e.to_string()))
                         }
                     },
                     Ok(None) => {
