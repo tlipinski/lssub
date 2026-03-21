@@ -233,7 +233,7 @@ impl App {
             widget_actions.push(Some(action));
         }
 
-        let actions: Vec<Action> = widget_actions.into_iter().filter_map(|a| a).collect();
+        let actions: Vec<Action> = widget_actions.into_iter().flatten().collect();
 
         match actions.len() {
             0 => None,

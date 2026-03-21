@@ -47,7 +47,7 @@ impl QueryWidget {
     }
 
     pub fn handle_key_event(&mut self, event: &Event) -> Option<String> {
-        if let Some(state_changed) = self.input.handle_event(&event)
+        if let Some(state_changed) = self.input.handle_event(event)
             && state_changed.value
         {
             Some(self.input.value().into())

@@ -142,10 +142,10 @@ impl LoginWidget {
                 _ => {
                     match self.focus {
                         Focus::Username => {
-                            self.username.handle_event(&event);
+                            self.username.handle_event(event);
                         }
                         Focus::Password => {
-                            self.password.handle_event(&event);
+                            self.password.handle_event(event);
                         }
                     }
                     None

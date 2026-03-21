@@ -215,11 +215,7 @@ impl<'a> From<&'a Subtitle> for Row<'a> {
                     .unwrap_or("".into()),
             )),
             Cell::from(Text::from(sub.upload_date())),
-            if (sub.downloads() >= 1000) {
-                Cell::from(Text::from(sub.downloads().to_string()))
-            } else {
-                Cell::from(Text::from(sub.downloads().to_string()))
-            },
+            Cell::from(Text::from(sub.downloads().to_string())),
             Cell::from(Text::from(match sub.attributes.ai_translated {
                 true => "✓".to_string(),
                 false => "".to_string(),

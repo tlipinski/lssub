@@ -170,7 +170,19 @@ impl LanguagesWidget {
         self.languages
             .iter()
             .enumerate()
-            .filter_map(
+            .filter(
+                |&(
+                    idx,
+                    (
+                        Language {
+                            language_name,
+                            language_code,
+                        },
+                        selected,
+                    ),
+                )| *selected,
+            )
+            .map(
                 |(
                     idx,
                     (
@@ -180,7 +192,7 @@ impl LanguagesWidget {
                         },
                         selected,
                     ),
-                )| selected.then(|| (*language_code).to_string()),
+                )| (*language_code).to_string(),
             )
             .collect()
     }
