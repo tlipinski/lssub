@@ -5,6 +5,7 @@ use log::{debug, error, info};
 use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display, Formatter};
+use crate::osb::osb_request::osb_request;
 
 pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
     info!("Logging in");
@@ -16,43 +17,12 @@ pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
         password: &credentials.password,
     };
 
+
     let req = reqwest::Client::new()
         .post(url)
-        .header("Api-Key", AK)
-        .header("User-Agent", USER_AGENT)
         .json(&login);
 
-    let response = req.send().await?;
-
-    let status = response.status();
-
-    let text_body = response.text().await?;
-
-    match status {
-        s if s.is_success() || s.is_redirection() => {
-            // debug!("Response {}", text_body);
-            let json: Result<LoginResponse, _> = serde_json::from_str(&text_body);
-            match json {
-                Ok(login_response) => {
-                    debug!("Login response: {login_response:?}");
-                    Ok(JwtToken(login_response.token))
-                }
-                Err(e) => {
-                    error!("Failed decoding body {:?} {}", e, text_body);
-                    Err(Error::from(e))
-                }
-            }
-        }
-        s if s.is_client_error() => {
-            let error_response: ErrorResponse = serde_json::from_str(&text_body)?;
-            info!("Client error {:?}", error_response);
-            Err(Error::msg(error_response))
-        }
-        s => {
-            error!("Server error [{}]: {}", s.as_u16(), text_body);
-            Err(Error::msg("Server error"))
-        }
-    }
+    osb_request(req).await
 }
 
 #[derive(Clone)]
@@ -67,7 +37,7 @@ impl Debug for Credentials {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct JwtToken(pub SecretBox<String>);
 
 #[derive(Serialize, Debug)]
