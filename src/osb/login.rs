@@ -19,7 +19,8 @@ pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
 
     let request = reqwest::Client::new().post(url).json(&login);
 
-    osb_request(request).await
+    let response = osb_request::<LoginResponse>(request).await?;
+    Ok(JwtToken(response.token))
 }
 
 #[derive(Clone)]
