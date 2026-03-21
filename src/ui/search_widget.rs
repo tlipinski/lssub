@@ -74,11 +74,11 @@ impl Component for SearchWidget {
                     (KeyCode::Enter, KeyModifiers::NONE) => {
                         self.subs_list_widget.selected().map(|selected_sub| {
                             let downloader = self.downloader.clone();
-                            let file_id = selected_sub.file_id;
-                            let language = selected_sub.language.clone();
+                            let file_id = selected_sub.attributes.files.first().unwrap().file_id;
+                            let language = selected_sub.attributes.language.clone();
 
                             Multi(vec![
-                                ChangeStatus(format!("Downloading {}", selected_sub.title)),
+                                ChangeStatus(format!("Downloading {}", selected_sub.attributes.feature_details.title)),
                                 RunTask(Task::new("download subs", async move {
                                     downloader.download(file_id, &language).await
                                 })),

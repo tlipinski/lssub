@@ -85,8 +85,9 @@ impl SubsListWidget {
                         .and_then(|selection| self.subs.get(selection))
                     {
                         Some(selected) => {
-                            self.params.feature_id = Some(selected.feature_id);
-                            self.single_title = selected.feature_title.clone();
+                            self.params.feature_id =
+                                Some(selected.attributes.feature_details.feature_id);
+                            self.single_title = selected.attributes.feature_details.title.clone();
                             Handled(Some(self.params.clone()))
                         }
                         None => Handled(None),
@@ -105,10 +106,16 @@ impl SubsListWidget {
                         .and_then(|selection| self.subs.get(selection))
                     {
                         Some(selected) => {
-                            if let Some(pfid) = selected.parent_feature_id {
+                            if let Some(pfid) =
+                                selected.attributes.feature_details.parent_feature_id
+                            {
                                 self.params.parent_feature_id = Some(pfid);
-                                self.single_title =
-                                    selected.parent_feature_title.clone().unwrap_or("".into());
+                                self.single_title = selected
+                                    .attributes
+                                    .feature_details
+                                    .parent_title
+                                    .clone()
+                                    .unwrap_or("".into());
                                 Handled(Some(self.params.clone()))
                             } else {
                                 Handled(None)
@@ -146,23 +153,38 @@ impl SubsListWidget {
         let wide = area.width > 90;
         let rows = self.subs.iter().map(|sub| {
             Row::from_iter(vec![
-                Cell::from(Text::from(sub.title.as_str())),
-                Cell::from(Text::from(sub.language.as_str())),
-                Cell::from(Text::from(sub.year.as_str())),
-                Cell::from(Text::from(sub.upload_date.as_str())),
+                Cell::from(Text::from(sub.attributes.release.as_str())),
+                Cell::from(Text::from(sub.attributes.language.as_str())),
+                Cell::from(Text::from(
+                    sub.attributes
+                        .feature_details
+                        .year
+                        .map(|a| a.to_string())
+                        .unwrap_or("".into()),
+                )),
+                Cell::from(Text::from(sub.upload_date())),
                 if (wide) {
-                    Cell::from(Text::from(sub.downloads.to_string()).right_aligned())
+                    Cell::from(Text::from(sub.downloads().to_string()).right_aligned())
                 } else {
-                    if (sub.downloads >= 1000) {
+                    if (sub.downloads() >= 1000) {
                         Cell::from(
-                            Text::from((sub.downloads / 1000).to_string() + "k").right_aligned(),
+                            Text::from((sub.downloads() / 1000).to_string() + "k").right_aligned(),
                         )
                     } else {
-                        Cell::from(Text::from(sub.downloads.to_string()).right_aligned())
+                        Cell::from(Text::from(sub.downloads().to_string()).right_aligned())
                     }
                 },
-                Cell::from(Text::from(sub.ai_translated.as_str())),
-                Cell::from(Text::from(sub.votes.as_str()).right_aligned()),
+                Cell::from(Text::from(match sub.attributes.ai_translated {
+                    true => "✓".to_string(),
+                    false => "".to_string(),
+                })),
+                Cell::from(
+                    Text::from(match sub.attributes.votes {
+                        0 => "".to_string(),
+                        other => other.to_string(),
+                    })
+                    .right_aligned(),
+                ),
             ])
         });
 
