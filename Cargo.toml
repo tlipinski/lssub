@@ -18,7 +18,7 @@ env_logger = "0.11.9"
 libsecret = { version = "0.9.0", features = ["v0_19"] }
 gio = "0.22.2"
 ratatui = "0.30.0"
-xdg = "2.5.2"
+xdg = "3.0.0"
 tui-input = "0.15.0"
 tui-popup = "0.7.2"
 tui-checkbox = "0.4.3"

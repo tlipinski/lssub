@@ -4,6 +4,7 @@ use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
+use xdg::BaseDirectories;
 
 #[derive(Debug)]
 pub struct ConfigProvider {
@@ -12,12 +13,15 @@ pub struct ConfigProvider {
 }
 
 impl ConfigProvider {
-    fn xdg_dirs(&self) -> Result<xdg::BaseDirectories> {
-        Ok(xdg::BaseDirectories::with_prefix(self.prefix.clone())?)
+    fn xdg_dirs(&self) -> Result<BaseDirectories> {
+        Ok(BaseDirectories::with_prefix(self.prefix.clone()))
     }
 
     fn config_path(&self) -> Result<PathBuf> {
-        Ok(self.xdg_dirs()?.get_config_file(self.path.clone()))
+        Ok(self
+            .xdg_dirs()?
+            .get_config_file(self.path.clone())
+            .expect("HOME does not exist"))
     }
 
     pub fn modify(&self, f: impl Fn(&Config) -> (Config)) -> Result<()> {
