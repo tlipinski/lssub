@@ -1,3 +1,4 @@
+use crate::osb::osb_request::osb_request;
 use crate::osb::values::API_URL;
 use crate::osb::values::{AK, USER_AGENT};
 use anyhow::{Error, Result};
@@ -5,7 +6,6 @@ use log::{debug, error, info};
 use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display, Formatter};
-use crate::osb::osb_request::osb_request;
 
 pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
     info!("Logging in");
@@ -30,7 +30,11 @@ pub struct Credentials {
 
 impl Debug for Credentials {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Credentials {{ username: {}, password: ******** }}", self.username)
+        write!(
+            f,
+            "Credentials {{ username: {}, password: ******** }}",
+            self.username
+        )
     }
 }
 

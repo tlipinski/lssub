@@ -1,6 +1,7 @@
 use crate::osb::subtitles::{SubtitlesRequest, SubtitlesResponse, subtitles};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, FetchSubtitles, RunTask, SubtitlesFetched};
+use crate::ui::search_widget::SubtitlesQuery;
 use crate::ui::task_runner::{Task, TaskRunner};
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, error, info};
@@ -10,7 +11,6 @@ use tokio::join;
 use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
-use crate::ui::search_widget::SubtitlesQuery;
 
 pub async fn debouncer_task(mut rx: Receiver<SubtitlesQuery>, ui_tx: Sender<Action>) -> Result<()> {
     'outer: loop {

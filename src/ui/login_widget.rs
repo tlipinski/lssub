@@ -1,7 +1,7 @@
-use crate::secret::store_credentials;
 use crate::osb::login::{Credentials, login};
 use crate::osb::user_info;
 use crate::osb::user_info::get_user_info;
+use crate::secret::store_credentials;
 use crate::secret::store_token;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, Multi, RunTask, UserLoggedIn};

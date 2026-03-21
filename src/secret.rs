@@ -1,12 +1,12 @@
 use crate::APP_NAME;
 use crate::osb::login::{Credentials, JwtToken};
 use anyhow::{Error, Result};
+use gio::prelude::ToSendValue;
 use libsecret::prelude::{RetrievableExt, RetrievableExtManual};
 use libsecret::{Schema, SchemaAttributeType, SchemaFlags, SearchFlags};
 use log::{debug, error, info};
 use secrecy::{ExposeSecret, SecretBox};
 use std::collections::HashMap;
-use gio::prelude::ToSendValue;
 use tokio::task;
 
 pub async fn store_token(api_token: &JwtToken) -> Result<()> {
@@ -109,10 +109,17 @@ pub async fn retrieve_credentials() -> Result<Option<Credentials>> {
         ) {
             Ok(vec) => {
                 let result = vec.first().map(|head| {
-                    let secret = head.retrieve_secret_sync(None::<&gio::Cancellable>).unwrap().unwrap().text().unwrap().to_string();
+                    let secret = head
+                        .retrieve_secret_sync(None::<&gio::Cancellable>)
+                        .unwrap()
+                        .unwrap()
+                        .text()
+                        .unwrap()
+                        .to_string();
                     let username_opt = head.attributes().get("username").cloned().unwrap();
                     Credentials {
-                        username: username_opt, password: secret,
+                        username: username_opt,
+                        password: secret,
                     }
                 });
                 Ok(result)

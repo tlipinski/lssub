@@ -43,7 +43,7 @@ impl Component for AccountWidget {
                                     let token = login(&credentials).await?;
                                     store_token(&token).await;
                                     info!("Token refreshed");
-                                    
+
                                     let user = get_user_info(&token).await?;
                                     Ok(UserLoggedIn(user))
                                 }

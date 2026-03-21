@@ -8,8 +8,7 @@ use secrecy::ExposeSecret;
 use serde::Deserialize;
 
 pub async fn get_languages() -> Result<Vec<Language>> {
-    let request = reqwest::Client::new()
-        .get(format!("{}/infos/languages", API_URL));
+    let request = reqwest::Client::new().get(format!("{}/infos/languages", API_URL));
 
     let languages: LanguagesResponse = osb_request(request).await?;
 
@@ -18,7 +17,7 @@ pub async fn get_languages() -> Result<Vec<Language>> {
 
 #[derive(Deserialize)]
 struct LanguagesResponse {
-    data: Vec<Language>
+    data: Vec<Language>,
 }
 
 #[derive(Deserialize, Debug, Clone)]

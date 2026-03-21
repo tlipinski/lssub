@@ -37,8 +37,7 @@ pub async fn osb_request<A: DeserializeOwned>(mut request: RequestBuilder) -> an
             }
         }
         s if s.is_client_error() => {
-            let error_response: ErrorResponse =
-                serde_json::from_str(&text_body)?;
+            let error_response: ErrorResponse = serde_json::from_str(&text_body)?;
             info!("Client error [{}]: {:?}", s.as_u16(), error_response);
             Err(Error::msg(error_response))
         }

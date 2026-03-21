@@ -224,12 +224,10 @@ impl<'a> From<&'a Subtitle> for Row<'a> {
                 true => "✓".to_string(),
                 false => "".to_string(),
             })),
-            Cell::from(
-                Text::from(match sub.attributes.votes {
-                    0 => "".to_string(),
-                    other => other.to_string(),
-                })
-            ),
+            Cell::from(Text::from(match sub.attributes.votes {
+                0 => "".to_string(),
+                other => other.to_string(),
+            })),
         ])
     }
 }
