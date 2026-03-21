@@ -28,7 +28,7 @@ use crate::ui::subs_list_widget::SubsListWidget;
 use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
 use Action::RunTask;
-use KeyCode::*;
+use KeyCode::{Esc, F, Char};
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
 use log::{debug, error, info};
@@ -134,7 +134,7 @@ impl App {
         match action {
             Tick | Multi(_) | InputReceived(_) => {}
             _ => debug!("--- {:?}", action),
-        };
+        }
 
         let mut widget_actions = self
             .widgets
@@ -159,7 +159,11 @@ impl App {
 
             SearchQueryUpdated(query) => {
                 if (self.initialized) {
-                    if (self.query.query != query.query) {
+                    if self.query.query == query.query {
+                        self.query = query.clone();
+
+                        Some(FetchSubtitles)
+                    } else {
                         self.query = query.clone();
                         let q = query.clone();
                         let debouncer = self.debouncer_tx.clone();
@@ -167,10 +171,6 @@ impl App {
                             debouncer.send(q).await;
                         });
                         None
-                    } else {
-                        self.query = query.clone();
-
-                        Some(FetchSubtitles)
                     }
                 } else {
                     self.query = query.clone();

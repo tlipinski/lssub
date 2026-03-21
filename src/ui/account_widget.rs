@@ -95,7 +95,7 @@ impl AccountWidget {
     pub fn new() -> Self {
         Self {
             login_widget: LoginWidget::from(),
-            logged_in_widget: LoggedInWidget::from(Default::default()),
+            logged_in_widget: LoggedInWidget::from(User::default()),
             logged_in: false,
         }
     }

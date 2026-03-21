@@ -13,15 +13,14 @@ pub struct ConfigProvider {
 }
 
 impl ConfigProvider {
-    fn xdg_dirs(&self) -> Result<BaseDirectories> {
-        Ok(BaseDirectories::with_prefix(self.prefix.clone()))
+    fn xdg_dirs(&self) -> BaseDirectories {
+        BaseDirectories::with_prefix(self.prefix.clone())
     }
 
-    fn config_path(&self) -> Result<PathBuf> {
-        Ok(self
-            .xdg_dirs()?
+    fn config_path(&self) -> PathBuf {
+        self.xdg_dirs()
             .get_config_file(self.path.clone())
-            .expect("HOME does not exist"))
+            .expect("HOME does not exist")
     }
 
     pub fn modify(&self, f: impl Fn(&Config) -> (Config)) -> Result<()> {
@@ -32,8 +31,8 @@ impl ConfigProvider {
 
     pub fn get_config(&self) -> Result<Config> {
         info!("Loading config from: {:?}", self.config_path());
-        if self.config_path()?.exists() {
-            let contents = match fs::read_to_string(self.config_path()?) {
+        if self.config_path().exists() {
+            let contents = match fs::read_to_string(self.config_path()) {
                 Ok(raw) => raw,
                 Err(e) => {
                     error!("Failed to read config file: {}", e);
@@ -45,14 +44,14 @@ impl ConfigProvider {
             Ok(config)
         } else {
             let default = Config::default();
-            self.xdg_dirs()?.place_config_file(&self.path);
+            self.xdg_dirs().place_config_file(&self.path);
             self.save_config(&default)?;
             Ok(default)
         }
     }
 
     pub fn save_config(&self, config: &Config) -> Result<()> {
-        fs::write(self.config_path()?, toml::to_string(&config)?);
+        fs::write(self.config_path(), toml::to_string(&config)?);
         Ok(())
     }
 }
