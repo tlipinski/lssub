@@ -33,6 +33,7 @@ use KeyCode::{Char, Esc, F};
 use anyhow::{Error, Result, bail};
 use clap::builder::TypedValueParser;
 use log::{debug, error, info};
+use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{StatefulWidget, Stylize};
@@ -44,7 +45,6 @@ use std::collections::{HashMap, VecDeque};
 use std::ops::Deref;
 use std::path::Path;
 use std::sync::{Arc, RwLock, mpsc};
-use ratatui::buffer::Buffer;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::task::JoinHandle;
@@ -62,10 +62,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(
-        base_path: &Path,
-        file_name: Option<&str>,
-    ) -> App {
+    pub fn new(base_path: &Path, file_name: Option<&str>) -> App {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
         let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
 
@@ -111,10 +108,7 @@ impl App {
         }
     }
 
-    pub async fn run(
-        &mut self,
-        terminal: &mut DefaultTerminal,
-    ) -> Result<()> {
+    pub async fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         let mut message_opt = Some(Init);
 
         'main_loop: loop {
@@ -345,18 +339,28 @@ pub enum Screen {
 
 #[cfg(test)]
 mod tests {
-    use ratatui::backend::TestBackend;
-    use ratatui::Terminal;
-    use insta::assert_snapshot;
+    use super::*;
     use crate::osb::subtitles::{Attributes, FeatureDetails, Subtitle};
     use crate::osb::user_info::User;
-    use super::*;
+    use crate::ui::subs_list_widget::QueryParams;
+    use crossterm::event::{KeyEvent, KeyEventKind, KeyEventState};
+    use insta::assert_snapshot;
+    use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
+
+    struct TestTerminal(Terminal<TestBackend>);
+
+    impl Default for TestTerminal {
+        fn default() -> Self {
+            TestTerminal(Terminal::new(TestBackend::new(100, 20)).unwrap())
+        }
+    }
 
     #[tokio::test]
     async fn main_screen() {
         let mut app = App::new(Path::new("."), None);
 
-        let mut terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
+        let mut terminal = TestTerminal::default().0;
         terminal.draw(|frame| app.draw(frame)).unwrap();
 
         assert_snapshot!(terminal.backend());
@@ -368,7 +372,7 @@ mod tests {
 
         app.update(&SwitchScreen(Account));
 
-        let mut terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
+        let mut terminal = TestTerminal::default().0;
         terminal.draw(|frame| app.draw(frame)).unwrap();
 
         assert_snapshot!(terminal.backend());
@@ -388,7 +392,7 @@ mod tests {
         };
         app.update(&UserLoggedIn(user));
 
-        let mut terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
+        let mut terminal = TestTerminal::default().0;
         terminal.draw(|frame| app.draw(frame)).unwrap();
 
         assert_snapshot!(terminal.backend());
@@ -410,7 +414,19 @@ mod tests {
         app.update(&UserLoggedIn(user));
         app.update(&SwitchScreen(Account));
 
-        let mut terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
+        let mut terminal = TestTerminal::default().0;
+        terminal.draw(|frame| app.draw(frame)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[tokio::test]
+    async fn subs_query() {
+        let mut app = App::new(Path::new("."), None);
+
+        input_text(&mut app, "title");
+
+        let mut terminal = TestTerminal::default().0;
         terminal.draw(|frame| app.draw(frame)).unwrap();
 
         assert_snapshot!(terminal.backend());
@@ -443,7 +459,6 @@ mod tests {
                     files: vec![],
                 },
             },
-
             Subtitle {
                 id: "1243".to_string(),
                 r#type: "".to_string(),
@@ -465,13 +480,33 @@ mod tests {
                     release: "release 2".to_string(),
                     files: vec![],
                 },
-            }
+            },
         ];
         app.update(&SubtitlesFetched(subs));
 
-        let mut terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
+        let mut terminal = TestTerminal::default().0;
         terminal.draw(|frame| app.draw(frame)).unwrap();
 
         assert_snapshot!(terminal.backend());
+    }
+
+    fn input_text(app: &mut App, text: &str) {
+        text.chars().for_each(|c| {
+            app.update(&InputReceived(Event::Key(KeyEvent {
+                code: Char(c),
+                modifiers: KeyModifiers::NONE,
+                kind: KeyEventKind::Press,
+                state: KeyEventState::NONE,
+            })));
+        })
+    }
+
+    fn input_key(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
+        app.update(&InputReceived(Event::Key(KeyEvent {
+            code,
+            modifiers,
+            kind: KeyEventKind::Press,
+            state: KeyEventState::NONE,
+        })));
     }
 }
