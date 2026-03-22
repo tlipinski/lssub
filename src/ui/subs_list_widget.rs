@@ -212,7 +212,7 @@ impl<'a> From<&'a Subtitle> for Row<'a> {
                     .feature_details
                     .year
                     .map(|a| a.to_string())
-                    .unwrap_or(String::new()),
+                    .unwrap_or_default(),
             )),
             Cell::from(Text::from(sub.upload_date())),
             Cell::from(Text::from(sub.downloads().to_string())),

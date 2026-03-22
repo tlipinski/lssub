@@ -11,7 +11,7 @@ pub async fn login(osb_client: OsbClient, credentials: &Credentials) -> Result<J
 
     let login = LoginRequest {
         username: &credentials.username,
-        password: &credentials.password.expose_secret(),
+        password: credentials.password.expose_secret(),
     };
 
     let response: LoginResponse = osb_client
