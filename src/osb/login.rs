@@ -1,4 +1,4 @@
-use crate::osb::osb_request::{OsbClient, osb_request};
+use crate::osb::osb_client::OsbClient;
 use crate::osb::values::API_URL;
 use crate::osb::values::{AK, USER_AGENT};
 use anyhow::{Error, Result};
@@ -8,7 +8,7 @@ use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display, Formatter};
 
-pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
+pub async fn login(osb_client: OsbClient, credentials: &Credentials) -> Result<JwtToken> {
     info!("Logging in");
 
     let url = format!("{}/login", API_URL);
@@ -18,9 +18,7 @@ pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
         password: &credentials.password,
     };
 
-    let client = OsbClient::new(API_URL);
-
-    let response: LoginResponse = client
+    let response: LoginResponse = osb_client
         .call(Method::POST, "/login", |req| req.json(&login))
         .await?;
 

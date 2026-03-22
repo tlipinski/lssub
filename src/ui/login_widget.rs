@@ -18,6 +18,8 @@ use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use crate::osb::osb_client::OsbClient;
+use crate::osb::values::API_URL;
 
 pub struct LoginWidget {
     username: Input,
@@ -157,7 +159,8 @@ impl LoginWidget {
     }
 
     async fn login_user(credentials: Credentials) -> Result<Action> {
-        match login(&credentials).await {
+        let client = OsbClient::new(API_URL);
+        match login(client, &credentials).await {
             Ok(jwt) => {
                 store_credentials(credentials.clone()).await?;
                 store_token(&jwt).await?;

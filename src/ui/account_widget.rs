@@ -16,6 +16,8 @@ use log::{error, info, warn};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::text::ToSpan;
+use crate::osb::osb_client::OsbClient;
+use crate::osb::values::API_URL;
 
 pub struct AccountWidget {
     login_widget: LoginWidget,
@@ -40,7 +42,8 @@ impl Component for AccountWidget {
                             match credentials_opt {
                                 None => Ok(NoOp),
                                 Some(credentials) => {
-                                    let token = login(&credentials).await?;
+                                    let client = OsbClient::new(API_URL);
+                                    let token = login(client, &credentials).await?;
                                     store_token(&token).await;
                                     info!("Token refreshed");
 

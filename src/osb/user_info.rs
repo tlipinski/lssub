@@ -1,5 +1,6 @@
 use crate::osb::login::JwtToken;
-use crate::osb::osb_request::{osb_request, OsbClient};
+use crate::osb::osb_client::OsbClient;
+use crate::osb::osb_request::osb_request;
 use crate::osb::values::API_URL;
 use crate::osb::values::{AK, USER_AGENT};
 use anyhow::Result;
