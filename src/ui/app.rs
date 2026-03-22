@@ -398,6 +398,18 @@ mod tests {
     }
 
     #[test]
+    fn main_screen_help() {
+        let (mut app, _) = App::new(Path::new("."), None);
+
+        input_key(&mut app, F(1), KeyModifiers::NONE);
+
+        let mut terminal = TestTerminal::default().0;
+        terminal.draw(|frame| app.draw(frame)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
     fn account_screen() {
         let (mut app, _) = App::new(Path::new("."), None);
 
