@@ -44,6 +44,7 @@ use std::collections::{HashMap, VecDeque};
 use std::ops::Deref;
 use std::path::Path;
 use std::sync::{Arc, RwLock, mpsc};
+use ratatui::buffer::Buffer;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::task::JoinHandle;
@@ -340,4 +341,23 @@ pub enum Screen {
     Account,
     Language,
     About,
+}
+
+#[cfg(test)]
+mod tests {
+    use ratatui::backend::TestBackend;
+    use ratatui::Terminal;
+    use insta::assert_snapshot;
+    use super::*;
+
+    #[tokio::test]
+    async fn main_screen() {
+        let mut app = App::new(Path::new("."), None);
+        let mut terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
+        terminal
+            .draw(|frame| app.draw(frame))
+            .unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
 }
