@@ -1,33 +1,29 @@
 use crate::osb::login::JwtToken;
-use crate::osb::osb_request::osb_request;
+use crate::osb::osb_client::OsbClient;
 use crate::osb::values::{AK, API_URL, USER_AGENT, VIP_API_URL};
 use anyhow::{Error, Result};
 use log::{error, info, trace};
+use reqwest::Method;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 
 pub async fn get_download_link(
+    osb_client: OsbClient,
     token_opt: Option<JwtToken>,
     file_id: i64,
 ) -> Result<DownloadLinkResponse> {
-    let url = if token_opt.is_some() {
-        format!("{}/download", VIP_API_URL)
+    let response: DownloadLinkResponse = if let Some(token) = token_opt {
+        osb_client.call(Method::POST, "/download", |rq| {
+            rq.bearer_auth(token.0.expose_secret())
+                .json(&DownloadRequest { file_id })
+        }).await?
     } else {
-        format!("{}/download", API_URL)
+        osb_client.call(Method::POST, "/download", |rq| {
+            rq.json(&DownloadRequest { file_id })
+        }).await?
     };
 
-    let request = if let Some(token) = token_opt {
-        reqwest::Client::new()
-            .post(url)
-            .bearer_auth(token.0.expose_secret())
-            .json(&DownloadRequest { file_id })
-    } else {
-        reqwest::Client::new()
-            .post(url)
-            .json(&DownloadRequest { file_id })
-    };
-
-    osb_request(request).await
+    Ok(response)
 }
 
 #[derive(Serialize, Debug)]

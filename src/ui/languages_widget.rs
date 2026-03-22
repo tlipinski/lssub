@@ -1,4 +1,6 @@
 use crate::osb::languages::{Language, get_languages};
+use crate::osb::osb_client::OsbClient;
+use crate::osb::values::API_URL;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     LanguagesAndConfigFetched, LanguagesFetched, LanguagesUpdated, RunTask,
@@ -30,7 +32,7 @@ impl Component for LanguagesWidget {
         match action {
             Init => {
                 let task = Task::new("fetch languages", async {
-                    let languages = get_languages().await?;
+                    let languages = get_languages(OsbClient::new(API_URL)).await?;
 
                     Ok(LanguagesFetched(languages))
                 });

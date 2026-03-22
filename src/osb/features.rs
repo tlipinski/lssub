@@ -1,19 +1,20 @@
-use crate::osb::osb_request::osb_request;
+use crate::osb::osb_client::OsbClient;
 use crate::osb::values::{AK, API_URL, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info, trace};
+use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub async fn features(feature_id: i32) -> Result<FeaturesResponse> {
-    let url = format!("{}/features", API_URL);
-
+pub async fn features(osb_client: OsbClient, feature_id: i32) -> Result<FeaturesResponse> {
     let mut params = HashMap::new();
     params.insert("id", feature_id);
 
-    let request = reqwest::Client::new().get(url).query(&params);
+    let response: FeaturesResponse = osb_client
+        .call(Method::GET, "/features", |request| request.query(&params))
+        .await?;
 
-    osb_request(request).await
+    Ok(response)
 }
 
 #[derive(Deserialize, Serialize, Debug)]

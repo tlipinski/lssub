@@ -1,11 +1,12 @@
-use crate::osb::osb_request::osb_request;
+use crate::osb::osb_client::OsbClient;
 use crate::osb::values::{AK, API_URL, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info, trace};
+use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
+pub async fn subtitles(osb_client: OsbClient, request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
     let mut params: HashMap<&'static str, String> = HashMap::new();
     let langs = request.languages.join(",");
     params.insert("languages", langs);
@@ -21,13 +22,11 @@ pub async fn subtitles(request: SubtitlesRequest) -> Result<Vec<Subtitle>> {
         params.insert("query", request.query.clone());
     }
 
-    let request = reqwest::Client::new()
-        .get(format!("{}/subtitles", API_URL))
-        .query(&params);
+    let response: SubtitlesResponse = osb_client
+        .call(Method::GET, "/subtitles", |rq| rq.query(&params))
+        .await?;
 
-    let subtitle_responses = osb_request::<SubtitlesResponse>(request).await?;
-
-    Ok(subtitle_responses.data)
+    Ok(response.data)
 }
 
 #[derive(Deserialize, Debug)]
