@@ -353,10 +353,21 @@ mod tests {
     #[tokio::test]
     async fn main_screen() {
         let mut app = App::new(Path::new("."), None);
+
         let mut terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
-        terminal
-            .draw(|frame| app.draw(frame))
-            .unwrap();
+        terminal.draw(|frame| app.draw(frame)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[tokio::test]
+    async fn account_screen() {
+        let mut app = App::new(Path::new("."), None);
+
+        app.update(&SwitchScreen(Account));
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
+        terminal.draw(|frame| app.draw(frame)).unwrap();
 
         assert_snapshot!(terminal.backend());
     }
