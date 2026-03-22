@@ -22,8 +22,8 @@ pub async fn store_token(api_token: &JwtToken) -> Result<()> {
             token.as_str(),
             None::<&gio::Cancellable>,
         ) {
-            error!("Storing API token failed: {e}")
-        };
+            error!("Storing API token failed: {e}");
+        }
     })
     .await?;
 
@@ -61,7 +61,7 @@ pub async fn clear_token() -> Result<()> {
             HashMap::new(),
             None::<&gio::Cancellable>,
         ) {
-            Ok(_) => Ok(()),
+            Ok(()) => Ok(()),
             Err(e) => {
                 error!("{}", e);
                 Err(Error::new(e))
@@ -87,8 +87,8 @@ pub async fn store_credentials(credentials: Credentials) -> Result<()> {
             credentials.password.expose_secret().as_str(),
             None::<&gio::Cancellable>,
         ) {
-            error!("Storing credentials failed: {e}")
-        };
+            error!("Storing credentials failed: {e}");
+        }
     })
     .await?;
 
@@ -140,7 +140,7 @@ pub async fn clear_credentials() -> Result<()> {
             HashMap::new(),
             None::<&gio::Cancellable>,
         ) {
-            Ok(_) => Ok(()),
+            Ok(()) => Ok(()),
             Err(e) => {
                 error!("{}", e);
                 Err(Error::new(e))

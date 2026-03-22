@@ -188,11 +188,11 @@ mod tests {
         let client = OsbClient::new(&mock_server.uri(), "", "");
 
         let request = SubtitlesRequest {
-            query: "".to_string(),
+            query: String::new(),
             languages: vec![],
             id: None,
             parent_id: None,
-            ai_translated: "".to_string(),
+            ai_translated: String::new(),
         };
 
         let response = subtitles(client, request).await.unwrap();

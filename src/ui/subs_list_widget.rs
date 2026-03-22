@@ -216,12 +216,13 @@ impl<'a> From<&'a Subtitle> for Row<'a> {
             )),
             Cell::from(Text::from(sub.upload_date())),
             Cell::from(Text::from(sub.downloads().to_string())),
-            Cell::from(Text::from(match sub.attributes.ai_translated {
-                true => "✓".to_string(),
-                false => "".to_string(),
+            Cell::from(Text::from(if sub.attributes.ai_translated {
+                "✓".to_string()
+            } else {
+                String::new()
             })),
             Cell::from(Text::from(match sub.attributes.votes {
-                0 => "".to_string(),
+                0 => String::new(),
                 other => other.to_string(),
             })),
         ])

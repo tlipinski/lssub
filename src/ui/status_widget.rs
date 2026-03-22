@@ -64,7 +64,7 @@ impl Component for StatusWidget {
 impl StatusWidget {
     pub fn from(spinner: Arc<RwLock<Spinner>>) -> Self {
         Self {
-            info: "".to_string(),
+            info: String::new(),
             spinner,
             in_progress: false,
         }

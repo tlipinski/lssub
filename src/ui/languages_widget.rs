@@ -8,7 +8,7 @@ use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::task_runner::Task;
 use Action::Init;
-use KeyCode::*;
+use KeyCode::{Enter, Char, Left, Right, Up, Down};
 use crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::Frame;
 use ratatui::layout::Rect;
@@ -193,7 +193,7 @@ impl LanguagesWidget {
                         },
                         _selected,
                     ),
-                )| (*language_code).to_string(),
+                )| (*language_code).clone(),
             )
             .collect()
     }

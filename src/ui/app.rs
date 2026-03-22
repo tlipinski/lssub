@@ -465,7 +465,7 @@ mod tests {
 
         let subs = vec![Subtitle {
             id: "1234".to_string(),
-            r#type: "".to_string(),
+            r#type: String::new(),
             attributes: Attributes {
                 feature_details: FeatureDetails {
                     feature_id: 0,
@@ -502,7 +502,7 @@ mod tests {
         let subs = vec![
             Subtitle {
                 id: "1234".to_string(),
-                r#type: "".to_string(),
+                r#type: String::new(),
                 attributes: Attributes {
                     feature_details: FeatureDetails {
                         feature_id: 0,
@@ -524,7 +524,7 @@ mod tests {
             },
             Subtitle {
                 id: "1243".to_string(),
-                r#type: "".to_string(),
+                r#type: String::new(),
                 attributes: Attributes {
                     feature_details: FeatureDetails {
                         feature_id: 0,
@@ -561,7 +561,7 @@ mod tests {
                 kind: KeyEventKind::Press,
                 state: KeyEventState::NONE,
             })));
-        })
+        });
     }
 
     fn input_key(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {

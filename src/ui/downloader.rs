@@ -105,7 +105,7 @@ fn output_file(
         output_file.push(".");
         output_file.push(language);
         output_file.push(".srt");
-    };
+    }
 
     base_path.join(output_file)
 }

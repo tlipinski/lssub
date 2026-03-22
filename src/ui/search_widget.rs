@@ -34,7 +34,7 @@ impl Component for SearchWidget {
                 params: QueryParams::default(),
             })),
             SubtitlesFetched(subtitles) => {
-                self.update_subtitles(subtitles.to_vec());
+                self.update_subtitles(subtitles.clone());
                 None
             }
             _ => None,
