@@ -45,12 +45,13 @@ use std::ops::Deref;
 use std::path::Path;
 use std::sync::{Arc, RwLock, mpsc};
 use tokio::sync::broadcast;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::task::JoinHandle;
 
 pub struct App {
     active_screen: Screen,
     debouncer_tx: Sender<SubtitlesQuery>,
+    ui_rx: Receiver<Action>,
     config_provider: ConfigProvider,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
     task_runner: TaskRunner,
@@ -60,11 +61,10 @@ pub struct App {
 }
 
 impl App {
-    pub async fn run(
-        terminal: &mut DefaultTerminal,
+    pub async fn new(
         base_path: &Path,
         file_name: Option<&str>,
-    ) -> Result<()> {
+    ) -> Result<App> {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
         let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
 
@@ -94,10 +94,11 @@ impl App {
             Box::new(StatusWidget::from(spinner.clone())),
         );
 
-        let mut app = App {
+        Ok(App {
             active_screen: Screen::default(),
             config_provider,
             debouncer_tx,
+            ui_rx,
             widgets: components,
             task_runner,
             query: SubtitlesQuery {
@@ -106,8 +107,13 @@ impl App {
             },
             languages: vec![],
             initialized: false,
-        };
+        })
+    }
 
+    pub async fn run(
+        &mut self,
+        terminal: &mut DefaultTerminal,
+    ) -> Result<()> {
         let mut message_opt = Some(Init);
 
         'main_loop: loop {
@@ -117,13 +123,13 @@ impl App {
                         info!("Exiting application");
                         break 'main_loop;
                     }
-                    _ => message_opt = app.update(&msg),
+                    _ => message_opt = self.update(&msg),
                 }
             }
 
-            terminal.draw(|frame| app.draw(frame))?;
+            terminal.draw(|frame| self.draw(frame))?;
 
-            message_opt = ui_rx.recv().await;
+            message_opt = self.ui_rx.recv().await;
         }
 
         Ok(())
