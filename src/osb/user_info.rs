@@ -25,7 +25,7 @@ pub struct UserInfo {
     pub data: User,
 }
 
-#[derive(Deserialize, Debug, Default, Clone)]
+#[derive(Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct User {
     pub username: String,
     pub downloads_count: i32,
@@ -74,10 +74,15 @@ async fn call_user_info_endpoint_and_parse_response() {
 
     let response = get_user_info(client, &token).await.unwrap();
 
-    assert_eq!(response.username, "test_user");
-    assert_eq!(response.level, "VIP Member");
-    assert_eq!(response.downloads_count, 1);
-    assert_eq!(response.remaining_downloads, 999);
-    assert_eq!(response.allowed_translations, 10);
-    assert_eq!(response.allowed_downloads, 1000);
+    assert_eq!(
+        response,
+        User {
+            username: "test_user".to_string(),
+            level: "VIP Member".to_string(),
+            downloads_count: 1,
+            remaining_downloads: 999,
+            allowed_translations: 10,
+            allowed_downloads: 1000,
+        }
+    );
 }
