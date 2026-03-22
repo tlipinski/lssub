@@ -164,7 +164,8 @@ impl LoginWidget {
             Ok(jwt) => {
                 store_credentials(credentials.clone()).await?;
                 store_token(&jwt).await?;
-                let user = get_user_info(&jwt).await?;
+                let client = OsbClient::new(API_URL);
+                let user = get_user_info(client, &jwt).await?;
                 Ok(Multi(vec![
                     UserLoggedIn(user.clone()),
                     ChangeStatus(format!("Logged in as {}", user.username)),

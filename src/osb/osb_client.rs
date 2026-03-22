@@ -31,50 +31,51 @@ impl OsbClient {
         info!("Request: {}", string);
 
         let request = build(reqwest::Client::new().request(method, string));
-        osb_request::<A>(request).await
+        Self::osb_request::<A>(request).await
     }
-}
 
-pub async fn osb_request<A: DeserializeOwned>(mut request: RequestBuilder) -> anyhow::Result<A> {
-    let request = request
-        .timeout(std::time::Duration::from_secs(5))
-        .header("Api-Key", AK)
-        .header("User-Agent", USER_AGENT);
+    async fn osb_request<A: DeserializeOwned>(mut request: RequestBuilder) -> anyhow::Result<A> {
+        let request = request
+            .timeout(std::time::Duration::from_secs(5))
+            .header("Api-Key", AK)
+            .header("User-Agent", USER_AGENT);
 
-    // debug!("Request {:?}", request);
+        // debug!("Request {:?}", request);
 
-    let http_response = request.send().await?;
-    let status = http_response.status();
-    let text_body = http_response.text().await?;
+        let http_response = request.send().await?;
+        let status = http_response.status();
+        let text_body = http_response.text().await?;
 
-    debug!("Response: {}", text_body);
+        debug!("Response: {}", text_body);
 
-    match status {
-        s if s.is_success() || s.is_redirection() => {
-            let body = text_body.clone();
-            let json: Result<A, _> = serde_json::from_str(&body);
-            match json {
-                Ok(subtitles_response) => {
-                    // debug!("{}", serde_json::to_string_pretty(&subtitles_response)?);
-                    Ok(subtitles_response)
-                }
-                Err(e) => {
-                    error!("Failed decoding body {:?} {}", e, text_body);
-                    Err(Error::from(e))
+        match status {
+            s if s.is_success() || s.is_redirection() => {
+                let body = text_body.clone();
+                let json: Result<A, _> = serde_json::from_str(&body);
+                match json {
+                    Ok(subtitles_response) => {
+                        // debug!("{}", serde_json::to_string_pretty(&subtitles_response)?);
+                        Ok(subtitles_response)
+                    }
+                    Err(e) => {
+                        error!("Failed decoding body {:?} {}", e, text_body);
+                        Err(Error::from(e))
+                    }
                 }
             }
-        }
-        s if s.is_client_error() => {
-            let error_response: ErrorResponse = serde_json::from_str(&text_body)?;
-            info!("Client error [{}]: {:?}", s.as_u16(), error_response);
-            Err(Error::msg(error_response))
-        }
-        s => {
-            error!("Server error [{}]: {}", s.as_u16(), text_body);
-            Err(Error::msg("Server error, check logs"))
+            s if s.is_client_error() => {
+                let error_response: ErrorResponse = serde_json::from_str(&text_body)?;
+                info!("Client error [{}]: {:?}", s.as_u16(), error_response);
+                Err(Error::msg(error_response))
+            }
+            s => {
+                error!("Server error [{}]: {}", s.as_u16(), text_body);
+                Err(Error::msg("Server error, check logs"))
+            }
         }
     }
 }
+
 
 #[derive(Deserialize, Debug)]
 pub(crate) struct ErrorResponse {

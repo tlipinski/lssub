@@ -7,12 +7,10 @@ use reqwest::Method;
 use secrecy::{ExposeSecret, SecretBox};
 use serde::Deserialize;
 
-pub async fn get_user_info(token: &JwtToken) -> Result<User> {
+pub async fn get_user_info(osb_client: OsbClient, token: &JwtToken) -> Result<User> {
     info!("Getting user info");
 
-    let client = OsbClient::new(API_URL);
-
-    let response: UserInfo = client
+    let response: UserInfo = osb_client
         .call(Method::GET, "/infos/user", |rq| {
             rq.bearer_auth(token.0.expose_secret())
         })
@@ -48,13 +46,18 @@ async fn call_user_info_endpoint_and_parse_response() {
         .respond_with(ResponseTemplate::new(200).set_body_string(
             r#"
                         {
-                          "data": {
-                            "username": "test_user",
-                            "downloads_count": 50,
-                            "remaining_downloads": 950,
-                            "level": "VIP Member",
+                          data": {
                             "allowed_translations": 10,
-                            "allowed_downloads": 1000
+                            "allowed_downloads": 1000,
+                            "level": "VIP Member",
+                            "user_id": 936829,
+                            "ext_installed": false,
+                            "vip": true,
+                            "reset_time_utc": "2026-03-22T23:59:58.000Z",
+                            "reset_time": "13 hours and 13 minutes",
+                            "downloads_count": 1,
+                            "remaining_downloads": 999,
+                            "username": "test_user"
                           }
                         }
                     "#,
@@ -64,7 +67,9 @@ async fn call_user_info_endpoint_and_parse_response() {
 
     let token = JwtToken(SecretBox::new(Box::new("test_token_123".to_string())));
 
-    let response = get_user_info(&token).await.unwrap();
+    let client = OsbClient::new(&mock_server.uri());
+
+    let response = get_user_info(client, &token).await.unwrap();
 
     assert_eq!(response.username, "test_user");
     assert_eq!(response.downloads_count, 50);

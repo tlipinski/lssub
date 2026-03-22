@@ -1,5 +1,7 @@
 use crate::osb::login::{Credentials, login};
+use crate::osb::osb_client::OsbClient;
 use crate::osb::user_info::{User, get_user_info};
+use crate::osb::values::API_URL;
 use crate::secret::{clear_token, retrieve_credentials, retrieve_token, store_token};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
@@ -16,8 +18,6 @@ use log::{error, info, warn};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::text::ToSpan;
-use crate::osb::osb_client::OsbClient;
-use crate::osb::values::API_URL;
 
 pub struct AccountWidget {
     login_widget: LoginWidget,
@@ -33,7 +33,7 @@ impl Component for AccountWidget {
                 warn!("Credentials retrieved: {:?}", c);
 
                 match retrieve_token().await {
-                    Ok(Some(jwt)) => match get_user_info(&jwt).await {
+                    Ok(Some(jwt)) => match get_user_info(OsbClient::new(API_URL), &jwt).await {
                         Ok(user) => Ok(UserLoggedIn(user)),
                         Err(e) => {
                             error!("Error getting user info: {e}");
@@ -47,7 +47,8 @@ impl Component for AccountWidget {
                                     store_token(&token).await;
                                     info!("Token refreshed");
 
-                                    let user = get_user_info(&token).await?;
+                                    let user =
+                                        get_user_info(OsbClient::new(API_URL), &token).await?;
                                     Ok(UserLoggedIn(user))
                                 }
                             }
