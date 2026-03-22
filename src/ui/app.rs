@@ -348,6 +348,7 @@ mod tests {
     use ratatui::backend::TestBackend;
     use ratatui::Terminal;
     use insta::assert_snapshot;
+    use crate::osb::user_info::User;
     use super::*;
 
     #[tokio::test]
@@ -364,6 +365,48 @@ mod tests {
     async fn account_screen() {
         let mut app = App::new(Path::new("."), None);
 
+        app.update(&SwitchScreen(Account));
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
+        terminal.draw(|frame| app.draw(frame)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[tokio::test]
+    async fn main_screen_logged_in() {
+        let mut app = App::new(Path::new("."), None);
+
+        let user = User {
+            username: "user".to_string(),
+            downloads_count: 4,
+            remaining_downloads: 6,
+            level: "vip".to_string(),
+            allowed_translations: 10,
+            allowed_downloads: 10,
+        };
+        app.update(&UserLoggedIn(user));
+
+        let mut terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
+        terminal.draw(|frame| app.draw(frame)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[tokio::test]
+    async fn account_screen_logged_in() {
+        let mut app = App::new(Path::new("."), None);
+
+        let user = User {
+            username: "user".to_string(),
+            downloads_count: 4,
+            remaining_downloads: 6,
+            level: "vip".to_string(),
+            allowed_translations: 10,
+            allowed_downloads: 10,
+        };
+
+        app.update(&UserLoggedIn(user));
         app.update(&SwitchScreen(Account));
 
         let mut terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
