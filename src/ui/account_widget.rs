@@ -1,22 +1,21 @@
-use crate::osb::login::{Credentials, login};
+use crate::osb::login::login;
 use crate::osb::osb_client::OsbClient;
 use crate::osb::user_info::{User, get_user_info};
-use crate::secret::{clear_token, retrieve_credentials, retrieve_token, store_token};
+use crate::secret::{retrieve_credentials, retrieve_token, store_token};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus, InputReceived, NoOp, RunTask, SwitchScreen, UserLoggedIn, UserLoggedOut,
+    NoOp, RunTask, UserLoggedIn, UserLoggedOut,
 };
 use crate::ui::component::Component;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
-use crate::ui::task_runner::{Task, TaskRunner};
+use crate::ui::task_runner::Task;
 use Action::Init;
-use anyhow::{Error, Result};
+use anyhow::Error;
 use crossterm::event::Event;
 use log::{error, info, warn};
 use ratatui::Frame;
 use ratatui::layout::Rect;
-use ratatui::text::ToSpan;
 
 pub struct AccountWidget {
     login_widget: LoginWidget,
@@ -78,7 +77,7 @@ impl Component for AccountWidget {
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
-        if (self.logged_in) {
+        if self.logged_in  {
             self.logged_in_widget.handle_key_event(event)
         } else {
             self.login_widget.handle_key_event(event)
@@ -86,7 +85,7 @@ impl Component for AccountWidget {
     }
 
     fn render(&mut self, frame: &mut Frame, area: Rect) {
-        if (self.logged_in) {
+        if self.logged_in  {
             self.logged_in_widget.render(frame, area);
         } else {
             self.login_widget.render(frame, area);

@@ -1,13 +1,9 @@
-use crate::osb::subtitles::{SubtitlesRequest, SubtitlesResponse, subtitles};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, FetchSubtitles, RunTask, SubtitlesFetched};
+use crate::ui::actions::Action::FetchSubtitles;
 use crate::ui::search_widget::SubtitlesQuery;
-use crate::ui::task_runner::{Task, TaskRunner};
-use anyhow::{Context, Error, Result, bail};
-use log::{debug, error, info};
-use std::sync::{Arc, Mutex, mpsc};
+use anyhow::Result;
+use log::{error, info};
 use std::time::Duration;
-use tokio::join;
 use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;

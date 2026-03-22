@@ -4,14 +4,11 @@ use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
 use Action::{UserLoggedIn, UserLoggedOut};
 use ratatui::Frame;
-use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
-use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use ratatui::prelude::{Line, Stylize};
-use ratatui::style::Style;
+use ratatui::crossterm::event::Event;
+use ratatui::layout::{Alignment, Rect};
+use ratatui::prelude::Line;
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
-use tui_input::Input;
-use tui_input::backend::crossterm::EventHandler;
 
 #[derive(Debug)]
 pub struct UserWidget {
@@ -40,7 +37,7 @@ impl Component for UserWidget {
         None
     }
 
-    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, _event: &Event) -> Option<Action> {
         None
     }
 

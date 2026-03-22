@@ -1,20 +1,16 @@
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, StopProgress, SubtitleDownloaded};
+use crate::ui::actions::Action::{ChangeStatus, StopProgress};
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::spinner::Spinner;
 use Action::StartProgress;
-use anyhow::Result;
 use ratatui::Frame;
-use ratatui::buffer::Buffer;
-use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
+use ratatui::crossterm::event::Event;
 use ratatui::layout::Rect;
-use ratatui::prelude::{Line, Stylize, Widget};
+use ratatui::prelude::Line;
 use ratatui::symbols::border;
-use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
+use ratatui::widgets::{Block, Paragraph};
 use std::sync::{Arc, RwLock};
-use tui_input::Input;
-use tui_input::backend::crossterm::EventHandler;
 
 pub struct StatusWidget {
     info: String,
@@ -41,16 +37,16 @@ impl Component for StatusWidget {
         }
     }
 
-    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, _event: &Event) -> Option<Action> {
         None
     }
 
     fn render(&mut self, frame: &mut Frame, area: Rect) {
         let c = self.spinner.read().unwrap().c;
-        let mut title = if (self.in_progress) {
-            ("Status ".to_string() + &c.to_string())
+        let title = if self.in_progress  {
+            "Status ".to_string() + &c.to_string() 
         } else {
-            ("Status".to_string())
+            "Status".to_string() 
         };
 
         let block = Block::bordered()

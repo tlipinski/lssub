@@ -1,15 +1,14 @@
 use crate::osb::login::{Credentials, login};
 use crate::osb::osb_client::OsbClient;
-use crate::osb::user_info;
 use crate::osb::user_info::get_user_info;
 use crate::secret::store_credentials;
 use crate::secret::store_token;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, Multi, RunTask, UserLoggedIn};
 use crate::ui::pad::BlockTitlePadExt;
-use crate::ui::task_runner::{Task, TaskRunner};
+use crate::ui::task_runner::Task;
 use anyhow::{Error, Result};
-use log::{error, info, warn};
+use log::warn;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};

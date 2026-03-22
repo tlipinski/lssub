@@ -3,9 +3,7 @@ use log::{debug, error, info};
 use reqwest::{Method, RequestBuilder};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
-use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
-use crate::osb::user_info::User;
 
 pub struct OsbClient {
     base_url: String,
@@ -38,7 +36,7 @@ impl OsbClient {
         self.osb_request::<A>(request).await
     }
 
-    async fn osb_request<A: DeserializeOwned>(&self, mut request: RequestBuilder) -> anyhow::Result<A> {
+    async fn osb_request<A: DeserializeOwned>(&self, request: RequestBuilder) -> anyhow::Result<A> {
         let request = request
             .timeout(std::time::Duration::from_secs(5))
             .header("Api-Key", self.api_key.clone())

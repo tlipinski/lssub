@@ -1,7 +1,4 @@
-use crate::ui::actions::Action;
 use std::sync::{Arc, RwLock};
-use tokio::sync::broadcast::Receiver;
-use tokio::sync::mpsc::Sender;
 use tokio::time::{Duration, sleep};
 
 pub struct Spinner {

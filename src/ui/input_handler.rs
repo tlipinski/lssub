@@ -4,7 +4,6 @@ use anyhow::Result;
 use futures_util::{FutureExt, StreamExt};
 use ratatui::crossterm::event::EventStream;
 use std::time::Duration;
-use tokio::sync::broadcast::Receiver;
 use tokio::sync::mpsc::Sender;
 use tokio::time::interval;
 

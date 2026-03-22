@@ -6,10 +6,8 @@ use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, Multi, SubtitleDownloaded};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
-use secrecy::ExposeSecret;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
-use tokio::sync::mpsc::{Receiver, Sender};
 
 #[derive(Clone)]
 pub struct Downloader {

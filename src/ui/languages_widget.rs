@@ -140,7 +140,7 @@ impl Component for LanguagesWidget {
             .checked_symbol("[X]")
             .unchecked_symbol("[ ]");
 
-            if (language.1) {
+            if language.1  {
                 checkbox = checkbox.style(Style::default().bg(Color::Gray));
             }
 
@@ -173,11 +173,11 @@ impl LanguagesWidget {
             .enumerate()
             .filter(
                 |&(
-                    idx,
+                    _idx,
                     (
                         Language {
-                            language_name,
-                            language_code,
+                            language_name: _,
+                            language_code: _,
                         },
                         selected,
                     ),
@@ -185,13 +185,13 @@ impl LanguagesWidget {
             )
             .map(
                 |(
-                    idx,
+                    _idx,
                     (
                         Language {
-                            language_name,
+                            language_name: _,
                             language_code,
                         },
-                        selected,
+                        _selected,
                     ),
                 )| (*language_code).to_string(),
             )

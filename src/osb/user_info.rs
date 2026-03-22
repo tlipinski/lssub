@@ -1,8 +1,7 @@
 use crate::osb::login::JwtToken;
 use crate::osb::osb_client::OsbClient;
 use anyhow::Result;
-use env_logger::{Builder, Target};
-use log::{LevelFilter, debug, error, info};
+use log::info;
 use reqwest::Method;
 use secrecy::{ExposeSecret, SecretBox};
 use serde::Deserialize;
@@ -36,10 +35,15 @@ pub struct User {
 
 #[tokio::test]
 async fn call_user_info_endpoint_and_parse_response() {
+    use env_logger::{Builder, Target};
+    use log::LevelFilter;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
-    Builder::new().target(Target::Stdout).filter_level(LevelFilter::Debug).try_init();
+    Builder::new()
+        .target(Target::Stdout)
+        .filter_level(LevelFilter::Debug)
+        .try_init();
 
     let mock_server = MockServer::start().await;
 

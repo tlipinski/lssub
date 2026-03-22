@@ -1,7 +1,6 @@
 use crate::osb::login::JwtToken;
 use crate::osb::osb_client::OsbClient;
-use anyhow::{Error, Result};
-use log::{error, info, trace};
+use anyhow::Result;
 use reqwest::Method;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};

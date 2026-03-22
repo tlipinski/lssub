@@ -1,16 +1,11 @@
-#![allow(unused)]
-
 mod config;
 mod osb;
 mod secret;
 mod ui;
 mod values;
 
-use crate::config::{Config, ConfigProvider};
-use crate::osb::user_info::get_user_info;
-use crate::secret::retrieve_token;
 use crate::values::APP_NAME;
-use anyhow::{Error, Result};
+use anyhow::Result;
 use clap::Parser;
 use env_logger::{Builder, Target};
 use log::{LevelFilter, error, info, warn};
@@ -85,7 +80,7 @@ async fn run(args: Args) -> Result<()> {
 
     info!("Input path: {}", p.display());
 
-    let (base_path, file_name) = if (p.is_dir()) {
+    let (base_path, file_name) = if p.is_dir()  {
         (Some(p.as_path()), None)
     } else {
         (p.parent(), p.file_stem().and_then(|os_str| os_str.to_str()))

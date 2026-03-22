@@ -1,17 +1,10 @@
-use crate::ui::actions::Action;
-use crate::ui::actions::Action::SearchQueryUpdated;
 use crate::ui::pad::BlockTitlePadExt;
-use crate::ui::search_widget::SubtitlesQuery;
-use anyhow::Result;
 use ratatui::Frame;
-use ratatui::buffer::Buffer;
-use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
+use ratatui::crossterm::event::Event;
 use ratatui::layout::Rect;
-use ratatui::prelude::{Line, Stylize, Widget};
+use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
-use ratatui::widgets::{Block, Paragraph, StatefulWidget, TableState};
-use std::sync::mpsc::Sender;
-use std::thread::sleep;
+use ratatui::widgets::{Block, Paragraph};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 

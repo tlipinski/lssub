@@ -1,6 +1,5 @@
 use crate::osb::osb_client::OsbClient;
-use anyhow::{Error, Result};
-use log::{debug, error, info, trace};
+use anyhow::Result;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

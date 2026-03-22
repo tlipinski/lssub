@@ -1,53 +1,37 @@
 use crate::config::{Config, ConfigProvider};
-use crate::osb::get_download_link::get_download_link;
-use crate::osb::login::login;
 use crate::osb::osb_client::OsbClient;
 use crate::osb::subtitles::{SubtitlesRequest, subtitles};
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus, Exit, FeatureInfo, FetchSubtitles, Init, LanguagesAndConfigFetched,
-    LanguagesFetched, LanguagesUpdated, Multi, SearchQueryUpdated, StartProgress, StopProgress,
-    SubtitleDownloaded, SwitchScreen, Tick, UserLoggedIn, UserLoggedOut,
+    Exit, FetchSubtitles, Init, LanguagesAndConfigFetched, LanguagesFetched, LanguagesUpdated,
+    Multi, SearchQueryUpdated, SwitchScreen, Tick,
 };
 use crate::ui::app::Action::{InputReceived, SubtitlesFetched};
 use crate::ui::app::Screen::{About, Account, Language, Search};
 use crate::ui::component::Component;
 use crate::ui::debouncer::debouncer_task;
-use crate::ui::downloader::Downloader;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::languages_widget::LanguagesWidget;
-use crate::ui::logged_in_widget::LoggedInWidget;
-use crate::ui::login_widget::LoginWidget;
 use crate::ui::nav_widget::NavWidget;
-use crate::ui::query_widget::QueryWidget;
 use crate::ui::search_widget::{SearchWidget, SubtitlesQuery};
 use crate::ui::spinner::{Spinner, spinner_task};
 use crate::ui::status_widget::StatusWidget;
-use crate::ui::subs_list_widget::SubsListWidget;
 use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
 use Action::RunTask;
 use KeyCode::{Char, Esc, F};
-use anyhow::{Error, Result, bail};
-use clap::builder::TypedValueParser;
+use anyhow::{Error, Result};
 use log::{debug, error, info};
-use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::prelude::{StatefulWidget, Stylize};
-use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Clear, Paragraph, Widget};
+use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
 use std::cmp::PartialEq;
-use std::collections::{HashMap, VecDeque};
-use std::ops::Deref;
+use std::collections::HashMap;
 use std::path::Path;
-use std::sync::{Arc, RwLock, mpsc};
-use tokio::sync::broadcast;
+use std::sync::{Arc, RwLock};
 use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::task::JoinHandle;
 
 pub struct App {
     active_screen: Screen,
@@ -80,7 +64,7 @@ impl AppBackground {
         }
     }
 
-    pub fn run(mut self) {
+    pub fn run(self) {
         tokio::spawn(handle_input_task(self.ui_tx.clone()));
         tokio::spawn(debouncer_task(self.debouncer_rx, self.ui_tx.clone()));
         tokio::spawn(spinner_task(self.spinner));
@@ -89,7 +73,7 @@ impl AppBackground {
 
 impl App {
     pub fn new(base_path: &Path, file_name: Option<&str>) -> (App, AppBackground) {
-        let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
+        let (ui_tx, ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
         let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
 
         let task_runner = TaskRunner::new(ui_tx.clone());
@@ -128,11 +112,7 @@ impl App {
             initialized: false,
         };
 
-        let app_background = AppBackground {
-            ui_tx,
-            debouncer_rx,
-            spinner,
-        };
+        let app_background = AppBackground::from(ui_tx, debouncer_rx, spinner);
 
         (app, app_background)
     }
@@ -168,7 +148,7 @@ impl App {
         let mut widget_actions = self
             .widgets
             .values_mut()
-            .map(|(component)| component.update(action))
+            .map(|component| component.update(action))
             .collect::<Vec<Option<Action>>>();
 
         let new_action = match action {
@@ -187,7 +167,7 @@ impl App {
             }
 
             SearchQueryUpdated(query) => {
-                if (self.initialized) {
+                if self.initialized {
                     if self.query.query == query.query {
                         self.query = query.clone();
 
@@ -277,7 +257,7 @@ impl App {
             id: self.query.params.feature_id,
             parent_id: self.query.params.parent_feature_id,
             languages: self.languages.clone(),
-            ai_translated: if (self.query.params.exclude_ai) {
+            ai_translated: if self.query.params.exclude_ai {
                 "exclude".to_string()
             } else {
                 "include".to_string()
@@ -371,10 +351,10 @@ mod tests {
     use super::*;
     use crate::osb::subtitles::{Attributes, FeatureDetails, Subtitle};
     use crate::osb::user_info::User;
-    use crate::ui::subs_list_widget::QueryParams;
-    use crossterm::event::{KeyEvent, KeyEventKind, KeyEventState};
+    use crate::ui::actions::Action::UserLoggedIn;
     use crossterm::event::Event::Key;
-    use crossterm::event::KeyCode::{Enter, Tab};
+    use crossterm::event::KeyCode::Tab;
+    use crossterm::event::{KeyEvent, KeyEventKind, KeyEventState};
     use insta::assert_snapshot;
     use ratatui::Terminal;
     use ratatui::backend::TestBackend;
@@ -483,30 +463,28 @@ mod tests {
     fn subs_query() {
         let (mut app, _) = App::new(Path::new("."), None);
 
-        let subs = vec![
-            Subtitle {
-                id: "1234".to_string(),
-                r#type: "".to_string(),
-                attributes: Attributes {
-                    feature_details: FeatureDetails {
-                        feature_id: 0,
-                        title: "title".to_string(),
-                        movie_name: "movie name".to_string(),
-                        year: Some(2004),
-                        parent_feature_id: None,
-                        parent_title: None,
-                    },
-                    language: "en".to_string(),
-                    download_count: 4,
-                    new_download_count: 8,
-                    ai_translated: true,
-                    votes: 8,
-                    upload_date: "2024-04-24T10:10:10".to_string(),
-                    release: "release".to_string(),
-                    files: vec![],
+        let subs = vec![Subtitle {
+            id: "1234".to_string(),
+            r#type: "".to_string(),
+            attributes: Attributes {
+                feature_details: FeatureDetails {
+                    feature_id: 0,
+                    title: "title".to_string(),
+                    movie_name: "movie name".to_string(),
+                    year: Some(2004),
+                    parent_feature_id: None,
+                    parent_title: None,
                 },
-            }
-        ];
+                language: "en".to_string(),
+                download_count: 4,
+                new_download_count: 8,
+                ai_translated: true,
+                votes: 8,
+                upload_date: "2024-04-24T10:10:10".to_string(),
+                release: "release".to_string(),
+                files: vec![],
+            },
+        }];
         app.update(&SubtitlesFetched(subs));
         input_text(&mut app, "title");
         input_key(&mut app, KeyCode::Down, KeyModifiers::NONE);

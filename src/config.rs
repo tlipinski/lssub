@@ -1,5 +1,5 @@
 use anyhow::Result;
-use log::{debug, error, info};
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -23,7 +23,7 @@ impl ConfigProvider {
             .expect("HOME does not exist")
     }
 
-    pub fn modify(&self, f: impl Fn(&Config) -> (Config)) -> Result<()> {
+    pub fn modify(&self, f: impl Fn(&Config) -> Config ) -> Result<()> {
         let c = self.get_config()?;
         let updated = f(&c);
         self.save_config(&updated)

@@ -1,22 +1,17 @@
-use crate::osb::login::Credentials;
 use crate::osb::user_info::User;
 use crate::secret::{clear_credentials, clear_token};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, Multi, RunTask, UserLoggedOut};
 use crate::ui::pad::BlockTitlePadExt;
-use crate::ui::task_runner::{Task, TaskRunner};
-use anyhow::Result;
+use crate::ui::task_runner::Task;
 use crossterm::event::KeyModifiers;
-use log::info;
 use ratatui::Frame;
-use ratatui::crossterm::event::{Event, KeyCode, KeyEvent};
+use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
 use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
-use tui_input::Input;
-use tui_input::backend::crossterm::EventHandler;
 
 pub struct LoggedInWidget {
     pub user: User,

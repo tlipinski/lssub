@@ -12,11 +12,11 @@ use crate::values::*;
 pub struct AboutWidget {}
 
 impl Component for AboutWidget {
-    fn update(&mut self, action: &Action) -> Option<Action> {
+    fn update(&mut self, _action: &Action) -> Option<Action> {
         None
     }
 
-    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, _event: &Event) -> Option<Action> {
         None
     }
 

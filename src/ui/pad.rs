@@ -1,4 +1,3 @@
-use ratatui::text::Line;
 use ratatui::widgets::Block;
 
 pub trait BlockTitlePadExt<'a> {

@@ -1,32 +1,22 @@
-use crate::osb::subtitles::{Subtitle, SubtitlesResponse};
-use crate::secret::retrieve_token;
+use crate::osb::subtitles::Subtitle;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus, Exit, FetchSubtitles, Init, LanguagesUpdated, Multi, RunTask, SearchQueryUpdated,
-    StartProgress, SubtitleDownloaded, SubtitlesFetched, SwitchScreen, UserLoggedOut,
+    ChangeStatus, Init, Multi, RunTask, SearchQueryUpdated, SubtitlesFetched,
 };
-use crate::ui::app::Screen::Search;
 use crate::ui::component::Component;
-use crate::ui::downloader::{Downloaded, Downloader};
+use crate::ui::downloader::Downloader;
 use crate::ui::handled::HandleResult::{Handled, Unhandled};
-use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::query_widget::QueryWidget;
-use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::{QueryParams, SubsListWidget};
-use crate::ui::task_runner::{Task, TaskRunner};
-use crate::ui::user_widget::UserWidget;
-use crossterm::event::{KeyEvent, KeyModifiers};
-use log::error;
+use crate::ui::task_runner::Task;
+use KeyCode::{Enter, Esc, F};
+use crossterm::event::KeyModifiers;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::prelude::{StatefulWidget, Stylize};
 use ratatui::style::Style;
-use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::text::{Line, Text};
 use std::path::Path;
-use KeyCode::{Enter, Esc, F};
-use tokio::sync::mpsc::Sender;
 use tui_popup::Popup;
 
 pub struct SearchWidget {
@@ -53,7 +43,7 @@ impl Component for SearchWidget {
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Event::Key(key_event) = event {
-            if (self.help) {
+            if self.help {
                 match (key_event.code, key_event.modifiers) {
                     (Esc | F(1), KeyModifiers::NONE) => {
                         self.help = !self.help;
@@ -116,7 +106,7 @@ impl Component for SearchWidget {
         self.query_widget.render(frame, layout[0]);
         self.subs_list_widget.render(frame, layout[1]);
 
-        if (self.help) {
+        if self.help {
             let body = Text::from(vec![
                 "".into(),
                 Line::from("Ctrl+P: Narrow results to TV series currently selected"),

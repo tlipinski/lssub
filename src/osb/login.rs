@@ -1,10 +1,10 @@
 use crate::osb::osb_client::OsbClient;
-use anyhow::{Error, Result};
-use log::{debug, error, info};
-use reqwest::{Client, Method};
+use anyhow::Result;
+use log::info;
+use reqwest::Method;
 use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::Debug;
 
 pub async fn login(osb_client: OsbClient, credentials: &Credentials) -> Result<JwtToken> {
     info!("Logging in");
@@ -49,19 +49,21 @@ struct User {
 
 #[cfg(test)]
 mod tests {
-    use env_logger::{Builder, Target};
     use crate::osb::login::{Credentials, login};
     use crate::osb::osb_client::OsbClient;
-    use log::{info, LevelFilter};
-    use reqwest::Method;
+    use env_logger::{Builder, Target};
+    use log::LevelFilter;
     use secrecy::{ExposeSecret, SecretBox};
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[tokio::test]
     async fn login_and_parse_response() {
-        Builder::new().target(Target::Stdout).filter_level(LevelFilter::Debug).try_init();
-        
+        Builder::new()
+            .target(Target::Stdout)
+            .filter_level(LevelFilter::Debug)
+            .try_init();
+
         let mock_server = MockServer::start().await;
 
         Mock::given(method("POST"))

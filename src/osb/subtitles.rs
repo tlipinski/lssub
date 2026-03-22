@@ -1,6 +1,6 @@
 use crate::osb::osb_client::OsbClient;
-use anyhow::{Error, Result};
-use log::{debug, error, info, trace};
+use anyhow::Result;
+use log::info;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -101,14 +101,16 @@ mod tests {
         Attributes, FeatureDetails, File, Subtitle, SubtitlesRequest, subtitles,
     };
     use env_logger::{Builder, Target};
-    use log::{LevelFilter, info};
-    use reqwest::Method;
+    use log::LevelFilter;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[tokio::test]
     async fn get_subs() {
-        Builder::new().target(Target::Stdout).filter_level(LevelFilter::Debug).try_init();
+        Builder::new()
+            .target(Target::Stdout)
+            .filter_level(LevelFilter::Debug)
+            .try_init();
 
         let mock_server = MockServer::start().await;
 
@@ -226,5 +228,4 @@ mod tests {
         assert_eq!(response.first().unwrap().downloads(), 741);
         assert_eq!(response.first().unwrap().upload_date(), "2024-07-11");
     }
-
 }

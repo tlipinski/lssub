@@ -1,9 +1,8 @@
 use crate::osb::login::{Credentials, JwtToken};
 use anyhow::{Error, Result};
-use gio::prelude::ToSendValue;
 use libsecret::prelude::{RetrievableExt, RetrievableExtManual};
 use libsecret::{Schema, SchemaAttributeType, SchemaFlags, SearchFlags};
-use log::{debug, error, info};
+use log::{error, info};
 use secrecy::{ExposeSecret, SecretBox};
 use std::collections::HashMap;
 use tokio::task;

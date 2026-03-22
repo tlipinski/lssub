@@ -7,7 +7,7 @@ use ratatui::layout::Rect;
 use ratatui::prelude::Line;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::Paragraph;
 
 pub struct NavWidget {
     pub username: Option<String>,
@@ -28,7 +28,7 @@ impl Component for NavWidget {
         None
     }
 
-    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, _event: &Event) -> Option<Action> {
         None
     }
 

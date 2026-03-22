@@ -1,4 +1,4 @@
-use crate::osb::subtitles::{Subtitle, SubtitlesResponse};
+use crate::osb::subtitles::Subtitle;
 use crate::ui::handled::HandleResult;
 use crate::ui::handled::HandleResult::Unhandled;
 use crate::ui::pad::BlockTitlePadExt;
@@ -7,7 +7,7 @@ use ratatui::Frame;
 use ratatui::crossterm::event::KeyModifiers;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::Rect;
-use ratatui::prelude::{Style, Stylize, Text};
+use ratatui::prelude::{Style, Text};
 use ratatui::style::Color;
 use ratatui::symbols::border;
 use ratatui::widgets::{
@@ -57,7 +57,7 @@ impl SubsListWidget {
             (KeyCode::PageUp, KeyModifiers::NONE) => {
                 let next = self.state.selected().map_or(0, |i| i.saturating_sub(10));
                 self.state.select(Some(next));
-                for i in 1..10 {
+                for _i in 1..10 {
                     self.scroll_state.scroll(ScrollDirection::Backward);
                 }
 
@@ -67,7 +67,7 @@ impl SubsListWidget {
             (KeyCode::PageDown, KeyModifiers::NONE) => {
                 let next = self.state.selected().map_or(0, |i| i.saturating_add(10));
                 self.state.select(Some(next));
-                for i in 1..10 {
+                for _i in 1..10 {
                     self.scroll_state.scroll(ScrollDirection::Forward);
                 }
 
@@ -75,7 +75,7 @@ impl SubsListWidget {
             }
 
             (KeyCode::Char('s'), KeyModifiers::CONTROL) => {
-                if (self.params.feature_id.is_some()) {
+                if self.params.feature_id.is_some() {
                     self.params.feature_id = None;
                     Handled(Some(self.params.clone()))
                 } else {
@@ -96,7 +96,7 @@ impl SubsListWidget {
             }
 
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
-                if (self.params.parent_feature_id.is_some()) {
+                if self.params.parent_feature_id.is_some() {
                     self.params.parent_feature_id = None;
                     Handled(Some(self.params.clone()))
                 } else {
@@ -154,10 +154,10 @@ impl SubsListWidget {
         let rows: Vec<Row> = self.subs.iter().map(|sub| sub.into()).collect();
 
         let mut title = format!("Results: {}", self.subs.len());
-        if (self.params.feature_id.is_some() || self.params.parent_feature_id.is_some()) {
+        if self.params.feature_id.is_some() || self.params.parent_feature_id.is_some() {
             title.push_str(&format!(" (single title: '{}')", self.single_title));
         }
-        if (self.params.exclude_ai) {
+        if self.params.exclude_ai {
             title.push_str(" (AI excluded)");
         }
 
@@ -165,7 +165,7 @@ impl SubsListWidget {
             .title_pad(&title)
             .border_set(border::PLAIN);
 
-        let (widths, headers) = if (wide) {
+        let (widths, headers) = if wide {
             (
                 [95, 10, 10, 12, 12, 10, 10],
                 vec![
