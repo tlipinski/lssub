@@ -61,19 +61,40 @@ pub struct App {
     initialized: bool,
 }
 
+pub struct AppBackground {
+    ui_tx: Sender<Action>,
+    debouncer_rx: Receiver<SubtitlesQuery>,
+    spinner: Arc<RwLock<Spinner>>,
+}
+
+impl AppBackground {
+    pub fn from(
+        ui_tx: Sender<Action>,
+        debouncer_rx: Receiver<SubtitlesQuery>,
+        spinner: Arc<RwLock<Spinner>>,
+    ) -> AppBackground {
+        AppBackground {
+            ui_tx,
+            debouncer_rx,
+            spinner,
+        }
+    }
+
+    pub fn run(mut self) {
+        tokio::spawn(handle_input_task(self.ui_tx.clone()));
+        tokio::spawn(debouncer_task(self.debouncer_rx, self.ui_tx.clone()));
+        tokio::spawn(spinner_task(self.spinner));
+    }
+}
+
 impl App {
-    pub fn new(base_path: &Path, file_name: Option<&str>) -> App {
+    pub fn new(base_path: &Path, file_name: Option<&str>) -> (App, AppBackground) {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
         let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
 
         let task_runner = TaskRunner::new(ui_tx.clone());
 
         let spinner = Arc::new(RwLock::new(Spinner { c: ' ' }));
-
-        // todo move out of fn new
-        tokio::spawn(handle_input_task(ui_tx.clone()));
-        tokio::spawn(debouncer_task(debouncer_rx, ui_tx.clone()));
-        tokio::spawn(spinner_task(spinner.clone()));
 
         let config_provider = ConfigProvider::default();
 
@@ -92,7 +113,7 @@ impl App {
             Box::new(StatusWidget::from(spinner.clone())),
         );
 
-        App {
+        let app = App {
             active_screen: Screen::default(),
             config_provider,
             debouncer_tx,
@@ -105,7 +126,15 @@ impl App {
             },
             languages: vec![],
             initialized: false,
-        }
+        };
+
+        let app_background = AppBackground {
+            ui_tx,
+            debouncer_rx,
+            spinner,
+        };
+
+        (app, app_background)
     }
 
     pub async fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
@@ -356,9 +385,9 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn main_screen() {
-        let mut app = App::new(Path::new("."), None);
+    #[test]
+    fn main_screen() {
+        let (mut app, _) = App::new(Path::new("."), None);
 
         let mut terminal = TestTerminal::default().0;
         terminal.draw(|frame| app.draw(frame)).unwrap();
@@ -366,9 +395,9 @@ mod tests {
         assert_snapshot!(terminal.backend());
     }
 
-    #[tokio::test]
-    async fn account_screen() {
-        let mut app = App::new(Path::new("."), None);
+    #[test]
+    fn account_screen() {
+        let (mut app, _) = App::new(Path::new("."), None);
 
         app.update(&SwitchScreen(Account));
 
@@ -378,9 +407,9 @@ mod tests {
         assert_snapshot!(terminal.backend());
     }
 
-    #[tokio::test]
-    async fn main_screen_logged_in() {
-        let mut app = App::new(Path::new("."), None);
+    #[test]
+    fn main_screen_logged_in() {
+        let (mut app, _) = App::new(Path::new("."), None);
 
         let user = User {
             username: "user".to_string(),
@@ -398,9 +427,9 @@ mod tests {
         assert_snapshot!(terminal.backend());
     }
 
-    #[tokio::test]
-    async fn account_screen_logged_in() {
-        let mut app = App::new(Path::new("."), None);
+    #[test]
+    fn account_screen_logged_in() {
+        let (mut app, _) = App::new(Path::new("."), None);
 
         let user = User {
             username: "user".to_string(),
@@ -420,9 +449,9 @@ mod tests {
         assert_snapshot!(terminal.backend());
     }
 
-    #[tokio::test]
-    async fn subs_query() {
-        let mut app = App::new(Path::new("."), None);
+    #[test]
+    fn subs_query() {
+        let (mut app, _) = App::new(Path::new("."), None);
 
         input_text(&mut app, "title");
 
@@ -432,9 +461,9 @@ mod tests {
         assert_snapshot!(terminal.backend());
     }
 
-    #[tokio::test]
-    async fn subs_fetched() {
-        let mut app = App::new(Path::new("."), None);
+    #[test]
+    fn subs_fetched() {
+        let (mut app, _) = App::new(Path::new("."), None);
 
         let subs = vec![
             Subtitle {

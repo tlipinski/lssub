@@ -96,7 +96,9 @@ async fn run(args: Args) -> Result<()> {
         info!("Base path: {:?}", bp);
         info!("File name: {:?}", file_name);
 
-        App::new(bp, file_name).run(&mut terminal).await;
+        let (mut app, app_background) = App::new(bp, file_name);
+        app_background.run();
+        app.run(&mut terminal).await;
 
         ratatui::restore();
 
