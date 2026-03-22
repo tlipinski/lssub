@@ -374,6 +374,7 @@ mod tests {
     use crate::ui::subs_list_widget::QueryParams;
     use crossterm::event::{KeyEvent, KeyEventKind, KeyEventState};
     use crossterm::event::Event::Key;
+    use crossterm::event::KeyCode::{Enter, Tab};
     use insta::assert_snapshot;
     use ratatui::Terminal;
     use ratatui::backend::TestBackend;
@@ -401,6 +402,10 @@ mod tests {
         let (mut app, _) = App::new(Path::new("."), None);
 
         app.update(&SwitchScreen(Account));
+
+        input_text(&mut app, "test_user");
+        input_key(&mut app, Tab, KeyModifiers::NONE);
+        input_text(&mut app, "test_pass");
 
         let mut terminal = TestTerminal::default().0;
         terminal.draw(|frame| app.draw(frame)).unwrap();
