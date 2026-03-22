@@ -2,7 +2,8 @@ use crate::osb::login::JwtToken;
 use crate::osb::osb_client::OsbClient;
 use crate::osb::values::API_URL;
 use anyhow::Result;
-use log::{debug, error, info};
+use env_logger::{Builder, Target};
+use log::{LevelFilter, debug, error, info};
 use reqwest::Method;
 use secrecy::{ExposeSecret, SecretBox};
 use serde::Deserialize;
@@ -39,6 +40,8 @@ async fn call_user_info_endpoint_and_parse_response() {
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
+    Builder::new().target(Target::Stdout).init();
+
     let mock_server = MockServer::start().await;
 
     Mock::given(method("GET"))
@@ -46,7 +49,7 @@ async fn call_user_info_endpoint_and_parse_response() {
         .respond_with(ResponseTemplate::new(200).set_body_string(
             r#"
                         {
-                          data": {
+                          "data": {
                             "allowed_translations": 10,
                             "allowed_downloads": 1000,
                             "level": "VIP Member",
@@ -72,9 +75,9 @@ async fn call_user_info_endpoint_and_parse_response() {
     let response = get_user_info(client, &token).await.unwrap();
 
     assert_eq!(response.username, "test_user");
-    assert_eq!(response.downloads_count, 50);
-    assert_eq!(response.remaining_downloads, 950);
     assert_eq!(response.level, "VIP Member");
+    assert_eq!(response.downloads_count, 1);
+    assert_eq!(response.remaining_downloads, 999);
     assert_eq!(response.allowed_translations, 10);
     assert_eq!(response.allowed_downloads, 1000);
 }
