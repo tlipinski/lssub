@@ -4,7 +4,7 @@ use crate::osb::values::{AK, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use reqwest::{Client, Method};
-use secrecy::SecretBox;
+use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display, Formatter};
 
@@ -15,7 +15,7 @@ pub async fn login(osb_client: OsbClient, credentials: &Credentials) -> Result<J
 
     let login = LoginRequest {
         username: &credentials.username,
-        password: &credentials.password,
+        password: &credentials.password.expose_secret(),
     };
 
     let response: LoginResponse = osb_client
@@ -25,26 +25,16 @@ pub async fn login(osb_client: OsbClient, credentials: &Credentials) -> Result<J
     Ok(JwtToken(response.token))
 }
 
-#[derive(Clone)]
+#[derive(Debug)]
 pub struct Credentials {
     pub username: String,
-    pub password: String,
-}
-
-impl Debug for Credentials {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Credentials {{ username: {}, password: ******** }}",
-            self.username
-        )
-    }
+    pub password: SecretBox<String>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct JwtToken(pub SecretBox<String>);
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize)]
 struct LoginRequest<'a> {
     username: &'a str,
     password: &'a str,
@@ -67,7 +57,7 @@ mod tests {
     use crate::osb::osb_client::OsbClient;
     use log::info;
     use reqwest::Method;
-    use secrecy::ExposeSecret;
+    use secrecy::{ExposeSecret, SecretBox};
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -77,24 +67,23 @@ mod tests {
 
         Mock::given(method("POST"))
             .and(path("/login"))
-            .respond_with(
-                ResponseTemplate::new(200)
-                    .set_body_string(r#"
-                        {
-                          "user": {
-                            "allowed_translations": 10,
-                            "allowed_downloads": 1000,
-                            "level": "VIP Member",
-                            "user_id": 936829,
-                            "ext_installed": false,
-                            "vip": true
-                          },
-                          "token": "123456",
-                          "status": 200,
-                          "base_url": "vip-api.opensubtitles.com"
-                        }
-                    "#),
-            )
+            .respond_with(ResponseTemplate::new(200).set_body_string(
+                r#"
+                    {
+                      "user": {
+                        "allowed_translations": 10,
+                        "allowed_downloads": 1000,
+                        "level": "VIP Member",
+                        "user_id": 936829,
+                        "ext_installed": false,
+                        "vip": true
+                      },
+                      "token": "123456",
+                      "status": 200,
+                      "base_url": "vip-api.opensubtitles.com"
+                    }
+                "#,
+            ))
             .mount(&mock_server)
             .await;
 
@@ -102,7 +91,7 @@ mod tests {
 
         let credentials = Credentials {
             username: "test_user".into(),
-            password: "test_password".into(),
+            password: SecretBox::new(Box::new("test_password".into())),
         };
 
         let response = login(client, &credentials).await.unwrap();

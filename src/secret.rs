@@ -85,7 +85,7 @@ pub async fn store_credentials(credentials: Credentials) -> Result<()> {
             attributes,
             Some(libsecret::COLLECTION_DEFAULT),
             &format!("{}{}", APP_NAME, "_pass"),
-            credentials.password.as_str(),
+            credentials.password.expose_secret().as_str(),
             None::<&gio::Cancellable>,
         ) {
             error!("Storing credentials failed: {e}")
@@ -119,7 +119,7 @@ pub async fn retrieve_credentials() -> Result<Option<Credentials>> {
                     let username_opt = head.attributes().get("username").cloned().unwrap();
                     Credentials {
                         username: username_opt,
-                        password: secret,
+                        password: SecretBox::from(Box::new(secret)),
                     }
                 });
                 Ok(result)

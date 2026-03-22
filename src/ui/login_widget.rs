@@ -1,6 +1,8 @@
 use crate::osb::login::{Credentials, login};
+use crate::osb::osb_client::OsbClient;
 use crate::osb::user_info;
 use crate::osb::user_info::get_user_info;
+use crate::osb::values::API_URL;
 use crate::secret::store_credentials;
 use crate::secret::store_token;
 use crate::ui::actions::Action;
@@ -16,10 +18,9 @@ use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
 use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph};
+use secrecy::SecretBox;
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::osb::osb_client::OsbClient;
-use crate::osb::values::API_URL;
 
 pub struct LoginWidget {
     username: Input,
@@ -118,7 +119,7 @@ impl LoginWidget {
                 (KeyCode::Enter, KeyModifiers::NONE) => {
                     let credentials = Credentials {
                         username: self.username.value().to_owned(),
-                        password: self.password.value().to_owned(),
+                        password: SecretBox::new(Box::new(self.password.value().to_owned())),
                     };
 
                     Some(Multi(vec![
@@ -162,7 +163,7 @@ impl LoginWidget {
         let client = OsbClient::new(API_URL);
         match login(client, &credentials).await {
             Ok(jwt) => {
-                store_credentials(credentials.clone()).await?;
+                store_credentials(credentials).await?;
                 store_token(&jwt).await?;
                 let client = OsbClient::new(API_URL);
                 let user = get_user_info(client, &jwt).await?;
