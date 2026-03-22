@@ -1,5 +1,4 @@
 use crate::osb::osb_client::OsbClient;
-use crate::osb::values::{AK, API_URL, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info, trace};
 use reqwest::Method;

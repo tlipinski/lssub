@@ -19,3 +19,4 @@ mod status_widget;
 mod subs_list_widget;
 mod task_runner;
 mod user_widget;
+mod client;

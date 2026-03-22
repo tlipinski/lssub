@@ -3,7 +3,6 @@ use crate::osb::get_download_link::get_download_link;
 use crate::osb::login::login;
 use crate::osb::osb_client::OsbClient;
 use crate::osb::subtitles::{SubtitlesRequest, subtitles};
-use crate::osb::values::API_URL;
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
@@ -186,7 +185,7 @@ impl App {
                     if request.query.len() < 3 {
                         Ok(SubtitlesFetched(vec![]))
                     } else {
-                        let result = subtitles(OsbClient::new(API_URL), request).await;
+                        let result = subtitles(OsbClient::default(), request).await;
                         match result {
                             Ok(subtitles) => Ok(SubtitlesFetched(subtitles)),
                             Err(e) => {

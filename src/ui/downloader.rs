@@ -1,7 +1,6 @@
 use crate::osb::download::download;
 use crate::osb::get_download_link::get_download_link;
 use crate::osb::osb_client::OsbClient;
-use crate::osb::values::API_URL;
 use crate::secret::retrieve_token;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, Multi, SubtitleDownloaded};
@@ -31,7 +30,7 @@ impl Downloader {
 
         let token_opt = retrieve_token().await?;
 
-        let download_link_response = get_download_link(OsbClient::new(API_URL), token_opt, file_id)
+        let download_link_response = get_download_link(OsbClient::default(), token_opt, file_id)
             .await
             .map_err(|e| {
                 error!("Downloading subs failed: {e}");

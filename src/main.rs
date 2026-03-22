@@ -4,19 +4,20 @@ mod config;
 mod osb;
 mod secret;
 mod ui;
+mod values;
 
 use crate::config::{Config, ConfigProvider};
 use crate::osb::user_info::get_user_info;
-use crate::osb::values::APP_NAME;
 use crate::secret::retrieve_token;
 use anyhow::{Error, Result};
 use clap::Parser;
 use env_logger::{Builder, Target};
-use log::{LevelFilter, error, info, warn};
+use log::{error, info, warn, LevelFilter};
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::process::exit;
 use ui::app::App;
+use crate::values::APP_NAME;
 
 #[tokio::main]
 async fn main() {
@@ -24,7 +25,7 @@ async fn main() {
         .create(true)
         .write(true)
         .truncate(true)
-        .open(format!("/tmp/{APP_NAME}.log"))
+        .open(format!("/tmp/{}.log", APP_NAME))
         .expect("Failed to open log file");
 
     // Configure env_logger to write logs to the file
@@ -48,7 +49,7 @@ async fn main() {
 }
 
 #[derive(Parser, Debug)]
-#[command(version = crate::osb::values::VERSION, about, long_about = None)]
+#[command(version = crate::values::VERSION, about, long_about = None)]
 struct Args {
     path: Option<String>,
 }

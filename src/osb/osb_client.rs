@@ -1,4 +1,3 @@
-use crate::osb::values::{AK, API_URL, USER_AGENT};
 use anyhow::Error;
 use log::{debug, error, info};
 use reqwest::{Method, RequestBuilder};
@@ -6,15 +5,20 @@ use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
+use crate::osb::user_info::User;
 
 pub struct OsbClient {
     base_url: String,
+    api_key: String,
+    user_agent: String,
 }
 
 impl OsbClient {
-    pub fn new(base_url: &str) -> Self {
+    pub fn new(base_url: &str, api_key: &str, user_agent: &str) -> Self {
         Self {
             base_url: base_url.into(),
+            api_key: api_key.into(),
+            user_agent: user_agent.into(),
         }
     }
 
@@ -31,14 +35,14 @@ impl OsbClient {
         info!("Request: {}", string);
 
         let request = build(reqwest::Client::new().request(method, string));
-        Self::osb_request::<A>(request).await
+        self.osb_request::<A>(request).await
     }
 
-    async fn osb_request<A: DeserializeOwned>(mut request: RequestBuilder) -> anyhow::Result<A> {
+    async fn osb_request<A: DeserializeOwned>(&self, mut request: RequestBuilder) -> anyhow::Result<A> {
         let request = request
             .timeout(std::time::Duration::from_secs(5))
-            .header("Api-Key", AK)
-            .header("User-Agent", USER_AGENT);
+            .header("Api-Key", self.api_key.clone())
+            .header("User-Agent", self.user_agent.clone());
 
         // debug!("Request {:?}", request);
 

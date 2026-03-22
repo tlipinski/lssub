@@ -2,7 +2,6 @@ use crate::osb::login::{Credentials, login};
 use crate::osb::osb_client::OsbClient;
 use crate::osb::user_info;
 use crate::osb::user_info::get_user_info;
-use crate::osb::values::API_URL;
 use crate::secret::store_credentials;
 use crate::secret::store_token;
 use crate::ui::actions::Action;
@@ -160,12 +159,12 @@ impl LoginWidget {
     }
 
     async fn login_user(credentials: Credentials) -> Result<Action> {
-        let client = OsbClient::new(API_URL);
+        let client = OsbClient::default();
         match login(client, &credentials).await {
             Ok(jwt) => {
                 store_credentials(credentials).await?;
                 store_token(&jwt).await?;
-                let client = OsbClient::new(API_URL);
+                let client = OsbClient::default();
                 let user = get_user_info(client, &jwt).await?;
                 Ok(Multi(vec![
                     UserLoggedIn(user.clone()),

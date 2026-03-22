@@ -1,7 +1,6 @@
 use crate::osb::login::{Credentials, login};
 use crate::osb::osb_client::OsbClient;
 use crate::osb::user_info::{User, get_user_info};
-use crate::osb::values::API_URL;
 use crate::secret::{clear_token, retrieve_credentials, retrieve_token, store_token};
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
@@ -33,7 +32,7 @@ impl Component for AccountWidget {
                 warn!("Credentials retrieved: {:?}", c);
 
                 match retrieve_token().await {
-                    Ok(Some(jwt)) => match get_user_info(OsbClient::new(API_URL), &jwt).await {
+                    Ok(Some(jwt)) => match get_user_info(OsbClient::default(), &jwt).await {
                         Ok(user) => Ok(UserLoggedIn(user)),
                         Err(e) => {
                             error!("Error getting user info: {e}");
@@ -42,13 +41,13 @@ impl Component for AccountWidget {
                             match credentials_opt {
                                 None => Ok(NoOp),
                                 Some(credentials) => {
-                                    let client = OsbClient::new(API_URL);
+                                    let client = OsbClient::default();
                                     let token = login(client, &credentials).await?;
                                     store_token(&token).await;
                                     info!("Token refreshed");
 
                                     let user =
-                                        get_user_info(OsbClient::new(API_URL), &token).await?;
+                                        get_user_info(OsbClient::default(), &token).await?;
                                     Ok(UserLoggedIn(user))
                                 }
                             }

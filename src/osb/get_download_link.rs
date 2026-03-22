@@ -1,6 +1,5 @@
 use crate::osb::login::JwtToken;
 use crate::osb::osb_client::OsbClient;
-use crate::osb::values::{AK, API_URL, USER_AGENT, VIP_API_URL};
 use anyhow::{Error, Result};
 use log::{error, info, trace};
 use reqwest::Method;

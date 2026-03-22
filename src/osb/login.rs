@@ -1,6 +1,4 @@
 use crate::osb::osb_client::OsbClient;
-use crate::osb::values::API_URL;
-use crate::osb::values::{AK, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use reqwest::{Client, Method};
@@ -10,8 +8,6 @@ use std::fmt::{Debug, Display, Formatter};
 
 pub async fn login(osb_client: OsbClient, credentials: &Credentials) -> Result<JwtToken> {
     info!("Logging in");
-
-    let url = format!("{}/login", API_URL);
 
     let login = LoginRequest {
         username: &credentials.username,
@@ -87,7 +83,7 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let client = OsbClient::new(&mock_server.uri());
+        let client = OsbClient::new(&mock_server.uri(), "", "");
 
         let credentials = Credentials {
             username: "test_user".into(),

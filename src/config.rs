@@ -1,10 +1,10 @@
-use crate::osb::values::APP_NAME;
 use anyhow::Result;
 use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use xdg::BaseDirectories;
+use crate::values::APP_NAME;
 
 #[derive(Debug)]
 pub struct ConfigProvider {
