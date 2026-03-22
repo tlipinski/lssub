@@ -25,11 +25,11 @@ pub struct FeaturesResponse {
 pub struct Data {
     pub id: String,
     pub r#type: String,
-    pub attributes: Attributes,
+    pub attributes: FeatureAttributes,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct Attributes {
+pub struct FeatureAttributes {
     pub title: String,
     pub year: String,
     pub subtitles_count: i32,
