@@ -9,15 +9,15 @@ mod values;
 use crate::config::{Config, ConfigProvider};
 use crate::osb::user_info::get_user_info;
 use crate::secret::retrieve_token;
+use crate::values::APP_NAME;
 use anyhow::{Error, Result};
 use clap::Parser;
 use env_logger::{Builder, Target};
-use log::{error, info, warn, LevelFilter};
+use log::{LevelFilter, error, info, warn};
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::process::exit;
 use ui::app::App;
-use crate::values::APP_NAME;
 
 #[tokio::main]
 async fn main() {
@@ -96,8 +96,7 @@ async fn run(args: Args) -> Result<()> {
         info!("Base path: {:?}", bp);
         info!("File name: {:?}", file_name);
 
-        let mut app = App::new(bp, file_name).await?;
-        app.run(&mut terminal).await;
+        App::new(bp, file_name).run(&mut terminal).await;
 
         ratatui::restore();
 

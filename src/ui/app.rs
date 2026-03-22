@@ -61,10 +61,10 @@ pub struct App {
 }
 
 impl App {
-    pub async fn new(
+    pub fn new(
         base_path: &Path,
         file_name: Option<&str>,
-    ) -> Result<App> {
+    ) -> App {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
         let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
 
@@ -94,7 +94,7 @@ impl App {
             Box::new(StatusWidget::from(spinner.clone())),
         );
 
-        Ok(App {
+        App {
             active_screen: Screen::default(),
             config_provider,
             debouncer_tx,
@@ -107,7 +107,7 @@ impl App {
             },
             languages: vec![],
             initialized: false,
-        })
+        }
     }
 
     pub async fn run(
