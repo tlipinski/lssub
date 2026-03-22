@@ -83,10 +83,10 @@ fn output_file(
     language: &str,
 ) -> PathBuf {
     let default_path = Path::new(default_file_name);
-    let default_stem = default_path
-        .file_stem()
-        .map(|s| s.to_string_lossy().to_string())
-        .unwrap_or_else(|| default_file_name.to_string());
+    let default_stem = default_path.file_stem().map_or_else(
+        || default_file_name.to_string(),
+        |s| s.to_string_lossy().to_string(),
+    );
     let default_ext_opt = default_path.extension();
 
     let mut output_file;

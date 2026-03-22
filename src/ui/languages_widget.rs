@@ -109,7 +109,7 @@ impl Component for LanguagesWidget {
             inner.height - hint_height,
         );
 
-        self.grid_columns = self.columns_for_width(grid_area.width);
+        self.grid_columns = Self::columns_for_width(grid_area.width);
         let columns = self.grid_columns as u16;
         let cell_width = (grid_area.width / columns).max(1);
 
@@ -198,7 +198,7 @@ impl LanguagesWidget {
             .collect()
     }
 
-    fn columns_for_width(&self, width: u16) -> usize {
+    fn columns_for_width(width: u16) -> usize {
         usize::max(1, (width / GRID_CELL_WIDTH) as usize)
     }
 
