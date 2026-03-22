@@ -4,7 +4,7 @@ use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub async fn features(osb_client: OsbClient, feature_id: i32) -> Result<FeaturesResponse> {
+pub async fn _features(osb_client: OsbClient, feature_id: i32) -> Result<FeaturesResponse> {
     let mut params = HashMap::new();
     params.insert("id", feature_id);
 
@@ -16,6 +16,7 @@ pub async fn features(osb_client: OsbClient, feature_id: i32) -> Result<Features
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[allow(unused)]
 pub struct FeaturesResponse {
     pub data: Vec<Data>,
 }

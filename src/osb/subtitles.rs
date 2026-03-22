@@ -107,7 +107,7 @@ mod tests {
 
     #[tokio::test]
     async fn get_subs() {
-        Builder::new()
+        let _ = Builder::new()
             .target(Target::Stdout)
             .filter_level(LevelFilter::Debug)
             .try_init();

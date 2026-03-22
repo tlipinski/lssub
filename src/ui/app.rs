@@ -157,7 +157,7 @@ impl App {
             LanguagesUpdated(languages) => {
                 self.languages.clone_from(languages);
 
-                self.config_provider.modify(|c: &Config| {
+                let _ = self.config_provider.modify(|c: &Config| {
                     let mut updated = c.clone();
                     updated.languages.clone_from(&self.languages);
                     updated
@@ -177,7 +177,7 @@ impl App {
                         let q = query.clone();
                         let debouncer = self.debouncer_tx.clone();
                         tokio::spawn(async move {
-                            debouncer.send(q).await;
+                            debouncer.send(q).await.expect("Sending to channel failed");
                         });
                         None
                     }

@@ -42,7 +42,7 @@ impl Component for AccountWidget {
                                 Some(credentials) => {
                                     let client = OsbClient::default();
                                     let token = login(client, &credentials).await?;
-                                    store_token(&token).await;
+                                    store_token(&token).await?;
                                     info!("Token refreshed");
 
                                     let user =
@@ -102,11 +102,4 @@ impl AccountWidget {
         }
     }
 
-    pub fn user_info(&self) -> Option<User> {
-        if self.logged_in {
-            Some(self.logged_in_widget.user.clone())
-        } else {
-            None
-        }
-    }
 }

@@ -3,7 +3,7 @@ use crate::osb::osb_client::OsbClient;
 use anyhow::Result;
 use log::info;
 use reqwest::Method;
-use secrecy::{ExposeSecret, SecretBox};
+use secrecy::ExposeSecret;
 use serde::Deserialize;
 
 pub async fn get_user_info(osb_client: OsbClient, token: &JwtToken) -> Result<User> {
@@ -37,10 +37,11 @@ pub struct User {
 async fn call_user_info_endpoint_and_parse_response() {
     use env_logger::{Builder, Target};
     use log::LevelFilter;
+    use secrecy::SecretBox;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
-    Builder::new()
+    let _ = Builder::new()
         .target(Target::Stdout)
         .filter_level(LevelFilter::Debug)
         .try_init();

@@ -65,7 +65,6 @@ impl Downloader {
 
         Ok(Multi(vec![
             SubtitleDownloaded(Downloaded {
-                path: output_file.clone(),
                 requests: download_link_response.requests,
                 remaining: download_link_response.remaining,
             }),
@@ -113,7 +112,6 @@ fn output_file(
 
 #[derive(Debug)]
 pub struct Downloaded {
-    pub path: PathBuf,
     pub requests: i32,
     pub remaining: i32,
 }

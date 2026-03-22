@@ -76,8 +76,8 @@ impl LoggedInWidget {
             match (key_event.code, key_event.modifiers) {
                 (KeyCode::Char('o'), KeyModifiers::CONTROL) => {
                     Some(RunTask(Task::new("log out", async move {
-                        clear_token().await;
-                        clear_credentials().await;
+                        let _ = clear_token().await;
+                        let _ = clear_credentials().await;
                         Ok(Multi(vec![
                             UserLoggedOut,
                             ChangeStatus("Logged out".to_string()),

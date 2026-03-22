@@ -44,14 +44,14 @@ impl ConfigProvider {
             Ok(config)
         } else {
             let default = Config::default();
-            self.xdg_dirs().place_config_file(&self.path);
+            self.xdg_dirs().place_config_file(&self.path)?;
             self.save_config(&default)?;
             Ok(default)
         }
     }
 
     pub fn save_config(&self, config: &Config) -> Result<()> {
-        fs::write(self.config_path(), toml::to_string(&config)?);
+        fs::write(self.config_path(), toml::to_string(&config)?)?;
         Ok(())
     }
 }

@@ -26,7 +26,6 @@ pub enum Action {
     LanguagesUpdated(Vec<String>),
     LanguagesFetched(Vec<Language>),
     LanguagesAndConfigFetched(Vec<Language>, Vec<String>),
-    FeatureInfo(i64),
 
     UserLoggedIn(User),
     UserLoggedOut,

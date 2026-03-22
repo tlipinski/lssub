@@ -21,6 +21,6 @@ pub async fn handle_input_task(tx: Sender<Action>) -> Result<()> {
             _ = tick_interval.tick() => Tick,
         };
 
-        tx.send(action).await;
+        tx.send(action).await?;
     }
 }

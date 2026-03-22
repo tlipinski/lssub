@@ -39,12 +39,6 @@ struct LoginRequest<'a> {
 #[derive(Deserialize, Debug)]
 struct LoginResponse {
     token: SecretBox<String>,
-    user: User,
-}
-
-#[derive(Deserialize, Debug)]
-struct User {
-    allowed_downloads: i32,
 }
 
 #[cfg(test)]
@@ -59,7 +53,7 @@ mod tests {
 
     #[tokio::test]
     async fn login_and_parse_response() {
-        Builder::new()
+        let _ = Builder::new()
             .target(Target::Stdout)
             .filter_level(LevelFilter::Debug)
             .try_init();

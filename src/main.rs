@@ -93,7 +93,7 @@ async fn run(args: Args) -> Result<()> {
 
         let (mut app, app_background) = App::new(bp, file_name);
         app_background.run();
-        app.run(&mut terminal).await;
+        app.run(&mut terminal).await?;
 
         ratatui::restore();
 

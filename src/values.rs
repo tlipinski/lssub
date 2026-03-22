@@ -1,4 +1,3 @@
-pub const VIP_API_URL: &str = "https://vip-api.opensubtitles.com/api/v1";
 pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
 pub const REPO_URL: &str = "https://github.com/tlipinski/lssub";
 pub const VERSION: &str = env!("APP_VERSION");

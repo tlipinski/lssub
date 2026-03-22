@@ -30,7 +30,7 @@ pub async fn debouncer_task(mut rx: Receiver<SubtitlesQuery>, ui_tx: Sender<Acti
 
         if let Some(debounced) = last {
             info!("Debounced {:?}", debounced);
-            ui_tx.send(FetchSubtitles).await;
+            ui_tx.send(FetchSubtitles).await?;
         }
     }
 }
