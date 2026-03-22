@@ -1,28 +1,25 @@
 use crate::osb::login::JwtToken;
-use crate::osb::osb_request::osb_request;
+use crate::osb::osb_request::{osb_request, OsbClient};
 use crate::osb::values::API_URL;
 use crate::osb::values::{AK, USER_AGENT};
 use anyhow::Result;
 use log::{debug, error, info};
+use reqwest::Method;
 use secrecy::ExposeSecret;
 use serde::Deserialize;
 
 pub async fn get_user_info(token: &JwtToken) -> Result<User> {
     info!("Getting user info");
 
-    let request = reqwest::Client::new()
-        .get(format!("{}/infos/user", ""))
-        .bearer_auth(token.0.expose_secret());
+    let client = OsbClient::new(API_URL);
 
-    // let user_info: UserInfo =
-        match osb_request::<UserInfo>(request).await {
-            Ok(info) => Ok(info.data),
-            Err(err) => {
-                error!("Failed to fetch user info: {}", err);
-                return Err(err);
-            }
-        }
+    let response: UserInfo = client
+        .call(Method::GET, "/infos/user", |rq| {
+            rq.bearer_auth(token.0.expose_secret())
+        })
+        .await?;
 
+    Ok(response.data)
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]

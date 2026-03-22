@@ -1,12 +1,12 @@
-use crate::osb::osb_request::osb_request;
+use crate::osb::osb_request::{OsbClient, osb_request};
 use crate::osb::values::API_URL;
 use crate::osb::values::{AK, USER_AGENT};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
+use reqwest::{Client, Method};
 use secrecy::SecretBox;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display, Formatter};
-use reqwest::Client;
 
 pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
     info!("Logging in");
@@ -18,9 +18,12 @@ pub async fn login(credentials: &Credentials) -> Result<JwtToken> {
         password: &credentials.password,
     };
 
-    let request = reqwest::Client::new().post(url).json(&login);
+    let client = OsbClient::new(API_URL);
 
-    let response = osb_request::<LoginResponse>(request).await?;
+    let response: LoginResponse = client
+        .call(Method::POST, "/login", |req| req.json(&login))
+        .await?;
+
     Ok(JwtToken(response.token))
 }
 

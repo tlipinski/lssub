@@ -1,18 +1,25 @@
 use crate::osb::values::{AK, API_URL, USER_AGENT};
 use anyhow::Error;
 use log::{debug, error, info};
-use reqwest::RequestBuilder;
+use reqwest::{Method, RequestBuilder};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
-struct OsbClient {
+pub struct OsbClient {
     base_url: String,
 }
 
 impl OsbClient {
-    pub async fn osb_request<A: DeserializeOwned>(&self, mut request: RequestBuilder) -> anyhow::Result<A> {
+    pub fn new(base_url: &str) -> Self {
+        Self { base_url: base_url.into() }
+    }
+
+    pub async fn osb_request<A: DeserializeOwned>(
+        &self,
+        mut request: RequestBuilder,
+    ) -> anyhow::Result<A> {
         let request = request
             .timeout(std::time::Duration::from_secs(5))
             .header("Api-Key", AK)
@@ -51,6 +58,25 @@ impl OsbClient {
                 Err(Error::msg("Server error, check logs"))
             }
         }
+    }
+}
+
+impl OsbClient {
+    pub async fn call<A: DeserializeOwned, F>(
+        &self,
+        method: Method,
+        url: &str,
+        mod_request: F,
+    ) -> anyhow::Result<A>
+    where
+        F: Fn(RequestBuilder) -> RequestBuilder,
+    {
+        let string = format!("{}{}", self.base_url, url);
+        info!("Request: {}", string);
+        let request = reqwest::Client::new().request(method, string);
+
+        let request = mod_request(request);
+        osb_request::<A>(request).await
     }
 }
 
