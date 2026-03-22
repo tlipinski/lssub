@@ -18,9 +18,8 @@ use ui::app::App;
 async fn main() {
     let file = OpenOptions::new()
         .create(true)
-        .write(true)
-        .truncate(true)
-        .open(format!("/tmp/{}.log", APP_NAME))
+        .append(true)
+        .open(format!("/tmp/{APP_NAME}.log"))
         .expect("Failed to open log file");
 
     // Configure env_logger to write logs to the file
