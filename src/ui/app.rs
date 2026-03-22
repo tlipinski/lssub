@@ -71,6 +71,7 @@ impl App {
         let spinner = Arc::new(RwLock::new(Spinner { c: ' ' }));
         let spinner_clone = spinner.clone();
 
+        // todo move out of fn new
         tokio::spawn(handle_input_task(ui_tx.clone()));
         tokio::spawn(debouncer_task(debouncer_rx, ui_tx.clone()));
         tokio::spawn(spinner_task(spinner_clone));
