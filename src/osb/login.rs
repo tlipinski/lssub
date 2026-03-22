@@ -63,20 +63,50 @@ struct User {
 
 #[cfg(test)]
 mod tests {
+    use crate::osb::login::{Credentials, login};
+    use crate::osb::osb_client::OsbClient;
     use log::info;
+    use reqwest::Method;
+    use secrecy::ExposeSecret;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[tokio::test]
-    async fn login_uses_osb_request_and_parses_hardcoded_response() {
+    async fn login_and_parse_response() {
         let mock_server = MockServer::start().await;
 
         Mock::given(method("POST"))
             .and(path("/login"))
-            .respond_with(ResponseTemplate::new(200).set_body_string(r#"{"token":"123456"}"#))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_string(r#"
+                        {
+                          "user": {
+                            "allowed_translations": 10,
+                            "allowed_downloads": 1000,
+                            "level": "VIP Member",
+                            "user_id": 936829,
+                            "ext_installed": false,
+                            "vip": true
+                          },
+                          "token": "123456",
+                          "status": 200,
+                          "base_url": "vip-api.opensubtitles.com"
+                        }
+                    "#),
+            )
             .mount(&mock_server)
             .await;
 
-        print!("Mock server started at {}", mock_server.uri());
+        let client = OsbClient::new(&mock_server.uri());
+
+        let credentials = Credentials {
+            username: "test_user".into(),
+            password: "test_password".into(),
+        };
+
+        let response = login(client, &credentials).await.unwrap();
+
+        assert_eq!(response.0.expose_secret(), "123456");
     }
 }
