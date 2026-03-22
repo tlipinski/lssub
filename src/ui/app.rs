@@ -373,6 +373,7 @@ mod tests {
     use crate::osb::user_info::User;
     use crate::ui::subs_list_widget::QueryParams;
     use crossterm::event::{KeyEvent, KeyEventKind, KeyEventState};
+    use crossterm::event::Event::Key;
     use insta::assert_snapshot;
     use ratatui::Terminal;
     use ratatui::backend::TestBackend;
@@ -450,10 +451,48 @@ mod tests {
     }
 
     #[test]
+    fn ai_excluded_main_screen() {
+        let (mut app, _) = App::new(Path::new("."), None);
+
+        input_key(&mut app, Char('t'), KeyModifiers::CONTROL);
+
+        let mut terminal = TestTerminal::default().0;
+        terminal.draw(|frame| app.draw(frame)).unwrap();
+
+        assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
     fn subs_query() {
         let (mut app, _) = App::new(Path::new("."), None);
 
+        let subs = vec![
+            Subtitle {
+                id: "1234".to_string(),
+                r#type: "".to_string(),
+                attributes: Attributes {
+                    feature_details: FeatureDetails {
+                        feature_id: 0,
+                        title: "title".to_string(),
+                        movie_name: "movie name".to_string(),
+                        year: Some(2004),
+                        parent_feature_id: None,
+                        parent_title: None,
+                    },
+                    language: "en".to_string(),
+                    download_count: 4,
+                    new_download_count: 8,
+                    ai_translated: true,
+                    votes: 8,
+                    upload_date: "2024-04-24T10:10:10".to_string(),
+                    release: "release".to_string(),
+                    files: vec![],
+                },
+            }
+        ];
+        app.update(&SubtitlesFetched(subs));
         input_text(&mut app, "title");
+        input_key(&mut app, KeyCode::Down, KeyModifiers::NONE);
 
         let mut terminal = TestTerminal::default().0;
         terminal.draw(|frame| app.draw(frame)).unwrap();
@@ -531,7 +570,7 @@ mod tests {
     }
 
     fn input_key(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
-        app.update(&InputReceived(Event::Key(KeyEvent {
+        app.update(&InputReceived(Key(KeyEvent {
             code,
             modifiers,
             kind: KeyEventKind::Press,
