@@ -49,9 +49,10 @@ struct User {
 
 #[cfg(test)]
 mod tests {
+    use env_logger::{Builder, Target};
     use crate::osb::login::{Credentials, login};
     use crate::osb::osb_client::OsbClient;
-    use log::info;
+    use log::{info, LevelFilter};
     use reqwest::Method;
     use secrecy::{ExposeSecret, SecretBox};
     use wiremock::matchers::{method, path};
@@ -59,6 +60,8 @@ mod tests {
 
     #[tokio::test]
     async fn login_and_parse_response() {
+        Builder::new().target(Target::Stdout).filter_level(LevelFilter::Debug).init();
+        
         let mock_server = MockServer::start().await;
 
         Mock::given(method("POST"))
