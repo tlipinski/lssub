@@ -108,10 +108,7 @@ mod tests {
 
     #[tokio::test]
     async fn get_subs() {
-        Builder::new()
-            .target(Target::Stdout)
-            .filter_level(LevelFilter::Debug)
-            .init();
+        Builder::new().target(Target::Stdout).filter_level(LevelFilter::Debug).try_init();
 
         let mock_server = MockServer::start().await;
 

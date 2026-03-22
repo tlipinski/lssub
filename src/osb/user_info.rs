@@ -39,7 +39,7 @@ async fn call_user_info_endpoint_and_parse_response() {
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
-    Builder::new().target(Target::Stdout).filter_level(LevelFilter::Debug).init();
+    Builder::new().target(Target::Stdout).filter_level(LevelFilter::Debug).try_init();
 
     let mock_server = MockServer::start().await;
 
