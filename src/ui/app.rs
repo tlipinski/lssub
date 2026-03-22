@@ -68,13 +68,12 @@ impl App {
         let (ui_tx, mut ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
         let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
 
-        let (shutdown_tx, mut shutdown_rx) = broadcast::channel(16);
         let task_runner = TaskRunner::new(ui_tx.clone());
 
         let spinner = Arc::new(RwLock::new(Spinner { c: ' ' }));
         let spinner_clone = spinner.clone();
 
-        tokio::spawn(handle_input_task(ui_tx.clone(), shutdown_tx.subscribe()));
+        tokio::spawn(handle_input_task(ui_tx.clone()));
         tokio::spawn(debouncer_task(debouncer_rx, ui_tx.clone()));
         tokio::spawn(spinner_task(spinner_clone));
 
@@ -116,7 +115,6 @@ impl App {
                 match msg {
                     Exit => {
                         info!("Exiting application");
-                        shutdown_tx.send(())?;
                         break 'main_loop;
                     }
                     _ => message_opt = app.update(&msg),

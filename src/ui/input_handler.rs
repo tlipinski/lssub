@@ -8,7 +8,7 @@ use tokio::sync::broadcast::Receiver;
 use tokio::sync::mpsc::Sender;
 use tokio::time::interval;
 
-pub async fn handle_input_task(tx: Sender<Action>, mut shutdown_rx: Receiver<()>) -> Result<()> {
+pub async fn handle_input_task(tx: Sender<Action>) -> Result<()> {
     let mut tick_interval = interval(Duration::from_secs_f64(1.0 / 4.0));
     let mut event_stream = EventStream::new();
 
@@ -20,7 +20,6 @@ pub async fn handle_input_task(tx: Sender<Action>, mut shutdown_rx: Receiver<()>
                 None => break Ok(()),
             },
             _ = tick_interval.tick() => Tick,
-            _ = shutdown_rx.recv() => break Ok(()),
         };
 
         tx.send(action).await;
