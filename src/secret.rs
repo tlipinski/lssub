@@ -1,4 +1,5 @@
 use crate::osb::login::{Credentials, JwtToken};
+use crate::values::APP_NAME;
 use anyhow::{Error, Result};
 use libsecret::prelude::{RetrievableExt, RetrievableExtManual};
 use libsecret::{Schema, SchemaAttributeType, SchemaFlags, SearchFlags};
@@ -6,7 +7,6 @@ use log::{error, info};
 use secrecy::{ExposeSecret, SecretBox};
 use std::collections::HashMap;
 use tokio::task;
-use crate::values::APP_NAME;
 
 pub async fn store_token(api_token: &JwtToken) -> Result<()> {
     info!("Storing api token");

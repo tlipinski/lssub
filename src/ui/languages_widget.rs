@@ -140,7 +140,7 @@ impl Component for LanguagesWidget {
             .checked_symbol("[X]")
             .unchecked_symbol("[ ]");
 
-            if language.1  {
+            if language.1 {
                 checkbox = checkbox.style(Style::default().bg(Color::Gray));
             }
 

@@ -78,7 +78,6 @@ impl OsbClient {
     }
 }
 
-
 #[derive(Deserialize, Debug)]
 pub(crate) struct ErrorResponse {
     pub message: Option<String>,

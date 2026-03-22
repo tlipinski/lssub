@@ -11,14 +11,18 @@ pub async fn get_download_link(
     file_id: i64,
 ) -> Result<DownloadLinkResponse> {
     let response: DownloadLinkResponse = if let Some(token) = token_opt {
-        osb_client.call(Method::POST, "/download", |rq| {
-            rq.bearer_auth(token.0.expose_secret())
-                .json(&DownloadRequest { file_id })
-        }).await?
+        osb_client
+            .call(Method::POST, "/download", |rq| {
+                rq.bearer_auth(token.0.expose_secret())
+                    .json(&DownloadRequest { file_id })
+            })
+            .await?
     } else {
-        osb_client.call(Method::POST, "/download", |rq| {
-            rq.json(&DownloadRequest { file_id })
-        }).await?
+        osb_client
+            .call(Method::POST, "/download", |rq| {
+                rq.json(&DownloadRequest { file_id })
+            })
+            .await?
     };
 
     Ok(response)

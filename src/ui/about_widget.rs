@@ -1,13 +1,13 @@
 use crate::ui::actions::Action;
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
+use crate::values::*;
 use crossterm::event::Event;
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph};
-use crate::values::*;
 
 pub struct AboutWidget {}
 

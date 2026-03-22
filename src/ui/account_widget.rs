@@ -3,9 +3,7 @@ use crate::osb::osb_client::OsbClient;
 use crate::osb::user_info::{User, get_user_info};
 use crate::secret::{retrieve_credentials, retrieve_token, store_token};
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{
-    NoOp, RunTask, UserLoggedIn, UserLoggedOut,
-};
+use crate::ui::actions::Action::{NoOp, RunTask, UserLoggedIn, UserLoggedOut};
 use crate::ui::component::Component;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
@@ -45,8 +43,7 @@ impl Component for AccountWidget {
                                     store_token(&token).await?;
                                     info!("Token refreshed");
 
-                                    let user =
-                                        get_user_info(OsbClient::default(), &token).await?;
+                                    let user = get_user_info(OsbClient::default(), &token).await?;
                                     Ok(UserLoggedIn(user))
                                 }
                             }
@@ -77,7 +74,7 @@ impl Component for AccountWidget {
     }
 
     fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
-        if self.logged_in  {
+        if self.logged_in {
             self.logged_in_widget.handle_key_event(event)
         } else {
             self.login_widget.handle_key_event(event)
@@ -85,7 +82,7 @@ impl Component for AccountWidget {
     }
 
     fn render(&mut self, frame: &mut Frame, area: Rect) {
-        if self.logged_in  {
+        if self.logged_in {
             self.logged_in_widget.render(frame, area);
         } else {
             self.login_widget.render(frame, area);
@@ -101,5 +98,4 @@ impl AccountWidget {
             logged_in: false,
         }
     }
-
 }

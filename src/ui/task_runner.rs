@@ -2,11 +2,11 @@ use crate::ui::actions::Action;
 use crate::ui::actions::Action::{ChangeStatus, StartProgress, StopProgress};
 use anyhow::anyhow;
 use futures_util::future::BoxFuture;
+use log::error;
 use std::fmt::{Debug, Formatter};
 use std::future::Future;
 use std::sync::Arc;
 use std::sync::Mutex;
-use log::error;
 use tokio::sync::mpsc::Sender;
 
 pub struct TaskRunner {
@@ -29,7 +29,10 @@ impl TaskRunner {
                 }
                 Err(err) => {
                     error!("Task failed: {}", err);
-                    ui_tx.send(ChangeStatus(err.to_string())).await.expect("UI channel closed");
+                    ui_tx
+                        .send(ChangeStatus(err.to_string()))
+                        .await
+                        .expect("UI channel closed");
                     ui_tx.send(StopProgress).await.expect("UI channel closed");
                 }
             }

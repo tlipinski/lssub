@@ -43,10 +43,10 @@ impl Component for StatusWidget {
 
     fn render(&mut self, frame: &mut Frame, area: Rect) {
         let c = self.spinner.read().unwrap().c;
-        let title = if self.in_progress  {
-            "Status ".to_string() + &c.to_string() 
+        let title = if self.in_progress {
+            "Status ".to_string() + &c.to_string()
         } else {
-            "Status".to_string() 
+            "Status".to_string()
         };
 
         let block = Block::bordered()

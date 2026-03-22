@@ -80,7 +80,7 @@ async fn run(args: Args) -> Result<()> {
 
     info!("Input path: {}", p.display());
 
-    let (base_path, file_name) = if p.is_dir()  {
+    let (base_path, file_name) = if p.is_dir() {
         (Some(p.as_path()), None)
     } else {
         (p.parent(), p.file_stem().and_then(|os_str| os_str.to_str()))
