@@ -18,14 +18,16 @@ pub enum Action {
     InputReceived(Event),
     SwitchScreen(Screen),
 
+    SearchInitialized(SubtitlesQuery),
     SearchQueryUpdated(SubtitlesQuery),
     FetchSubtitles,
     SubtitlesFetched(Vec<Subtitle>),
     SubtitleDownloaded(Downloaded),
 
     LanguagesUpdated(Vec<String>),
+    LanguagesInitialized(Vec<String>),
     LanguagesFetched(Vec<Language>),
-    LanguagesAndConfigFetched(Vec<Language>, Vec<String>),
+    UserLanguagesFetched(Vec<String>),
 
     UserLoggedIn(User),
     UserLoggedOut,

@@ -5,8 +5,8 @@ use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    Exit, FetchSubtitles, Init, LanguagesAndConfigFetched, LanguagesFetched, LanguagesUpdated,
-    Multi, SearchQueryUpdated, SwitchScreen, Tick,
+    Exit, FetchSubtitles, Init, LanguagesInitialized, LanguagesUpdated, Multi, SearchInitialized,
+    SearchQueryUpdated, SwitchScreen, Tick,
 };
 use crate::ui::app::Action::{InputReceived, SubtitlesFetched};
 use crate::ui::app::Screen::{About, Account, Language, Search};
@@ -40,9 +40,8 @@ pub struct App {
     config_provider: ConfigProvider,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
     task_runner: TaskRunner,
-    query: SubtitlesQuery,
-    languages: Vec<String>,
-    initialized: bool,
+    query: Option<SubtitlesQuery>,
+    languages: Option<Vec<String>>,
 }
 
 pub struct AppBackground {
@@ -104,12 +103,8 @@ impl App {
             ui_rx,
             widgets: components,
             task_runner,
-            query: SubtitlesQuery {
-                query: file_name.unwrap_or("").into(),
-                ..SubtitlesQuery::default()
-            },
-            languages: vec![],
-            initialized: false,
+            query: None,
+            languages: None,
         };
 
         let app_background = AppBackground::from(ui_tx, debouncer_rx, spinner);
@@ -155,25 +150,35 @@ impl App {
             InputReceived(event) => self.handle_key_event(event),
 
             LanguagesUpdated(languages) => {
-                self.languages.clone_from(languages);
+                self.languages = Some(languages.clone());
 
                 let _ = self.config_provider.modify(|c: &Config| {
                     let mut updated = c.clone();
-                    updated.languages.clone_from(&self.languages);
+                    updated.languages.clone_from(languages);
                     updated
                 });
 
                 Some(Multi(vec![SwitchScreen(Search), FetchSubtitles]))
             }
 
-            SearchQueryUpdated(query) => {
-                if self.initialized {
-                    if self.query.query == query.query {
-                        self.query = query.clone();
+            SearchInitialized(query) => {
+                self.query = Some(query.clone());
+                Some(FetchSubtitles)
+            }
+
+            LanguagesInitialized(languages) => {
+                self.languages = Some(languages.clone());
+                Some(FetchSubtitles)
+            }
+
+            SearchQueryUpdated(updated_query) => {
+                if let Some(query) = self.query.clone() {
+                    if query.query == updated_query.query {
+                        self.query = Some(updated_query.clone());
 
                         Some(FetchSubtitles)
                     } else {
-                        self.query = query.clone();
+                        self.query = Some(query.clone());
                         let q = query.clone();
                         let debouncer = self.debouncer_tx.clone();
                         tokio::spawn(async move {
@@ -182,37 +187,33 @@ impl App {
                         None
                     }
                 } else {
-                    self.query = query.clone();
                     None
                 }
             }
 
-            FetchSubtitles => {
-                let request = self.subtitles_request();
-                let task = Task::new("fetch subs", async move {
-                    if request.query.len() < 3 {
-                        Ok(SubtitlesFetched(vec![]))
-                    } else {
-                        let result = subtitles(OsbClient::default(), request).await;
-                        match result {
-                            Ok(subtitles) => Ok(SubtitlesFetched(subtitles)),
-                            Err(e) => {
-                                error!("Error fetching subtitles {e}");
-                                Err(Error::msg("Error fetching subtitles list, check logs"))
+            FetchSubtitles => match (self.query.clone(), self.languages.clone()) {
+                (Some(query), Some(languages)) => {
+                    let request = Self::subtitles_request(query, languages);
+                    let task = Task::new("fetch subs", async move {
+                        if request.query.len() < 3 {
+                            Ok(SubtitlesFetched(vec![]))
+                        } else {
+                            let result = subtitles(OsbClient::default(), request).await;
+                            match result {
+                                Ok(subtitles) => Ok(SubtitlesFetched(subtitles)),
+                                Err(e) => {
+                                    error!("Error fetching subtitles {e}");
+                                    Err(Error::msg("Error fetching subtitles list, check logs"))
+                                }
                             }
                         }
-                    }
-                });
+                    });
 
-                Some(RunTask(task))
-            }
+                    Some(RunTask(task))
+                }
 
-            LanguagesFetched(languages) => {
-                let user_languages = self.config_provider.get_config().unwrap().languages;
-                self.initialized = true; // todo rework it
-
-                Some(LanguagesAndConfigFetched(languages.clone(), user_languages))
-            }
+                _ => None,
+            },
 
             SwitchScreen(screen) => {
                 self.active_screen = *screen;
@@ -251,13 +252,13 @@ impl App {
         }
     }
 
-    fn subtitles_request(&self) -> SubtitlesRequest {
+    fn subtitles_request(query: SubtitlesQuery, languages: Vec<String>) -> SubtitlesRequest {
         SubtitlesRequest {
-            query: self.query.query.clone(),
-            id: self.query.params.feature_id,
-            parent_id: self.query.params.parent_feature_id,
-            languages: self.languages.clone(),
-            ai_translated: if self.query.params.exclude_ai {
+            query: query.query,
+            id: query.params.feature_id,
+            parent_id: query.params.parent_feature_id,
+            languages: languages,
+            ai_translated: if query.params.exclude_ai {
                 "exclude".to_string()
             } else {
                 "include".to_string()

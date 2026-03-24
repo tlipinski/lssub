@@ -1,14 +1,16 @@
+use crate::config::ConfigProvider;
 use crate::osb::languages::{Language, get_languages};
 use crate::osb::osb_client::OsbClient;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    LanguagesAndConfigFetched, LanguagesFetched, LanguagesUpdated, RunTask,
+    LanguagesFetched, LanguagesUpdated, Multi, RunTask,
+    UserLanguagesFetched,
 };
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::task_runner::Task;
-use Action::Init;
-use KeyCode::{Enter, Char, Left, Right, Up, Down};
+use Action::{Init, LanguagesInitialized};
+use KeyCode::{Char, Down, Enter, Left, Right, Up};
 use crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::Frame;
 use ratatui::layout::Rect;
@@ -24,28 +26,33 @@ pub struct LanguagesWidget {
     languages: Vec<(Language, bool)>,
     focused_idx: usize,
     grid_columns: usize,
+    osb_languages_opt: Option<Vec<Language>>,
+    user_languages_opt: Option<Vec<String>>,
 }
 
 impl Component for LanguagesWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
-            Init => {
-                let task = Task::new("fetch languages", async {
-                    let languages = get_languages(OsbClient::default()).await?;
+            Init => Some(Multi(vec![
+                RunTask(Task::new("fetch languages", async {
+                    let osb_languages = get_languages(OsbClient::default()).await?;
 
-                    Ok(LanguagesFetched(languages))
-                });
+                    Ok(LanguagesFetched(osb_languages))
+                })),
+                RunTask(Task::new("fetch user languages", async {
+                    let user_languages = ConfigProvider::default().get_config().unwrap().languages;
 
-                Some(RunTask(task))
+                    Ok(UserLanguagesFetched(user_languages))
+                })),
+            ])),
+            LanguagesFetched(languages) => {
+                self.osb_languages_opt = Some(languages.clone());
+                self.try_init()
             }
-            LanguagesAndConfigFetched(languages, user_languages) => {
-                self.languages = languages
-                    .iter()
-                    .map(|lang| (lang.clone(), user_languages.contains(&lang.language_code)))
-                    .collect::<Vec<(Language, bool)>>();
-
-                Some(LanguagesUpdated(self.languages()))
-            }
+            UserLanguagesFetched(user_languages) => {
+                self.user_languages_opt = Some(user_languages.clone());
+                self.try_init()
+            },
             _ => None,
         }
     }
@@ -164,6 +171,23 @@ impl LanguagesWidget {
             languages: vec![],
             focused_idx: 0,
             grid_columns: 4,
+            osb_languages_opt: None,
+            user_languages_opt: None,
+        }
+    }
+
+    fn try_init(&mut self) -> Option<Action> {
+        match (self.osb_languages_opt.clone(), self.user_languages_opt.clone()) {
+            (Some(osb_languages), Some(user_languages)) => {
+                self.languages = osb_languages
+                    .iter()
+                    .map(|lang| (lang.clone(), user_languages.contains(&lang.language_code)))
+                    .collect::<Vec<(Language, bool)>>();
+
+                Some(LanguagesInitialized(user_languages))
+            }
+
+            _ => None,
         }
     }
 

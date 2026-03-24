@@ -1,8 +1,6 @@
 use crate::osb::subtitles::Subtitle;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{
-    ChangeStatus, Init, Multi, RunTask, SearchQueryUpdated, SubtitlesFetched,
-};
+use crate::ui::actions::Action::{ChangeStatus, Init, Multi, RunTask, SearchInitialized, SearchQueryUpdated, SubtitlesFetched};
 use crate::ui::component::Component;
 use crate::ui::downloader::Downloader;
 use crate::ui::handled::HandleResult::{Handled, Unhandled};
@@ -29,7 +27,7 @@ pub struct SearchWidget {
 impl Component for SearchWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
-            Init => Some(SearchQueryUpdated(SubtitlesQuery {
+            Init => Some(SearchInitialized(SubtitlesQuery {
                 query: self.query_widget.query(),
                 params: QueryParams::default(),
             })),
