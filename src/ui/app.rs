@@ -173,13 +173,14 @@ impl App {
 
             SearchQueryUpdated(updated_query) => {
                 if let Some(query) = self.query.clone() {
+                    // params changed, not the query itself - maybe split?
                     if query.query == updated_query.query {
                         self.query = Some(updated_query.clone());
 
                         Some(FetchSubtitles)
                     } else {
-                        self.query = Some(query.clone());
-                        let q = query.clone();
+                        self.query = Some(updated_query.clone());
+                        let q = updated_query.clone();
                         let debouncer = self.debouncer_tx.clone();
                         tokio::spawn(async move {
                             debouncer.send(q).await.expect("Sending to channel failed");
@@ -187,6 +188,12 @@ impl App {
                         None
                     }
                 } else {
+                    self.query = Some(updated_query.clone());
+                    let q = updated_query.clone();
+                    let debouncer = self.debouncer_tx.clone();
+                    tokio::spawn(async move {
+                        debouncer.send(q).await.expect("Sending to channel failed");
+                    });
                     None
                 }
             }
