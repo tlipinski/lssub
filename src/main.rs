@@ -12,7 +12,7 @@ use log::{LevelFilter, error, info, warn};
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::process::exit;
-use ui::app::App;
+use ui::app::AppWidget;
 
 #[tokio::main]
 async fn main() {
@@ -90,7 +90,7 @@ async fn run(args: Args) -> Result<()> {
         info!("Base path: {:?}", bp);
         info!("File name: {:?}", file_name);
 
-        let (mut app, app_background) = App::new(bp, file_name);
+        let (mut app, app_background) = AppWidget::new(bp, file_name);
         app_background.run();
         app.run(&mut terminal).await?;
 

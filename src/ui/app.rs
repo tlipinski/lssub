@@ -26,7 +26,7 @@ use KeyCode::{Char, Esc, F};
 use anyhow::{Error, Result};
 use log::{debug, error, info};
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
-use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::{DefaultTerminal, Frame};
 use std::cmp::PartialEq;
 use std::collections::HashMap;
@@ -35,7 +35,7 @@ use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-pub struct App {
+pub struct AppWidget {
     active_screen: Screen,
     debouncer_tx: Sender<()>,
     ui_rx: Receiver<Action>,
@@ -47,108 +47,7 @@ pub struct App {
     languages: Option<Vec<String>>,
 }
 
-pub struct AppBackground {
-    ui_tx: Sender<Action>,
-    debouncer_rx: Receiver<()>,
-    spinner: Arc<RwLock<Spinner>>,
-}
-
-impl AppBackground {
-    pub fn from(
-        ui_tx: Sender<Action>,
-        debouncer_rx: Receiver<()>,
-        spinner: Arc<RwLock<Spinner>>,
-    ) -> AppBackground {
-        AppBackground {
-            ui_tx,
-            debouncer_rx,
-            spinner,
-        }
-    }
-
-    pub fn run(self) {
-        tokio::spawn(handle_input_task(self.ui_tx.clone()));
-        tokio::spawn(spinner_task(self.spinner));
-
-        let ui_tx = self.ui_tx.clone();
-        tokio::spawn(debouncer_task(
-            self.debouncer_rx,
-            Duration::from_millis(1000),
-            async move || {
-                ui_tx
-                    .send(FetchSubtitles)
-                    .await
-                    .expect("Sending to channel failed");
-            },
-        ));
-    }
-}
-
-impl App {
-    pub fn new(base_path: &Path, file_name: Option<&str>) -> (App, AppBackground) {
-        let (ui_tx, ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
-        let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<()>(100);
-
-        let task_runner = TaskRunner::new(ui_tx.clone());
-
-        let spinner = Arc::new(RwLock::new(Spinner { c: ' ' }));
-
-        let config_provider = ConfigProvider::default();
-
-        let mut components: HashMap<WidgetName, Box<dyn Component>> = HashMap::new();
-        components.insert(WidgetName::Nav, Box::new(NavWidget::new()));
-        components.insert(WidgetName::User, Box::new(UserWidget::from()));
-        components.insert(WidgetName::About, Box::new(AboutWidget::new()));
-        components.insert(WidgetName::Account, Box::new(AccountWidget::new()));
-        components.insert(
-            WidgetName::Search,
-            Box::new(SearchWidget::from(base_path, file_name)),
-        );
-        components.insert(WidgetName::Languages, Box::new(LanguagesWidget::new()));
-        components.insert(
-            WidgetName::Status,
-            Box::new(StatusWidget::from(spinner.clone())),
-        );
-
-        let app = App {
-            active_screen: Screen::default(),
-            config_provider,
-            debouncer_tx,
-            ui_rx,
-            widgets: components,
-            task_runner,
-            query: None,
-            params: None,
-            languages: None,
-        };
-
-        let app_background = AppBackground::from(ui_tx, debouncer_rx, spinner);
-
-        (app, app_background)
-    }
-
-    pub async fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
-        let mut message_opt = Some(Init);
-
-        'main_loop: loop {
-            while let Some(msg) = message_opt {
-                match msg {
-                    Exit => {
-                        info!("Exiting application");
-                        break 'main_loop;
-                    }
-                    _ => message_opt = self.update(&msg),
-                }
-            }
-
-            terminal.draw(|frame| self.draw(frame))?;
-
-            message_opt = self.ui_rx.recv().await;
-        }
-
-        Ok(())
-    }
-
+impl Component for AppWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
             Tick | Multi(_) | InputReceived(_) => {}
@@ -273,27 +172,24 @@ impl App {
         }
     }
 
-    fn subtitles_request(
-        query: String,
-        params: QueryParams,
-        languages: Vec<String>,
-    ) -> SubtitlesRequest {
-        SubtitlesRequest {
-            query,
-            languages,
-            id: params.feature_id,
-            parent_id: params.parent_feature_id,
-            ai_translated: if params.exclude_ai {
-                "exclude".to_string()
+    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+        self.active_widget().handle_key_event(event).or_else(|| {
+            if let Event::Key(key_event) = event {
+                match (key_event.code, key_event.modifiers) {
+                    (Esc | F(2), KeyModifiers::NONE) => Some(SwitchScreen(Search)),
+                    (F(3), KeyModifiers::NONE) => Some(SwitchScreen(Account)),
+                    (F(4), KeyModifiers::NONE) => Some(SwitchScreen(Language)),
+                    (F(10), KeyModifiers::NONE) | (Char('c'), KeyModifiers::CONTROL) => Some(Exit),
+                    (F(12), KeyModifiers::NONE) => Some(SwitchScreen(About)),
+                    _ => None,
+                }
             } else {
-                "include".to_string()
-            },
-        }
+                None
+            }
+        })
     }
 
-    fn draw(&mut self, frame: &mut Frame) {
-        let area = frame.area();
-
+    fn render(&mut self, frame: &mut Frame, area: Rect) {
         let content = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -323,6 +219,129 @@ impl App {
 
         self.active_widget().render(frame, content[0]);
     }
+}
+
+pub struct AppBackground {
+    ui_tx: Sender<Action>,
+    debouncer_rx: Receiver<()>,
+    spinner: Arc<RwLock<Spinner>>,
+}
+
+impl AppBackground {
+    pub fn from(
+        ui_tx: Sender<Action>,
+        debouncer_rx: Receiver<()>,
+        spinner: Arc<RwLock<Spinner>>,
+    ) -> AppBackground {
+        AppBackground {
+            ui_tx,
+            debouncer_rx,
+            spinner,
+        }
+    }
+
+    pub fn run(self) {
+        tokio::spawn(handle_input_task(self.ui_tx.clone()));
+        tokio::spawn(spinner_task(self.spinner));
+
+        let ui_tx = self.ui_tx.clone();
+        tokio::spawn(debouncer_task(
+            self.debouncer_rx,
+            Duration::from_millis(1000),
+            async move || {
+                ui_tx
+                    .send(FetchSubtitles)
+                    .await
+                    .expect("Sending to channel failed");
+            },
+        ));
+    }
+}
+
+impl AppWidget {
+    pub fn new(base_path: &Path, file_name: Option<&str>) -> (AppWidget, AppBackground) {
+        let (ui_tx, ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
+        let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<()>(100);
+
+        let task_runner = TaskRunner::new(ui_tx.clone());
+
+        let spinner = Arc::new(RwLock::new(Spinner { c: ' ' }));
+
+        let config_provider = ConfigProvider::default();
+
+        let mut components: HashMap<WidgetName, Box<dyn Component>> = HashMap::new();
+        components.insert(WidgetName::Nav, Box::new(NavWidget::new()));
+        components.insert(WidgetName::User, Box::new(UserWidget::from()));
+        components.insert(WidgetName::About, Box::new(AboutWidget::new()));
+        components.insert(WidgetName::Account, Box::new(AccountWidget::new()));
+        components.insert(
+            WidgetName::Search,
+            Box::new(SearchWidget::from(base_path, file_name)),
+        );
+        components.insert(WidgetName::Languages, Box::new(LanguagesWidget::new()));
+        components.insert(
+            WidgetName::Status,
+            Box::new(StatusWidget::from(spinner.clone())),
+        );
+
+        let app = AppWidget {
+            active_screen: Screen::default(),
+            config_provider,
+            debouncer_tx,
+            ui_rx,
+            widgets: components,
+            task_runner,
+            query: None,
+            params: None,
+            languages: None,
+        };
+
+        let app_background = AppBackground::from(ui_tx, debouncer_rx, spinner);
+
+        (app, app_background)
+    }
+
+    pub async fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
+        let mut message_opt = Some(Init);
+
+        'main_loop: loop {
+            while let Some(msg) = message_opt {
+                match msg {
+                    Exit => {
+                        info!("Exiting application");
+                        break 'main_loop;
+                    }
+                    _ => message_opt = self.update(&msg),
+                }
+            }
+
+            terminal.draw(|frame| self.render(frame, frame.area()))?;
+
+            message_opt = self.ui_rx.recv().await;
+        }
+
+        Ok(())
+    }
+
+
+    fn subtitles_request(
+        query: String,
+        params: QueryParams,
+        languages: Vec<String>,
+    ) -> SubtitlesRequest {
+        SubtitlesRequest {
+            query,
+            languages,
+            id: params.feature_id,
+            parent_id: params.parent_feature_id,
+            ai_translated: if params.exclude_ai {
+                "exclude".to_string()
+            } else {
+                "include".to_string()
+            },
+        }
+    }
+
 
     fn active_widget(&mut self) -> &mut Box<dyn Component> {
         let widget_name = match self.active_screen {
@@ -334,22 +353,6 @@ impl App {
         self.widgets.get_mut(&widget_name).unwrap()
     }
 
-    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
-        self.active_widget().handle_key_event(event).or_else(|| {
-            if let Event::Key(key_event) = event {
-                match (key_event.code, key_event.modifiers) {
-                    (Esc | F(2), KeyModifiers::NONE) => Some(SwitchScreen(Search)),
-                    (F(3), KeyModifiers::NONE) => Some(SwitchScreen(Account)),
-                    (F(4), KeyModifiers::NONE) => Some(SwitchScreen(Language)),
-                    (F(10), KeyModifiers::NONE) | (Char('c'), KeyModifiers::CONTROL) => Some(Exit),
-                    (F(12), KeyModifiers::NONE) => Some(SwitchScreen(About)),
-                    _ => None,
-                }
-            } else {
-                None
-            }
-        })
-    }
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
@@ -395,29 +398,29 @@ mod tests {
 
     #[test]
     fn main_screen() {
-        let (mut app, _) = App::new(Path::new("."), None);
+        let (mut app, _) = AppWidget::new(Path::new("."), None);
 
         let mut terminal = TestTerminal::default().0;
-        terminal.draw(|frame| app.draw(frame)).unwrap();
+        terminal.draw(|frame| app.render(frame, frame.area())).unwrap();
 
         assert_snapshot!(terminal.backend());
     }
 
     #[test]
     fn main_screen_help() {
-        let (mut app, _) = App::new(Path::new("."), None);
+        let (mut app, _) = AppWidget::new(Path::new("."), None);
 
         input_key(&mut app, F(1), KeyModifiers::NONE);
 
         let mut terminal = TestTerminal::default().0;
-        terminal.draw(|frame| app.draw(frame)).unwrap();
+        terminal.draw(|frame| app.render(frame, frame.area())).unwrap();
 
         assert_snapshot!(terminal.backend());
     }
 
     #[test]
     fn account_screen() {
-        let (mut app, _) = App::new(Path::new("."), None);
+        let (mut app, _) = AppWidget::new(Path::new("."), None);
 
         app.update(&SwitchScreen(Account));
 
@@ -426,14 +429,14 @@ mod tests {
         input_text(&mut app, "test_pass");
 
         let mut terminal = TestTerminal::default().0;
-        terminal.draw(|frame| app.draw(frame)).unwrap();
+        terminal.draw(|frame| app.render(frame, frame.area())).unwrap();
 
         assert_snapshot!(terminal.backend());
     }
 
     #[test]
     fn main_screen_logged_in() {
-        let (mut app, _) = App::new(Path::new("."), None);
+        let (mut app, _) = AppWidget::new(Path::new("."), None);
 
         let user = User {
             username: "user".to_string(),
@@ -446,14 +449,14 @@ mod tests {
         app.update(&UserLoggedIn(user));
 
         let mut terminal = TestTerminal::default().0;
-        terminal.draw(|frame| app.draw(frame)).unwrap();
+        terminal.draw(|frame| app.render(frame, frame.area())).unwrap();
 
         assert_snapshot!(terminal.backend());
     }
 
     #[test]
     fn account_screen_logged_in() {
-        let (mut app, _) = App::new(Path::new("."), None);
+        let (mut app, _) = AppWidget::new(Path::new("."), None);
 
         let user = User {
             username: "user".to_string(),
@@ -468,26 +471,26 @@ mod tests {
         app.update(&SwitchScreen(Account));
 
         let mut terminal = TestTerminal::default().0;
-        terminal.draw(|frame| app.draw(frame)).unwrap();
+        terminal.draw(|frame| app.render(frame, frame.area())).unwrap();
 
         assert_snapshot!(terminal.backend());
     }
 
     #[test]
     fn ai_excluded_main_screen() {
-        let (mut app, _) = App::new(Path::new("."), None);
+        let (mut app, _) = AppWidget::new(Path::new("."), None);
 
         input_key(&mut app, Char('t'), KeyModifiers::CONTROL);
 
         let mut terminal = TestTerminal::default().0;
-        terminal.draw(|frame| app.draw(frame)).unwrap();
+        terminal.draw(|frame| app.render(frame, frame.area())).unwrap();
 
         assert_snapshot!(terminal.backend());
     }
 
     #[test]
     fn subs_query() {
-        let (mut app, _) = App::new(Path::new("."), None);
+        let (mut app, _) = AppWidget::new(Path::new("."), None);
 
         let subs = vec![Subtitle {
             id: "1234".to_string(),
@@ -516,14 +519,14 @@ mod tests {
         input_key(&mut app, KeyCode::Down, KeyModifiers::NONE);
 
         let mut terminal = TestTerminal::default().0;
-        terminal.draw(|frame| app.draw(frame)).unwrap();
+        terminal.draw(|frame| app.render(frame, frame.area())).unwrap();
 
         assert_snapshot!(terminal.backend());
     }
 
     #[test]
     fn subs_fetched() {
-        let (mut app, _) = App::new(Path::new("."), None);
+        let (mut app, _) = AppWidget::new(Path::new("."), None);
 
         let subs = vec![
             Subtitle {
@@ -574,12 +577,12 @@ mod tests {
         app.update(&SubtitlesFetched(subs));
 
         let mut terminal = TestTerminal::default().0;
-        terminal.draw(|frame| app.draw(frame)).unwrap();
+        terminal.draw(|frame| app.render(frame, frame.area())).unwrap();
 
         assert_snapshot!(terminal.backend());
     }
 
-    fn input_text(app: &mut App, text: &str) {
+    fn input_text(app: &mut AppWidget, text: &str) {
         text.chars().for_each(|c| {
             app.update(&InputReceived(Event::Key(KeyEvent {
                 code: Char(c),
@@ -590,7 +593,7 @@ mod tests {
         });
     }
 
-    fn input_key(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
+    fn input_key(app: &mut AppWidget, code: KeyCode, modifiers: KeyModifiers) {
         app.update(&InputReceived(Key(KeyEvent {
             code,
             modifiers,
