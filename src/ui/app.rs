@@ -1,11 +1,11 @@
 use crate::config::ConfigProvider;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{Exit, FetchSubtitles, Init};
-use crate::ui::main_widget::{MainWidget, Screen};
 use crate::ui::component::Component;
 use crate::ui::debouncer::debouncer_task;
 use crate::ui::input_handler::handle_input_task;
-use crate::ui::spinner::{spinner_task, Spinner};
+use crate::ui::main_widget::{MainWidget, Screen};
+use crate::ui::spinner::{Spinner, spinner_task};
 use crate::ui::task_runner::TaskRunner;
 use log::info;
 use ratatui::DefaultTerminal;
@@ -19,7 +19,7 @@ pub struct App {
     ui_rx: Receiver<Action>,
     debouncer_rx: Receiver<()>,
     spinner: Arc<RwLock<Spinner>>,
-    main_widget: MainWidget,
+    main_widget: Box<dyn Component>,
 }
 
 impl App {
@@ -45,7 +45,7 @@ impl App {
             ui_rx,
             debouncer_rx,
             spinner: spinner.clone(),
-            main_widget,
+            main_widget: Box::new(main_widget),
         }
     }
 

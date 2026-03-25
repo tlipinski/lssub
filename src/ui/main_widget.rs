@@ -10,9 +10,9 @@ use crate::ui::actions::Action::{
     Tick,
 };
 use crate::ui::app::App;
-use crate::ui::main_widget::Screen::{About, Account, Language, Search};
 use crate::ui::component::Component;
 use crate::ui::languages_widget::LanguagesWidget;
+use crate::ui::main_widget::Screen::{About, Account, Language, Search};
 use crate::ui::nav_widget::NavWidget;
 use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::{Spinner, spinner_task};
@@ -238,10 +238,7 @@ impl MainWidget {
             Box::new(SearchWidget::from(base_path, file_name)),
         );
         components.insert(WidgetName::Languages, Box::new(LanguagesWidget::new()));
-        components.insert(
-            WidgetName::Status,
-            Box::new(StatusWidget::from(spinner.clone())),
-        );
+        components.insert(WidgetName::Status, Box::new(StatusWidget::from(spinner)));
 
         MainWidget {
             active_screen: Screen::default(),
@@ -304,7 +301,7 @@ pub enum Screen {
     About,
 }
 
-#[cfg(ztest)]
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::osb::subtitles::{Attributes, FeatureDetails, Subtitle};
@@ -325,9 +322,26 @@ mod tests {
         }
     }
 
+    impl Default for MainWidget {
+        fn default() -> Self {
+            let (ui_tx, ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
+            let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<()>(100);
+            let spinner = Arc::new(RwLock::new(Spinner { c: ' ' }));
+
+            MainWidget::new(
+                Path::new("."),
+                None,
+                debouncer_tx,
+                TaskRunner::new(ui_tx),
+                ConfigProvider::default(),
+                spinner,
+            )
+        }
+    }
+
     #[test]
     fn main_screen() {
-        let (mut app, _) = MainWidget::new(Path::new("."), None);
+        let mut app = MainWidget::default();
 
         let mut terminal = TestTerminal::default().0;
         terminal
@@ -339,7 +353,7 @@ mod tests {
 
     #[test]
     fn main_screen_help() {
-        let (mut app, _) = MainWidget::new(Path::new("."), None);
+        let mut app = MainWidget::default();
 
         input_key(&mut app, F(1), KeyModifiers::NONE);
 
@@ -353,7 +367,7 @@ mod tests {
 
     #[test]
     fn account_screen() {
-        let (mut app, _) = MainWidget::new(Path::new("."), None);
+        let mut app = MainWidget::default();
 
         app.update(&SwitchScreen(Account));
 
@@ -371,7 +385,7 @@ mod tests {
 
     #[test]
     fn main_screen_logged_in() {
-        let (mut app, _) = MainWidget::new(Path::new("."), None);
+        let mut app = MainWidget::default();
 
         let user = User {
             username: "user".to_string(),
@@ -393,7 +407,7 @@ mod tests {
 
     #[test]
     fn account_screen_logged_in() {
-        let (mut app, _) = MainWidget::new(Path::new("."), None);
+        let mut app = MainWidget::default();
 
         let user = User {
             username: "user".to_string(),
@@ -417,7 +431,7 @@ mod tests {
 
     #[test]
     fn ai_excluded_main_screen() {
-        let (mut app, _) = MainWidget::new(Path::new("."), None);
+        let mut app = MainWidget::default();
 
         input_key(&mut app, Char('t'), KeyModifiers::CONTROL);
 
@@ -431,7 +445,7 @@ mod tests {
 
     #[test]
     fn subs_query() {
-        let (mut app, _) = MainWidget::new(Path::new("."), None);
+        let mut app = MainWidget::default();
 
         let subs = vec![Subtitle {
             id: "1234".to_string(),
@@ -469,7 +483,7 @@ mod tests {
 
     #[test]
     fn subs_fetched() {
-        let (mut app, _) = MainWidget::new(Path::new("."), None);
+        let mut app = MainWidget::default();
 
         let subs = vec![
             Subtitle {
