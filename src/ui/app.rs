@@ -4,7 +4,7 @@ use crate::ui::actions::Action::{Exit, FetchSubtitles, Init};
 use crate::ui::component::Component;
 use crate::ui::debouncer::debouncer_task;
 use crate::ui::input_handler::handle_input_task;
-use crate::ui::main_widget::{MainWidget, Screen};
+use crate::ui::main_widget::MainWidget;
 use crate::ui::spinner::{Spinner, spinner_task};
 use crate::ui::task_runner::TaskRunner;
 use log::info;

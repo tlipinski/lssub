@@ -1,13 +1,15 @@
-use crate::ui::actions::Action;
-use crate::ui::actions::Action::FetchSubtitles;
 use anyhow::Result;
 use log::{error, info};
 use std::time::Duration;
+use tokio::sync::mpsc::Receiver;
 use tokio::sync::mpsc::error::TryRecvError;
-use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
-pub async fn debouncer_task<F>(mut rx: Receiver<()>, duration: Duration, on_debounce: F) -> Result<()>
+pub async fn debouncer_task<F>(
+    mut rx: Receiver<()>,
+    duration: Duration,
+    on_debounce: F,
+) -> Result<()>
 where
     F: AsyncFn() -> (),
 {

@@ -4,6 +4,7 @@ mod secret;
 mod ui;
 mod values;
 
+use crate::ui::app::App;
 use crate::values::APP_NAME;
 use anyhow::Result;
 use clap::Parser;
@@ -12,8 +13,6 @@ use log::{LevelFilter, error, info, warn};
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::process::exit;
-use crate::ui::app::App;
-use crate::ui::main_widget::MainWidget;
 
 #[tokio::main]
 async fn main() {

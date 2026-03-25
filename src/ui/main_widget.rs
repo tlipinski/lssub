@@ -5,34 +5,32 @@ use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    Exit, FetchSubtitles, Init, InputReceived, LanguagesInitialized, LanguagesUpdated, Multi,
+    Exit, FetchSubtitles, InputReceived, LanguagesInitialized, LanguagesUpdated, Multi,
     SearchInitialized, SearchParamsUpdated, SearchQueryUpdated, SubtitlesFetched, SwitchScreen,
     Tick,
 };
-use crate::ui::app::App;
 use crate::ui::component::Component;
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::main_widget::Screen::{About, Account, Language, Search};
 use crate::ui::nav_widget::NavWidget;
 use crate::ui::search_widget::SearchWidget;
-use crate::ui::spinner::{Spinner, spinner_task};
+use crate::ui::spinner::Spinner;
 use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::QueryParams;
 use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
 use Action::RunTask;
 use KeyCode::{Char, Esc, F};
-use anyhow::{Error, Result};
+use anyhow::Error;
 use log::{debug, error, info};
+use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::{DefaultTerminal, Frame};
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, RwLock};
-use std::time::Duration;
-use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::sync::mpsc::Sender;
 
 pub struct MainWidget {
     active_screen: Screen,
@@ -87,7 +85,6 @@ impl Component for MainWidget {
             SearchQueryUpdated(query) => {
                 self.query = Some(query.clone());
                 let debouncer = self.debouncer_tx.clone();
-                let q = query.clone();
                 tokio::spawn(async move {
                     debouncer.send(()).await.expect("Sending to channel failed");
                 });

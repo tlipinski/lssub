@@ -3,8 +3,7 @@ use crate::osb::languages::{Language, get_languages};
 use crate::osb::osb_client::OsbClient;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    LanguagesFetched, LanguagesUpdated, Multi, RunTask,
-    UserLanguagesFetched,
+    LanguagesFetched, LanguagesUpdated, Multi, RunTask, UserLanguagesFetched,
 };
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
@@ -52,7 +51,7 @@ impl Component for LanguagesWidget {
             UserLanguagesFetched(user_languages) => {
                 self.user_languages_opt = Some(user_languages.clone());
                 self.try_init()
-            },
+            }
             _ => None,
         }
     }
@@ -177,7 +176,10 @@ impl LanguagesWidget {
     }
 
     fn try_init(&mut self) -> Option<Action> {
-        match (self.osb_languages_opt.clone(), self.user_languages_opt.clone()) {
+        match (
+            self.osb_languages_opt.clone(),
+            self.user_languages_opt.clone(),
+        ) {
             (Some(osb_languages), Some(user_languages)) => {
                 self.languages = osb_languages
                     .iter()

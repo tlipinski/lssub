@@ -1,7 +1,7 @@
 use crate::ui::actions::Action;
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
-use crate::values::{APP_NAME, VERSION, REPO_URL};
+use crate::values::{APP_NAME, REPO_URL, VERSION};
 use crossterm::event::Event;
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
