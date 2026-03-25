@@ -6,7 +6,7 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     Exit, FetchSubtitles, Init, LanguagesInitialized, LanguagesUpdated, Multi, SearchInitialized,
-    SearchQueryUpdated, SwitchScreen, Tick,
+    SearchParamsUpdated, SearchQueryUpdated, SwitchScreen, Tick,
 };
 use crate::ui::app::Action::{InputReceived, SubtitlesFetched};
 use crate::ui::app::Screen::{About, Account, Language, Search};
@@ -197,15 +197,22 @@ impl App {
                 None
             }
 
+            SearchParamsUpdated(params) => {
+                self.params = Some(params.clone());
+                Some(FetchSubtitles)
+            }
+
             FetchSubtitles => match (
                 self.query.clone(),
                 self.params.clone(),
                 self.languages.clone(),
             ) {
                 (Some(query), Some(params), Some(languages)) => {
-                    info!("Fetching subtitles for query: {query:?}, languages: {languages:?}, params: {params:?}");
+                    info!(
+                        "Fetching subtitles for query: {query:?}, languages: {languages:?}, params: {params:?}"
+                    );
                     let request = Self::subtitles_request(query, params, languages);
-                    let task = Task::new("fetch subs", async move {
+                    let fetch_subs_task = Task::new("fetch subs", async move {
                         if request.query.len() < 3 {
                             Ok(SubtitlesFetched(vec![]))
                         } else {
@@ -220,10 +227,13 @@ impl App {
                         }
                     });
 
-                    Some(RunTask(task))
+                    Some(RunTask(fetch_subs_task))
                 }
 
-                _ => None,
+                _ => {
+                    // not initialized yet
+                    None
+                }
             },
 
             SwitchScreen(screen) => {
