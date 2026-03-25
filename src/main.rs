@@ -12,7 +12,7 @@ use log::{LevelFilter, error, info, warn};
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::process::exit;
-use ui::app::AppWidget;
+use crate::ui::app_widget::AppWidget;
 
 #[tokio::main]
 async fn main() {

@@ -1,11 +1,11 @@
 use crate::osb::languages::Language;
 use crate::osb::subtitles::Subtitle;
 use crate::osb::user_info::User;
-use crate::ui::app::Screen;
 use crate::ui::downloader::Downloaded;
 use crate::ui::search_widget::SubtitlesQuery;
 use crate::ui::task_runner::Task;
 use ratatui::crossterm::event::Event;
+use crate::ui::app_widget::Screen;
 use crate::ui::subs_list_widget::QueryParams;
 
 #[derive(Debug)]
