@@ -6,6 +6,7 @@ use crate::ui::downloader::Downloaded;
 use crate::ui::search_widget::SubtitlesQuery;
 use crate::ui::task_runner::Task;
 use ratatui::crossterm::event::Event;
+use crate::ui::subs_list_widget::QueryParams;
 
 #[derive(Debug)]
 pub enum Action {
@@ -19,7 +20,8 @@ pub enum Action {
     SwitchScreen(Screen),
 
     SearchInitialized(SubtitlesQuery),
-    SearchQueryUpdated(SubtitlesQuery),
+    SearchQueryUpdated(String),
+    SearchParamsUpdated(QueryParams),
     FetchSubtitles,
     SubtitlesFetched(Vec<Subtitle>),
     SubtitleDownloaded(Downloaded),

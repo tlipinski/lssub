@@ -1,6 +1,6 @@
 use crate::osb::subtitles::Subtitle;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{ChangeStatus, Init, Multi, RunTask, SearchInitialized, SearchQueryUpdated, SubtitlesFetched};
+use crate::ui::actions::Action::{ChangeStatus, Init, Multi, RunTask, SearchInitialized, SearchParamsUpdated, SearchQueryUpdated, SubtitlesFetched};
 use crate::ui::component::Component;
 use crate::ui::downloader::Downloader;
 use crate::ui::handled::HandleResult::{Handled, Unhandled};
@@ -76,16 +76,13 @@ impl Component for SearchWidget {
 
                     _ => match self.subs_list_widget.handle_key_event(key_event) {
                         Handled(result) => result.map(|params| {
-                            SearchQueryUpdated(SubtitlesQuery {
-                                query: self.query_widget.query(),
-                                params,
-                            })
+                            SearchQueryUpdated(self.query_widget.query())
                         }),
                         Unhandled => {
                             let params = self.subs_list_widget.params.clone();
                             self.query_widget
                                 .handle_key_event(event)
-                                .map(|query| SearchQueryUpdated(SubtitlesQuery { query, params }))
+                                .map(|query| SearchParamsUpdated(params))
                         }
                     },
                 }

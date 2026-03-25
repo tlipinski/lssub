@@ -15,9 +15,10 @@ use crate::ui::debouncer::debouncer_task;
 use crate::ui::input_handler::handle_input_task;
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::nav_widget::NavWidget;
-use crate::ui::search_widget::{SearchWidget, SubtitlesQuery};
+use crate::ui::search_widget::SearchWidget;
 use crate::ui::spinner::{Spinner, spinner_task};
 use crate::ui::status_widget::StatusWidget;
+use crate::ui::subs_list_widget::QueryParams;
 use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
 use Action::RunTask;
@@ -35,25 +36,26 @@ use tokio::sync::mpsc::{Receiver, Sender};
 
 pub struct App {
     active_screen: Screen,
-    debouncer_tx: Sender<SubtitlesQuery>,
+    debouncer_tx: Sender<()>,
     ui_rx: Receiver<Action>,
     config_provider: ConfigProvider,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
     task_runner: TaskRunner,
-    query: Option<SubtitlesQuery>,
+    query: Option<String>,
+    params: Option<QueryParams>,
     languages: Option<Vec<String>>,
 }
 
 pub struct AppBackground {
     ui_tx: Sender<Action>,
-    debouncer_rx: Receiver<SubtitlesQuery>,
+    debouncer_rx: Receiver<()>,
     spinner: Arc<RwLock<Spinner>>,
 }
 
 impl AppBackground {
     pub fn from(
         ui_tx: Sender<Action>,
-        debouncer_rx: Receiver<SubtitlesQuery>,
+        debouncer_rx: Receiver<()>,
         spinner: Arc<RwLock<Spinner>>,
     ) -> AppBackground {
         AppBackground {
@@ -73,7 +75,7 @@ impl AppBackground {
 impl App {
     pub fn new(base_path: &Path, file_name: Option<&str>) -> (App, AppBackground) {
         let (ui_tx, ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
-        let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<SubtitlesQuery>(100);
+        let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<()>(100);
 
         let task_runner = TaskRunner::new(ui_tx.clone());
 
@@ -104,6 +106,7 @@ impl App {
             widgets: components,
             task_runner,
             query: None,
+            params: None,
             languages: None,
         };
 
@@ -162,7 +165,8 @@ impl App {
             }
 
             SearchInitialized(query) => {
-                self.query = Some(query.clone());
+                self.query = Some(query.query.clone());
+                self.params = Some(query.params.clone());
                 Some(FetchSubtitles)
             }
 
@@ -171,36 +175,23 @@ impl App {
                 Some(FetchSubtitles)
             }
 
-            SearchQueryUpdated(updated_query) => {
-                if let Some(query) = self.query.clone() {
-                    // params changed, not the query itself - maybe split?
-                    if query.query == updated_query.query {
-                        self.query = Some(updated_query.clone());
-
-                        Some(FetchSubtitles)
-                    } else {
-                        self.query = Some(updated_query.clone());
-                        let q = updated_query.clone();
-                        let debouncer = self.debouncer_tx.clone();
-                        tokio::spawn(async move {
-                            debouncer.send(q).await.expect("Sending to channel failed");
-                        });
-                        None
-                    }
-                } else {
-                    self.query = Some(updated_query.clone());
-                    let q = updated_query.clone();
-                    let debouncer = self.debouncer_tx.clone();
-                    tokio::spawn(async move {
-                        debouncer.send(q).await.expect("Sending to channel failed");
-                    });
-                    None
-                }
+            SearchQueryUpdated(query) => {
+                self.query = Some(query.clone());
+                let debouncer = self.debouncer_tx.clone();
+                let q = query.clone();
+                tokio::spawn(async move {
+                    debouncer.send(()).await.expect("Sending to channel failed");
+                });
+                None
             }
 
-            FetchSubtitles => match (self.query.clone(), self.languages.clone()) {
-                (Some(query), Some(languages)) => {
-                    let request = Self::subtitles_request(query, languages);
+            FetchSubtitles => match (
+                self.query.clone(),
+                self.params.clone(),
+                self.languages.clone(),
+            ) {
+                (Some(query), Some(params), Some(languages)) => {
+                    let request = Self::subtitles_request(query, params, languages);
                     let task = Task::new("fetch subs", async move {
                         if request.query.len() < 3 {
                             Ok(SubtitlesFetched(vec![]))
@@ -259,13 +250,17 @@ impl App {
         }
     }
 
-    fn subtitles_request(query: SubtitlesQuery, languages: Vec<String>) -> SubtitlesRequest {
+    fn subtitles_request(
+        query: String,
+        params: QueryParams,
+        languages: Vec<String>,
+    ) -> SubtitlesRequest {
         SubtitlesRequest {
-            query: query.query,
-            id: query.params.feature_id,
-            parent_id: query.params.parent_feature_id,
-            languages: languages,
-            ai_translated: if query.params.exclude_ai {
+            query,
+            languages,
+            id: params.feature_id,
+            parent_id: params.parent_feature_id,
+            ai_translated: if params.exclude_ai {
                 "exclude".to_string()
             } else {
                 "include".to_string()
