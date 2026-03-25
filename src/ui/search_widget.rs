@@ -76,13 +76,13 @@ impl Component for SearchWidget {
 
                     _ => match self.subs_list_widget.handle_key_event(key_event) {
                         Handled(result) => result.map(|params| {
-                            SearchQueryUpdated(self.query_widget.query())
+                            SearchParamsUpdated(params)
                         }),
                         Unhandled => {
                             let params = self.subs_list_widget.params.clone();
                             self.query_widget
                                 .handle_key_event(event)
-                                .map(|query| SearchParamsUpdated(params))
+                                .map(SearchQueryUpdated)
                         }
                     },
                 }
