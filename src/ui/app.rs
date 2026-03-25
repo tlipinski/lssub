@@ -32,6 +32,7 @@ use std::cmp::PartialEq;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, RwLock};
+use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 pub struct App {
@@ -67,8 +68,19 @@ impl AppBackground {
 
     pub fn run(self) {
         tokio::spawn(handle_input_task(self.ui_tx.clone()));
-        tokio::spawn(debouncer_task(self.debouncer_rx, self.ui_tx.clone()));
         tokio::spawn(spinner_task(self.spinner));
+
+        let ui_tx = self.ui_tx.clone();
+        tokio::spawn(debouncer_task(
+            self.debouncer_rx,
+            Duration::from_millis(1000),
+            async move || {
+                ui_tx
+                    .send(FetchSubtitles)
+                    .await
+                    .expect("Sending to channel failed");
+            },
+        ));
     }
 }
 
@@ -191,6 +203,7 @@ impl App {
                 self.languages.clone(),
             ) {
                 (Some(query), Some(params), Some(languages)) => {
+                    info!("Fetching subtitles for query: {query:?}, languages: {languages:?}, params: {params:?}");
                     let request = Self::subtitles_request(query, params, languages);
                     let task = Task::new("fetch subs", async move {
                         if request.query.len() < 3 {

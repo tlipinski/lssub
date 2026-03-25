@@ -7,13 +7,16 @@ use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
-pub async fn debouncer_task(mut rx: Receiver<()>, ui_tx: Sender<Action>) -> Result<()> {
+pub async fn debouncer_task<F>(mut rx: Receiver<()>, duration: Duration, on_debounce: F) -> Result<()>
+where
+    F: AsyncFn() -> (),
+{
     'outer: loop {
-        sleep(Duration::from_millis(1000)).await;
+        sleep(duration).await;
 
         let mut last: Option<()> = None;
 
-        // Receive as much as possible within outer loop cycle to reduce OSB calls.
+        // Receive as much as possible within outer loop cycle
         'debouncing: loop {
             match rx.try_recv() {
                 Ok(request) => last = Some(request),
@@ -27,9 +30,9 @@ pub async fn debouncer_task(mut rx: Receiver<()>, ui_tx: Sender<Action>) -> Resu
             }
         }
 
-        if let Some(debounced) = last {
-            info!("Debounced {debounced:?}");
-            ui_tx.send(FetchSubtitles).await?;
+        if last.is_some() {
+            info!("Debounced");
+            on_debounce().await;
         }
     }
 }
