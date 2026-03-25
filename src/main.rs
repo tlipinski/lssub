@@ -12,7 +12,8 @@ use log::{LevelFilter, error, info, warn};
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::process::exit;
-use crate::ui::app_widget::AppWidget;
+use crate::ui::app::App;
+use crate::ui::main_widget::MainWidget;
 
 #[tokio::main]
 async fn main() {
@@ -90,8 +91,7 @@ async fn run(args: Args) -> Result<()> {
         info!("Base path: {:?}", bp);
         info!("File name: {:?}", file_name);
 
-        let (mut app, app_background) = AppWidget::new(bp, file_name);
-        app_background.run();
+        let app = App::new(bp, file_name);
         app.run(&mut terminal).await?;
 
         ratatui::restore();

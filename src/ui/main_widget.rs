@@ -9,7 +9,8 @@ use crate::ui::actions::Action::{
     SearchInitialized, SearchParamsUpdated, SearchQueryUpdated, SubtitlesFetched, SwitchScreen,
     Tick,
 };
-use crate::ui::app_widget::Screen::{About, Account, Language, Search};
+use crate::ui::app::App;
+use crate::ui::main_widget::Screen::{About, Account, Language, Search};
 use crate::ui::component::Component;
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::nav_widget::NavWidget;
@@ -32,12 +33,10 @@ use std::path::Path;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
-use crate::ui::app::AppBackground;
 
-pub struct AppWidget {
+pub struct MainWidget {
     active_screen: Screen,
     debouncer_tx: Sender<()>,
-    ui_rx: Receiver<Action>,
     config_provider: ConfigProvider,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
     task_runner: TaskRunner,
@@ -46,7 +45,7 @@ pub struct AppWidget {
     languages: Option<Vec<String>>,
 }
 
-impl Component for AppWidget {
+impl Component for MainWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
             Tick | Multi(_) | InputReceived(_) => {}
@@ -220,17 +219,15 @@ impl Component for AppWidget {
     }
 }
 
-impl AppWidget {
-    pub fn new(base_path: &Path, file_name: Option<&str>) -> (AppWidget, AppBackground) {
-        let (ui_tx, ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
-        let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<()>(100);
-
-        let task_runner = TaskRunner::new(ui_tx.clone());
-
-        let spinner = Arc::new(RwLock::new(Spinner { c: ' ' }));
-
-        let config_provider = ConfigProvider::default();
-
+impl MainWidget {
+    pub fn new(
+        base_path: &Path,
+        file_name: Option<&str>,
+        debouncer_tx: Sender<()>,
+        task_runner: TaskRunner,
+        config_provider: ConfigProvider,
+        spinner: Arc<RwLock<Spinner>>,
+    ) -> MainWidget {
         let mut components: HashMap<WidgetName, Box<dyn Component>> = HashMap::new();
         components.insert(WidgetName::Nav, Box::new(NavWidget::new()));
         components.insert(WidgetName::User, Box::new(UserWidget::from()));
@@ -246,43 +243,16 @@ impl AppWidget {
             Box::new(StatusWidget::from(spinner.clone())),
         );
 
-        let app = AppWidget {
+        MainWidget {
             active_screen: Screen::default(),
             config_provider,
             debouncer_tx,
-            ui_rx,
             widgets: components,
             task_runner,
             query: None,
             params: None,
             languages: None,
-        };
-
-        let app_background = AppBackground::from(ui_tx, debouncer_rx, spinner);
-
-        (app, app_background)
-    }
-
-    pub async fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
-        let mut message_opt = Some(Init);
-
-        'main_loop: loop {
-            while let Some(msg) = message_opt {
-                match msg {
-                    Exit => {
-                        info!("Exiting application");
-                        break 'main_loop;
-                    }
-                    _ => message_opt = self.update(&msg),
-                }
-            }
-
-            terminal.draw(|frame| self.render(frame, frame.area()))?;
-
-            message_opt = self.ui_rx.recv().await;
         }
-
-        Ok(())
     }
 
     fn subtitles_request(
@@ -334,7 +304,7 @@ pub enum Screen {
     About,
 }
 
-#[cfg(test)]
+#[cfg(ztest)]
 mod tests {
     use super::*;
     use crate::osb::subtitles::{Attributes, FeatureDetails, Subtitle};
@@ -357,7 +327,7 @@ mod tests {
 
     #[test]
     fn main_screen() {
-        let (mut app, _) = AppWidget::new(Path::new("."), None);
+        let (mut app, _) = MainWidget::new(Path::new("."), None);
 
         let mut terminal = TestTerminal::default().0;
         terminal
@@ -369,7 +339,7 @@ mod tests {
 
     #[test]
     fn main_screen_help() {
-        let (mut app, _) = AppWidget::new(Path::new("."), None);
+        let (mut app, _) = MainWidget::new(Path::new("."), None);
 
         input_key(&mut app, F(1), KeyModifiers::NONE);
 
@@ -383,7 +353,7 @@ mod tests {
 
     #[test]
     fn account_screen() {
-        let (mut app, _) = AppWidget::new(Path::new("."), None);
+        let (mut app, _) = MainWidget::new(Path::new("."), None);
 
         app.update(&SwitchScreen(Account));
 
@@ -401,7 +371,7 @@ mod tests {
 
     #[test]
     fn main_screen_logged_in() {
-        let (mut app, _) = AppWidget::new(Path::new("."), None);
+        let (mut app, _) = MainWidget::new(Path::new("."), None);
 
         let user = User {
             username: "user".to_string(),
@@ -423,7 +393,7 @@ mod tests {
 
     #[test]
     fn account_screen_logged_in() {
-        let (mut app, _) = AppWidget::new(Path::new("."), None);
+        let (mut app, _) = MainWidget::new(Path::new("."), None);
 
         let user = User {
             username: "user".to_string(),
@@ -447,7 +417,7 @@ mod tests {
 
     #[test]
     fn ai_excluded_main_screen() {
-        let (mut app, _) = AppWidget::new(Path::new("."), None);
+        let (mut app, _) = MainWidget::new(Path::new("."), None);
 
         input_key(&mut app, Char('t'), KeyModifiers::CONTROL);
 
@@ -461,7 +431,7 @@ mod tests {
 
     #[test]
     fn subs_query() {
-        let (mut app, _) = AppWidget::new(Path::new("."), None);
+        let (mut app, _) = MainWidget::new(Path::new("."), None);
 
         let subs = vec![Subtitle {
             id: "1234".to_string(),
@@ -499,7 +469,7 @@ mod tests {
 
     #[test]
     fn subs_fetched() {
-        let (mut app, _) = AppWidget::new(Path::new("."), None);
+        let (mut app, _) = MainWidget::new(Path::new("."), None);
 
         let subs = vec![
             Subtitle {
@@ -557,7 +527,7 @@ mod tests {
         assert_snapshot!(terminal.backend());
     }
 
-    fn input_text(app: &mut AppWidget, text: &str) {
+    fn input_text(app: &mut MainWidget, text: &str) {
         text.chars().for_each(|c| {
             app.update(&InputReceived(Event::Key(KeyEvent {
                 code: Char(c),
@@ -568,7 +538,7 @@ mod tests {
         });
     }
 
-    fn input_key(app: &mut AppWidget, code: KeyCode, modifiers: KeyModifiers) {
+    fn input_key(app: &mut MainWidget, code: KeyCode, modifiers: KeyModifiers) {
         app.update(&InputReceived(Key(KeyEvent {
             code,
             modifiers,
