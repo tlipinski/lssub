@@ -1,3 +1,4 @@
+use crossterm::style::Stylize;
 use crate::osb::subtitles::Subtitle;
 use crate::ui::handled::HandleResult;
 use crate::ui::handled::HandleResult::Unhandled;
@@ -167,12 +168,13 @@ impl SubsListWidget {
 
         let (widths, headers) = if wide {
             (
-                [95, 10, 10, 12, 12, 10, 10],
+                [95, 10, 10, 12, 12, 12, 10, 10],
                 vec![
                     "Title",
                     "Language",
                     "Year",
                     "Uploaded",
+                    "Uploader",
                     "Downloads",
                     "AI",
                     "Votes",
@@ -180,8 +182,8 @@ impl SubsListWidget {
             )
         } else {
             (
-                [50, 4, 4, 10, 10, 3, 3],
-                vec!["Title", "Lng", "Yr", "Upl", "Downs", "AI", "Vt"],
+                [50, 4, 4, 10, 10, 10, 3, 3],
+                vec!["Title", "Lng", "Yr", "UplDt", "Upl", "Downs", "AI", "Vt"],
             )
         };
 
@@ -215,6 +217,11 @@ impl<'a> From<&'a Subtitle> for Row<'a> {
                     .unwrap_or_default(),
             )),
             Cell::from(Text::from(sub.upload_date())),
+            if sub.attributes.uploader.rank == "Trusted member" {
+                Cell::from(Text::from(sub.attributes.uploader.name.clone()).style(Style::default().fg(Color::Green)))
+            } else {
+                Cell::from(Text::from(sub.attributes.uploader.name.clone()))
+            },
             Cell::from(Text::from(sub.downloads().to_string())),
             Cell::from(Text::from(if sub.attributes.ai_translated {
                 "✓".to_string()

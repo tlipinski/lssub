@@ -1,10 +1,14 @@
 use crate::config::{Config, ConfigProvider};
 use crate::osb::osb_client::OsbClient;
-use crate::osb::subtitles::{subtitles, SubtitlesRequest};
+use crate::osb::subtitles::{SubtitlesRequest, subtitles};
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{Exit, FetchSubtitles, InputReceived, LanguagesInitialized, LanguagesUpdated, Multi, SearchParamsInitialized, SearchParamsUpdated, SearchQueryInitialized, SearchQueryUpdated, SubtitlesFetched, SwitchScreen, Tick};
+use crate::ui::actions::Action::{
+    Exit, FetchSubtitles, InputReceived, LanguagesInitialized, LanguagesUpdated, Multi,
+    SearchParamsInitialized, SearchParamsUpdated, SearchQueryInitialized, SearchQueryUpdated,
+    SubtitlesFetched, SwitchScreen, Tick,
+};
 use crate::ui::component::Component;
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::main_widget::Screen::{About, Account, Language, Search};
@@ -15,18 +19,18 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::QueryParams;
 use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
+use Action::RunTask;
+use KeyCode::{Char, Esc, F};
 use anyhow::Error;
 use log::{debug, error, info};
+use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::Frame;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, RwLock};
 use tokio::sync::mpsc::Sender;
-use Action::RunTask;
-use KeyCode::{Char, Esc, F};
 
 pub struct MainWidget {
     active_screen: Screen,
@@ -301,15 +305,15 @@ pub enum Screen {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::osb::subtitles::{Attributes, FeatureDetails, Subtitle};
+    use crate::osb::subtitles::{Attributes, FeatureDetails, Subtitle, Uploader};
     use crate::osb::user_info::User;
     use crate::ui::actions::Action::UserLoggedIn;
     use crossterm::event::Event::Key;
     use crossterm::event::KeyCode::Tab;
     use crossterm::event::{KeyEvent, KeyEventKind, KeyEventState};
     use insta::assert_snapshot;
-    use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     struct TestTerminal(Terminal<TestBackend>);
 
@@ -464,6 +468,10 @@ mod tests {
                 upload_date: "2024-04-24T10:10:10".to_string(),
                 release: "release".to_string(),
                 files: vec![],
+                uploader: Uploader {
+                    name: "".to_string(),
+                    rank: "".to_string(),
+                }
             },
         }];
         app.update(&SubtitlesFetched(subs));
@@ -503,6 +511,7 @@ mod tests {
                     upload_date: "2024-04-24T10:10:10".to_string(),
                     release: "release".to_string(),
                     files: vec![],
+                    uploader: vec![],
                 },
             },
             Subtitle {
@@ -525,6 +534,10 @@ mod tests {
                     upload_date: "2014-04-24T10:10:10".to_string(),
                     release: "release 2".to_string(),
                     files: vec![],
+                    uploader: Uploader {
+                        name: "uploader".to_string(),
+                        rank: "".to_string(),
+                    },
                 },
             },
         ];

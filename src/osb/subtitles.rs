@@ -83,6 +83,13 @@ pub struct Attributes {
     pub upload_date: String,
     pub release: String,
     pub files: Vec<File>,
+    pub uploader: Uploader,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+pub struct Uploader {
+    pub name: String,
+    pub rank: String,
 }
 
 #[derive(Debug, Clone)]
@@ -98,7 +105,7 @@ pub struct SubtitlesRequest {
 mod tests {
     use crate::osb::osb_client::OsbClient;
     use crate::osb::subtitles::{
-        Attributes, FeatureDetails, File, Subtitle, SubtitlesRequest, subtitles,
+        Attributes, FeatureDetails, File, Subtitle, SubtitlesRequest, Uploader, subtitles,
     };
     use env_logger::{Builder, Target};
     use log::LevelFilter;
@@ -220,7 +227,11 @@ mod tests {
                     votes: 0,
                     upload_date: "2024-07-11T06:25:49Z".to_string(),
                     release: "release".to_string(),
-                    files: vec![File { file_id: 9535264 }],
+                    files: vec![File { file_id: 9_535_264 }],
+                    uploader: Uploader {
+                        name: "uploader".to_string(),
+                        rank: "trusted".to_string()
+                    }
                 }
             }
         );
