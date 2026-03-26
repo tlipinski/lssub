@@ -1,14 +1,10 @@
 use crate::config::{Config, ConfigProvider};
 use crate::osb::osb_client::OsbClient;
-use crate::osb::subtitles::{SubtitlesRequest, subtitles};
+use crate::osb::subtitles::{subtitles, SubtitlesRequest};
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{
-    Exit, FetchSubtitles, InputReceived, LanguagesInitialized, LanguagesUpdated, Multi,
-    SearchInitialized, SearchParamsUpdated, SearchQueryUpdated, SubtitlesFetched, SwitchScreen,
-    Tick,
-};
+use crate::ui::actions::Action::{Exit, FetchSubtitles, InputReceived, LanguagesInitialized, LanguagesUpdated, Multi, SearchParamsInitialized, SearchParamsUpdated, SearchQueryInitialized, SearchQueryUpdated, SubtitlesFetched, SwitchScreen, Tick};
 use crate::ui::component::Component;
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::main_widget::Screen::{About, Account, Language, Search};
@@ -19,18 +15,18 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::QueryParams;
 use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
-use Action::RunTask;
-use KeyCode::{Char, Esc, F};
 use anyhow::Error;
 use log::{debug, error, info};
-use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::Frame;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, RwLock};
 use tokio::sync::mpsc::Sender;
+use Action::RunTask;
+use KeyCode::{Char, Esc, F};
 
 pub struct MainWidget {
     active_screen: Screen,
@@ -71,9 +67,13 @@ impl Component for MainWidget {
                 Some(Multi(vec![SwitchScreen(Search), FetchSubtitles]))
             }
 
-            SearchInitialized(query) => {
-                self.query = Some(query.query.clone());
-                self.params = Some(query.params.clone());
+            SearchQueryInitialized(query) => {
+                self.query = Some(query.clone());
+                Some(FetchSubtitles)
+            }
+
+            SearchParamsInitialized(params) => {
+                self.params = Some(params.clone());
                 Some(FetchSubtitles)
             }
 
@@ -308,8 +308,8 @@ mod tests {
     use crossterm::event::KeyCode::Tab;
     use crossterm::event::{KeyEvent, KeyEventKind, KeyEventState};
     use insta::assert_snapshot;
-    use ratatui::Terminal;
     use ratatui::backend::TestBackend;
+    use ratatui::Terminal;
 
     struct TestTerminal(Terminal<TestBackend>);
 

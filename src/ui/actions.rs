@@ -3,7 +3,6 @@ use crate::osb::subtitles::Subtitle;
 use crate::osb::user_info::User;
 use crate::ui::downloader::Downloaded;
 use crate::ui::main_widget::Screen;
-use crate::ui::search_widget::SubtitlesQuery;
 use crate::ui::subs_list_widget::QueryParams;
 use crate::ui::task_runner::Task;
 use ratatui::crossterm::event::Event;
@@ -19,9 +18,11 @@ pub enum Action {
     InputReceived(Event),
     SwitchScreen(Screen),
 
-    SearchInitialized(SubtitlesQuery),
+    SearchQueryInitialized(String),
     SearchQueryUpdated(String),
+    SearchParamsInitialized(QueryParams),
     SearchParamsUpdated(QueryParams),
+
     FetchSubtitles,
     SubtitlesFetched(Vec<Subtitle>),
     SubtitleDownloaded(Downloaded),

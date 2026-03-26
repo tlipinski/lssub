@@ -1,8 +1,8 @@
 use crate::osb::subtitles::Subtitle;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    ChangeStatus, Init, Multi, RunTask, SearchInitialized, SearchParamsUpdated, SearchQueryUpdated,
-    SubtitlesFetched,
+    ChangeStatus, Init, Multi, RunTask, SearchParamsInitialized, SearchParamsUpdated,
+    SearchQueryInitialized, SearchQueryUpdated, SubtitlesFetched,
 };
 use crate::ui::component::Component;
 use crate::ui::downloader::Downloader;
@@ -30,10 +30,10 @@ pub struct SearchWidget {
 impl Component for SearchWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
-            Init => Some(SearchInitialized(SubtitlesQuery {
-                query: self.query_widget.query(),
-                params: QueryParams::default(),
-            })),
+            Init => Some(Multi(vec![
+                SearchQueryInitialized(self.query_widget.query()),
+                SearchParamsInitialized(QueryParams::default()),
+            ])),
             SubtitlesFetched(subtitles) => {
                 self.update_subtitles(subtitles.clone());
                 None
@@ -129,10 +129,4 @@ impl SearchWidget {
     pub fn update_subtitles(&mut self, subtitles: Vec<Subtitle>) {
         self.subs_list_widget.update_subtitles(subtitles);
     }
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct SubtitlesQuery {
-    pub query: String,
-    pub params: QueryParams,
 }
