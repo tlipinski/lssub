@@ -151,7 +151,7 @@ impl SubsListWidget {
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
         let wide = area.width > 90;
-        let rows: Vec<Row> = self.subs.iter().map(|sub| sub.into()).collect();
+        let rows: Vec<Row> = self.subs.iter().map(Into::into).collect();
 
         let mut title = format!("Results: {}", self.subs.len());
         if self.params.feature_id.is_some() || self.params.parent_feature_id.is_some() {
