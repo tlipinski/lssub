@@ -511,7 +511,10 @@ mod tests {
                     upload_date: "2024-04-24T10:10:10".to_string(),
                     release: "release".to_string(),
                     files: vec![],
-                    uploader: vec![],
+                    uploader: Uploader {
+                        name: "uploader".into(),
+                        rank: String::new(),
+                    }
                 },
             },
             Subtitle {

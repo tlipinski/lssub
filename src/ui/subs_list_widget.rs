@@ -1,4 +1,3 @@
-use crossterm::style::Stylize;
 use crate::osb::subtitles::Subtitle;
 use crate::ui::handled::HandleResult;
 use crate::ui::handled::HandleResult::Unhandled;
