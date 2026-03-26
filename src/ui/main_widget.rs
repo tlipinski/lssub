@@ -64,7 +64,7 @@ impl Component for MainWidget {
 
                 let _ = self.config_provider.modify(|c: &Config| {
                     let mut updated = c.clone();
-                    updated.languages.clone_from(languages);
+                    updated.languages.clone_from(&Some(languages.clone()));
                     updated
                 });
 
@@ -321,8 +321,8 @@ mod tests {
 
     impl Default for MainWidget {
         fn default() -> Self {
-            let (ui_tx, ui_rx) = tokio::sync::mpsc::channel::<Action>(100);
-            let (debouncer_tx, debouncer_rx) = tokio::sync::mpsc::channel::<()>(100);
+            let (ui_tx, _) = tokio::sync::mpsc::channel::<Action>(100);
+            let (debouncer_tx, _) = tokio::sync::mpsc::channel::<()>(100);
             let spinner = Arc::new(RwLock::new(Spinner { c: ' ' }));
 
             MainWidget::new(

@@ -39,7 +39,11 @@ impl Component for LanguagesWidget {
                     Ok(LanguagesFetched(osb_languages))
                 })),
                 RunTask(Task::new("fetch user languages", async {
-                    let user_languages = ConfigProvider::default().get_config().unwrap().languages;
+                    let user_languages = ConfigProvider::default()
+                        .get_config()
+                        .unwrap()
+                        .languages
+                        .unwrap_or(Vec::new());
 
                     Ok(UserLanguagesFetched(user_languages))
                 })),

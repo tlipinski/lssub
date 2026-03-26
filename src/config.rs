@@ -65,15 +65,7 @@ impl Default for ConfigProvider {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Config {
-    pub languages: Vec<String>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            languages: vec!["en".into()],
-        }
-    }
+    pub languages: Option<Vec<String>>,
 }
