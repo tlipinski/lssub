@@ -5,9 +5,9 @@ use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
-    Exit, FetchSubtitles, InputReceived, LanguagesInitialized, LanguagesUpdated, Multi,
-    SearchParamsInitialized, SearchParamsUpdated, SearchQueryInitialized, SearchQueryUpdated,
-    SubtitlesFetched, SwitchScreen, Tick,
+    Exit, FetchSubtitles, LanguagesInitialized, LanguagesUpdated, Multi, SearchParamsInitialized,
+    SearchParamsUpdated, SearchQueryInitialized, SearchQueryUpdated, SubtitlesFetched,
+    SwitchScreen, Tick,
 };
 use crate::ui::component::Component;
 use crate::ui::languages_widget::LanguagesWidget;
@@ -46,7 +46,7 @@ pub struct MainWidget {
 impl Component for MainWidget {
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
-            Tick | Multi(_) | InputReceived(_) => {}
+            Tick | Multi(_) => {}
             _ => debug!("--- {:?}", action),
         }
 
@@ -57,8 +57,6 @@ impl Component for MainWidget {
             .collect::<Vec<Option<Action>>>();
 
         let new_action = match action {
-            InputReceived(event) => self.handle_key_event(event),
-
             LanguagesUpdated(languages) => {
                 self.languages = Some(languages.clone());
 
@@ -471,7 +469,7 @@ mod tests {
                 uploader: Uploader {
                     name: "".to_string(),
                     rank: "".to_string(),
-                }
+                },
             },
         }];
         app.update(&SubtitlesFetched(subs));
@@ -514,7 +512,7 @@ mod tests {
                     uploader: Uploader {
                         name: "uploader".into(),
                         rank: String::new(),
-                    }
+                    },
                 },
             },
             Subtitle {
@@ -556,21 +554,21 @@ mod tests {
 
     fn input_text(app: &mut MainWidget, text: &str) {
         text.chars().for_each(|c| {
-            app.update(&InputReceived(Event::Key(KeyEvent {
+            app.handle_key_event(&Event::Key(KeyEvent {
                 code: Char(c),
                 modifiers: KeyModifiers::NONE,
                 kind: KeyEventKind::Press,
                 state: KeyEventState::NONE,
-            })));
+            }));
         });
     }
 
     fn input_key(app: &mut MainWidget, code: KeyCode, modifiers: KeyModifiers) {
-        app.update(&InputReceived(Key(KeyEvent {
+        app.handle_key_event(&Key(KeyEvent {
             code,
             modifiers,
             kind: KeyEventKind::Press,
             state: KeyEventState::NONE,
-        })));
+        }));
     }
 }

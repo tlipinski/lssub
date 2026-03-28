@@ -5,7 +5,6 @@ use crate::ui::downloader::Downloaded;
 use crate::ui::main_widget::Screen;
 use crate::ui::subs_list_widget::QueryParams;
 use crate::ui::task_runner::Task;
-use ratatui::crossterm::event::Event;
 
 #[derive(Debug)]
 pub enum Action {
@@ -15,7 +14,6 @@ pub enum Action {
     NoOp,
     Multi(Vec<Action>),
 
-    InputReceived(Event),
     SwitchScreen(Screen),
 
     SearchQueryInitialized(String),

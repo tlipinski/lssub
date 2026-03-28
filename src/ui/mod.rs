@@ -7,7 +7,6 @@ mod component;
 mod debouncer;
 mod downloader;
 mod handled;
-mod input_handler;
 mod languages_widget;
 mod logged_in_widget;
 mod login_widget;

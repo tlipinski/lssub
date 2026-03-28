@@ -1,18 +1,21 @@
 use crate::config::ConfigProvider;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{Exit, FetchSubtitles, Init};
+use crate::ui::actions::Action::{Exit, FetchSubtitles, Init, Tick};
 use crate::ui::component::Component;
 use crate::ui::debouncer::debouncer_task;
-use crate::ui::input_handler::handle_input_task;
 use crate::ui::main_widget::MainWidget;
 use crate::ui::spinner::{Spinner, spinner_task};
 use crate::ui::task_runner::TaskRunner;
-use log::info;
+use crossterm::event::EventStream;
+use futures_util::FutureExt;
+use futures_util::StreamExt;
+use log::{error, info};
 use ratatui::DefaultTerminal;
 use std::path::Path;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::time::interval;
 
 pub struct App {
     ui_tx: Sender<Action>,
@@ -50,7 +53,7 @@ impl App {
     }
 
     pub async fn run(mut self, terminal: &mut DefaultTerminal) -> anyhow::Result<()> {
-        tokio::spawn(handle_input_task(self.ui_tx.clone()));
+        // tokio::spawn(handle_input_task(self.ui_tx.clone()));
         tokio::spawn(spinner_task(self.spinner.clone()));
 
         let ui_tx = self.ui_tx.clone();
@@ -64,6 +67,9 @@ impl App {
                     .expect("Sending to channel failed");
             },
         ));
+
+        let mut event_stream = EventStream::new();
+        let mut tick_interval = interval(Duration::from_secs_f64(1.0 / 4.0));
 
         let mut message_opt = Some(Init);
 
@@ -80,7 +86,18 @@ impl App {
 
             terminal.draw(|frame| self.main_widget.render(frame, frame.area()))?;
 
-            message_opt = self.ui_rx.recv().await;
+            message_opt = tokio::select! {
+                maybe_event = event_stream.next().fuse() => match maybe_event {
+                    Some(Ok(event)) => self.main_widget.handle_key_event(&event),
+                    Some(Err(err)) => {
+                        error!("{err}");
+                        return Err(err.into())
+                    },
+                    None => break (),
+                },
+                ui = self.ui_rx.recv().fuse() => ui,
+                _ = tick_interval.tick() => Some(Tick),
+            };
         }
 
         Ok(())
