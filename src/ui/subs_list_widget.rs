@@ -3,11 +3,12 @@ use crate::ui::handled::HandleResult;
 use crate::ui::handled::HandleResult::Unhandled;
 use crate::ui::pad::BlockTitlePadExt;
 use HandleResult::Handled;
-use ratatui::Frame;
+use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::KeyModifiers;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::Rect;
-use ratatui::prelude::{Style, Text};
+use ratatui::prelude::StatefulWidget;
+use ratatui::prelude::{Style, Text, Widget};
 use ratatui::style::Color;
 use ratatui::symbols::border;
 use ratatui::widgets::{
@@ -20,7 +21,7 @@ pub struct SubsListWidget {
     subs: Vec<Subtitle>,
     state: TableState,
     scroll_state: ScrollbarState,
-    pub params: QueryParams,
+    params: QueryParams,
     single_title: String,
 }
 
@@ -29,6 +30,61 @@ pub struct QueryParams {
     pub feature_id: Option<i64>,
     pub parent_feature_id: Option<i64>,
     pub exclude_ai: bool,
+}
+
+impl Widget for &mut SubsListWidget {
+    fn render(self, area: Rect, buf: &mut Buffer)
+    where
+        Self: Sized,
+    {
+        let wide = area.width > 90;
+        let rows: Vec<Row> = self.subs.iter().map(Into::into).collect();
+
+        let mut title = format!("Results: {}", self.subs.len());
+        if self.params.feature_id.is_some() || self.params.parent_feature_id.is_some() {
+            title.push_str(&format!(" (single title: '{}')", self.single_title));
+        }
+        if self.params.exclude_ai {
+            title.push_str(" (AI excluded)");
+        }
+
+        let block_bot = Block::bordered()
+            .title_pad(&title)
+            .border_set(border::PLAIN);
+
+        let (widths, headers) = if wide {
+            (
+                [95, 10, 10, 12, 12, 12, 10, 10],
+                vec![
+                    "Title",
+                    "Language",
+                    "Year",
+                    "Uploaded",
+                    "Uploader",
+                    "Downloads",
+                    "AI",
+                    "Votes",
+                ],
+            )
+        } else {
+            (
+                [50, 4, 4, 10, 10, 10, 3, 3],
+                vec!["Title", "Lng", "Yr", "UplDt", "Upl", "Downs", "AI", "Vt"],
+            )
+        };
+
+        let table = Table::new(rows, widths)
+            .header(Row::from_iter(headers))
+            .block(block_bot)
+            .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
+        StatefulWidget::render(table, area, buf, &mut self.state);
+
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
+            .style(Style::default().fg(Color::DarkGray))
+            .begin_symbol(Some("↑"))
+            .end_symbol(Some("↓"));
+        StatefulWidget::render(scrollbar, area, buf, &mut self.scroll_state);
+    }
 }
 
 impl SubsListWidget {
@@ -148,59 +204,6 @@ impl SubsListWidget {
 
         self.subs = subs;
     }
-
-    pub fn render(&mut self, frame: &mut Frame, area: Rect) {
-        let wide = area.width > 90;
-        let rows: Vec<Row> = self.subs.iter().map(Into::into).collect();
-
-        let mut title = format!("Results: {}", self.subs.len());
-        if self.params.feature_id.is_some() || self.params.parent_feature_id.is_some() {
-            title.push_str(&format!(" (single title: '{}')", self.single_title));
-        }
-        if self.params.exclude_ai {
-            title.push_str(" (AI excluded)");
-        }
-
-        let block_bot = Block::bordered()
-            .title_pad(&title)
-            .border_set(border::PLAIN);
-
-        let (widths, headers) = if wide {
-            (
-                [95, 10, 10, 12, 12, 12, 10, 10],
-                vec![
-                    "Title",
-                    "Language",
-                    "Year",
-                    "Uploaded",
-                    "Uploader",
-                    "Downloads",
-                    "AI",
-                    "Votes",
-                ],
-            )
-        } else {
-            (
-                [50, 4, 4, 10, 10, 10, 3, 3],
-                vec!["Title", "Lng", "Yr", "UplDt", "Upl", "Downs", "AI", "Vt"],
-            )
-        };
-
-        let table = Table::new(rows, widths)
-            .header(Row::from_iter(headers))
-            .block(block_bot)
-            .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
-
-        frame.render_stateful_widget(table, area, &mut self.state);
-        frame.render_stateful_widget(
-            Scrollbar::new(ScrollbarOrientation::VerticalRight)
-                .style(Style::default().fg(Color::DarkGray))
-                .begin_symbol(Some("↑"))
-                .end_symbol(Some("↓")),
-            area,
-            &mut self.scroll_state,
-        );
-    }
 }
 
 impl<'a> From<&'a Subtitle> for Row<'a> {
@@ -217,7 +220,10 @@ impl<'a> From<&'a Subtitle> for Row<'a> {
             )),
             Cell::from(Text::from(sub.upload_date())),
             if sub.attributes.uploader.rank == "Trusted member" {
-                Cell::from(Text::from(sub.attributes.uploader.name.clone()).style(Style::default().fg(Color::Green)))
+                Cell::from(
+                    Text::from(sub.attributes.uploader.name.clone())
+                        .style(Style::default().fg(Color::Green)),
+                )
             } else {
                 Cell::from(Text::from(sub.attributes.uploader.name.clone()))
             },

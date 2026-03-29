@@ -4,6 +4,7 @@ use crate::ui::actions::Action::{
     ChangeStatus, Init, Multi, RunTask, SearchParamsInitialized, SearchParamsUpdated,
     SearchQueryInitialized, SearchQueryUpdated, SubtitlesFetched,
 };
+use ratatui::prelude::Widget;
 use crate::ui::component::Component;
 use crate::ui::downloader::Downloader;
 use crate::ui::handled::HandleResult::{Handled, Unhandled};
@@ -97,8 +98,13 @@ impl Component for SearchWidget {
             .constraints([Constraint::Length(3), Constraint::Fill(1)])
             .split(area);
 
-        self.query_widget.render(frame, layout[0]);
-        self.subs_list_widget.render(frame, layout[1]);
+        self.query_widget.render(layout[0], frame.buffer_mut());
+        frame.set_cursor_position((
+            layout[0].x + (self.query_widget.visual_cursor() + 1) as u16,
+            layout[0].y + 1,
+        ));
+
+        self.subs_list_widget.render(layout[1], frame.buffer_mut());
 
         if self.help {
             let body = Text::from(vec![

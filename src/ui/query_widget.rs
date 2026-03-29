@@ -1,16 +1,33 @@
+use ratatui::buffer::Buffer;
 use crate::ui::pad::BlockTitlePadExt;
-use ratatui::Frame;
 use ratatui::crossterm::event::Event;
 use ratatui::layout::Rect;
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
-use ratatui::widgets::{Block, Paragraph};
+use ratatui::widgets::{Block, Paragraph, Widget};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 
 #[derive(Debug)]
 pub struct QueryWidget {
     input: Input,
+}
+
+impl Widget for &QueryWidget {
+    fn render(self, area: Rect, buf: &mut Buffer)
+    where
+        Self: Sized
+    {
+        let block = Block::bordered()
+            .title_pad("Search")
+            .border_set(border::PLAIN);
+
+        let par = Line::from(self.input.value().bold());
+
+        let view = Paragraph::new(par).block(block);
+
+        view.render(area, buf);
+    }
 }
 
 impl QueryWidget {
@@ -24,19 +41,8 @@ impl QueryWidget {
         self.input.value().into()
     }
 
-    pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::bordered()
-            .title_pad("Search")
-            .border_set(border::PLAIN);
-
-        let par = Line::from(self.input.value().bold());
-
-        let view = Paragraph::new(par).block(block);
-
-        let x = self.input.visual_cursor();
-        frame.set_cursor_position((area.x + (x + 1) as u16, area.y + 1));
-
-        frame.render_widget(view, area);
+    pub fn visual_cursor(&self) -> usize {
+        self.input.visual_cursor()
     }
 
     pub fn handle_key_event(&mut self, event: &Event) -> Option<String> {
