@@ -7,6 +7,8 @@ use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph, Widget};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
+use crate::ui::actions::Action;
+use crate::ui::actions::Action::SearchQueryUpdated;
 
 #[derive(Debug)]
 pub struct QueryWidget {
@@ -45,11 +47,11 @@ impl QueryWidget {
         self.input.visual_cursor()
     }
 
-    pub fn handle_key_event(&mut self, event: &Event) -> Option<String> {
+    pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
         if let Some(state_changed) = self.input.handle_event(event)
             && state_changed.value
         {
-            Some(self.input.value().into())
+            Some(SearchQueryUpdated(self.input.value().into()))
         } else {
             None
         }

@@ -2,9 +2,8 @@ use crate::osb::subtitles::Subtitle;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::{
     ChangeStatus, Init, Multi, RunTask, SearchParamsInitialized, SearchParamsUpdated,
-    SearchQueryInitialized, SearchQueryUpdated, SubtitlesFetched,
+    SearchQueryInitialized, SubtitlesFetched,
 };
-use ratatui::prelude::Widget;
 use crate::ui::component::Component;
 use crate::ui::downloader::Downloader;
 use crate::ui::handled::HandleResult::{Handled, Unhandled};
@@ -16,6 +15,7 @@ use crossterm::event::KeyModifiers;
 use ratatui::Frame;
 use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::prelude::Widget;
 use ratatui::style::Style;
 use ratatui::text::{Line, Text};
 use std::path::Path;
@@ -80,10 +80,7 @@ impl Component for SearchWidget {
 
                     _ => match self.subs_list_widget.handle_key_event(key_event) {
                         Handled(result) => result.map(|params| SearchParamsUpdated(params)),
-                        Unhandled => self
-                            .query_widget
-                            .handle_key_event(event)
-                            .map(SearchQueryUpdated),
+                        Unhandled => self.query_widget.handle_key_event(event),
                     },
                 }
             }
