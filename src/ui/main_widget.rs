@@ -38,9 +38,9 @@ pub struct MainWidget {
     config_provider: ConfigProvider,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
     task_runner: TaskRunner,
-    query: Option<String>,
-    params: Option<QueryParams>,
-    languages: Option<Vec<String>>,
+    query_snapshot: Option<String>,
+    params_snapshot: Option<QueryParams>,
+    languages_snapshot: Option<Vec<String>>,
 }
 
 impl Component for MainWidget {
@@ -58,7 +58,7 @@ impl Component for MainWidget {
 
         let new_action = match action {
             LanguagesUpdated(languages) => {
-                self.languages = Some(languages.clone());
+                self.languages_snapshot = Some(languages.clone());
 
                 let _ = self.config_provider.modify(|c: &Config| {
                     let mut updated = c.clone();
@@ -70,22 +70,22 @@ impl Component for MainWidget {
             }
 
             SearchQueryInitialized(query) => {
-                self.query = Some(query.clone());
+                self.query_snapshot = Some(query.clone());
                 Some(FetchSubtitles)
             }
 
             SearchParamsInitialized(params) => {
-                self.params = Some(params.clone());
+                self.params_snapshot = Some(params.clone());
                 Some(FetchSubtitles)
             }
 
             LanguagesInitialized(languages) => {
-                self.languages = Some(languages.clone());
+                self.languages_snapshot = Some(languages.clone());
                 Some(FetchSubtitles)
             }
 
             SearchQueryUpdated(query) => {
-                self.query = Some(query.clone());
+                self.query_snapshot = Some(query.clone());
                 let debouncer = self.debouncer_tx.clone();
                 tokio::spawn(async move {
                     debouncer.send(()).await.expect("Sending to channel failed");
@@ -94,14 +94,14 @@ impl Component for MainWidget {
             }
 
             SearchParamsUpdated(params) => {
-                self.params = Some(params.clone());
+                self.params_snapshot = Some(params.clone());
                 Some(FetchSubtitles)
             }
 
             FetchSubtitles => match (
-                self.query.clone(),
-                self.params.clone(),
-                self.languages.clone(),
+                self.query_snapshot.clone(),
+                self.params_snapshot.clone(),
+                self.languages_snapshot.clone(),
             ) {
                 (Some(query), Some(params), Some(languages)) => {
                     info!(
@@ -245,9 +245,9 @@ impl MainWidget {
             debouncer_tx,
             widgets: components,
             task_runner,
-            query: None,
-            params: None,
-            languages: None,
+            query_snapshot: None,
+            params_snapshot: None,
+            languages_snapshot: None,
         }
     }
 
