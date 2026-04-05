@@ -44,12 +44,24 @@ impl Downloader {
             e
         })?;
 
-        let output_file = output_file(
-            &self.base_path,
-            self.file_name_opt.as_deref(),
-            download_link_response.file_name.as_str(),
-            language,
-        );
+        let mut output_file: PathBuf;
+        let mut index = 0;
+
+        loop {
+            output_file = output_file_name(
+                &self.base_path,
+                self.file_name_opt.as_deref(),
+                download_link_response.file_name.as_str(),
+                language,
+                index,
+            );
+
+            if tokio::fs::try_exists(output_file.clone()).await? {
+                index += 1;
+            } else {
+                break
+            }
+        }
 
         debug!("Output file: {}", output_file.display());
 
@@ -76,11 +88,12 @@ impl Downloader {
     }
 }
 
-fn output_file(
+fn output_file_name(
     base_path: &Path,
     file_name_opt: Option<&str>,
     default_file_name: &str,
     language: &str,
+    n: usize,
 ) -> PathBuf {
     let default_path = Path::new(default_file_name);
     let default_stem = default_path.file_stem().map_or_else(
@@ -98,12 +111,20 @@ fn output_file(
         }
         output_file.push(".");
         output_file.push(language);
+        if n != 0 {
+            output_file.push(".");
+            output_file.push(n.to_string());
+        }
         output_file.push(".");
         output_file.push(ext);
     } else {
         output_file = OsString::from(file_name_opt.unwrap_or(&default_stem));
         output_file.push(".");
         output_file.push(language);
+        if n != 0 {
+            output_file.push(".");
+            output_file.push(n.to_string());
+        }
         output_file.push(".srt");
     }
 
@@ -123,7 +144,7 @@ mod tests {
     #[test]
     fn no_input_file() {
         assert_eq!(
-            output_file(&PathBuf::from("/home/user"), None, "default.ext", "en"),
+            output_file_name(&PathBuf::from("/home/user"), None, "default.ext", "en", 0),
             PathBuf::from("/home/user/default.en.ext")
         );
     }
@@ -131,11 +152,12 @@ mod tests {
     #[test]
     fn input_file_with_ext_from_default() {
         assert_eq!(
-            output_file(
+            output_file_name(
                 &PathBuf::from("/home/user"),
                 Some("file"),
                 "default.ext",
-                "en"
+                "en",
+                0
             ),
             PathBuf::from("/home/user/file.en.ext")
         );
@@ -144,11 +166,12 @@ mod tests {
     #[test]
     fn input_file_with_multiple_ext() {
         assert_eq!(
-            output_file(
+            output_file_name(
                 &PathBuf::from("/home/user"),
                 Some("file.multiple"),
                 "default.ext",
-                "en"
+                "en",
+                0
             ),
             PathBuf::from("/home/user/file.multiple.en.ext")
         );
@@ -157,8 +180,22 @@ mod tests {
     #[test]
     fn fallback_to_srt_if_default_has_no_extension() {
         assert_eq!(
-            output_file(&PathBuf::from("/home/user"), Some("file"), "default", "en"),
+            output_file_name(
+                &PathBuf::from("/home/user"),
+                Some("file"),
+                "default",
+                "en",
+                0
+            ),
             PathBuf::from("/home/user/file.en.srt")
+        );
+    }
+
+    #[test]
+    fn indexed_name() {
+        assert_eq!(
+            output_file_name(&PathBuf::from("/home/user"), None, "default.ext", "en", 4),
+            PathBuf::from("/home/user/default.en.4.ext")
         );
     }
 }
