@@ -87,8 +87,7 @@ impl Component for MainWidget {
                 (Some(FetchSubtitles), current_state)
             }
 
-            SearchQueryUpdated(query) => {
-                current_state.query_snapshot = Some(query.clone());
+            SearchQueryUpdated => {
                 let debouncer = self.debouncer_tx.clone();
                 tokio::spawn(async move {
                     debouncer.send(()).await.expect("Sending to channel failed");

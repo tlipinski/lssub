@@ -91,8 +91,7 @@ impl Component for SearchWidget {
                         }
                         Unhandled => self
                             .query_widget
-                            .handle_key_event(event)
-                            .map(|action| (action, state)),
+                            .handle_key_event(event, state),
                     },
                 }
             }

@@ -9,6 +9,7 @@ use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 use crate::ui::actions::Action;
 use crate::ui::actions::Action::SearchQueryUpdated;
+use crate::ui::app_state::AppState;
 
 #[derive(Debug)]
 pub struct QueryWidget {
@@ -47,11 +48,15 @@ impl QueryWidget {
         self.input.visual_cursor()
     }
 
-    pub fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+    pub fn handle_key_event(&mut self, event: &Event, app_state: AppState) -> Option<(Action, AppState)> {
         if let Some(state_changed) = self.input.handle_event(event)
             && state_changed.value
         {
-            Some(SearchQueryUpdated(self.input.value().into()))
+            let new_state = AppState {
+                query_snapshot: Some(self.input.value().into()),
+                ..app_state
+            };
+            Some((SearchQueryUpdated, new_state))
         } else {
             None
         }

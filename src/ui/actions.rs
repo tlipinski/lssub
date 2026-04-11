@@ -17,7 +17,7 @@ pub enum Action {
     SwitchScreen(Screen),
 
     SearchQueryInitialized(String),
-    SearchQueryUpdated(String),
+    SearchQueryUpdated,
     SearchParamsInitialized(QueryParams),
     SearchParamsUpdated(QueryParams),
 
