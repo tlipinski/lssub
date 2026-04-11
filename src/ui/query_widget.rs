@@ -22,7 +22,7 @@ impl Component for QueryWidget {
     fn update(&mut self, action: &Action, state: AppState) -> Option<(Action, AppState)> {
         match action {
             Action::Init => {
-                self.input = Input::from(state.query.unwrap_or("".into()));
+                self.input = Input::from(state.query);
                 None
             }
             _ => None
@@ -34,7 +34,7 @@ impl Component for QueryWidget {
             && state_changed.value
         {
             let new_state = AppState {
-                query: Some(self.input.value().into()),
+                query: self.input.value().into(),
                 ..app_state
             };
             Some((SearchQueryUpdated, new_state))
@@ -51,7 +51,7 @@ impl Component for QueryWidget {
         let par = Line::from(self.input.value().bold());
 
         let view = Paragraph::new(par).block(block);
-        
+
         frame.set_cursor_position((
             area.x + (self.input.visual_cursor() + 1) as u16,
             area.y + 1,

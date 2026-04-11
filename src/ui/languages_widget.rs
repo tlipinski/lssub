@@ -2,14 +2,14 @@ use crate::config::ConfigProvider;
 use crate::osb::languages::{Language, get_languages};
 use crate::osb::osb_client::OsbClient;
 use crate::ui::actions::Action;
-use crate::ui::app_state::AppState;
 use crate::ui::actions::Action::{
     LanguagesFetched, LanguagesUpdated, Multi, RunTask, UserLanguagesFetched,
 };
+use crate::ui::app_state::AppState;
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
 use crate::ui::task_runner::Task;
-use Action::{Init, LanguagesInitialized};
+use Action::Init;
 use KeyCode::{Char, Down, Enter, Left, Right, Up};
 use crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::Frame;
@@ -54,11 +54,11 @@ impl Component for LanguagesWidget {
             )),
             LanguagesFetched(languages) => {
                 self.osb_languages_opt = Some(languages.clone());
-                self.try_init().map(|action| (action, state))
+                self.try_init(state)
             }
             UserLanguagesFetched(user_languages) => {
                 self.user_languages_opt = Some(user_languages.clone());
-                self.try_init().map(|action| (action, state))
+                self.try_init(state)
             }
             _ => None,
         }
@@ -69,7 +69,7 @@ impl Component for LanguagesWidget {
             match (key_event.code, key_event.modifiers) {
                 (Enter, KeyModifiers::NONE) => {
                     let new_state = AppState {
-                        languages: Some(self.languages()),
+                        languages: self.languages(),
                         ..state
                     };
                     Some((LanguagesUpdated, new_state))
@@ -189,7 +189,7 @@ impl LanguagesWidget {
         }
     }
 
-    fn try_init(&mut self) -> Option<Action> {
+    fn try_init(&mut self, state: AppState) -> Option<(Action, AppState)> {
         match (
             self.osb_languages_opt.clone(),
             self.user_languages_opt.clone(),
@@ -200,7 +200,12 @@ impl LanguagesWidget {
                     .map(|lang| (lang.clone(), user_languages.contains(&lang.language_code)))
                     .collect::<Vec<(Language, bool)>>();
 
-                Some(LanguagesInitialized(user_languages))
+                let new_state = AppState {
+                    languages: self.languages(),
+                    ..state
+                };
+
+                Some((LanguagesUpdated, new_state))
             }
 
             _ => None,

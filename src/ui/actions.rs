@@ -23,7 +23,6 @@ pub enum Action {
     SubtitleDownloaded(Downloaded),
 
     LanguagesUpdated,
-    LanguagesInitialized(Vec<String>),
     LanguagesFetched(Vec<Language>),
     UserLanguagesFetched(Vec<String>),
 

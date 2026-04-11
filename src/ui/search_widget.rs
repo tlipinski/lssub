@@ -93,7 +93,7 @@ impl Component for SearchWidget {
                     _ => match self.subs_list_widget.handle_key_event(key_event) {
                         Handled(result) => result.map(|params| {
                             let new_state = AppState {
-                                params: Some(params),
+                                params: params,
                                 ..state
                             };
                             (SearchParamsUpdated, new_state)

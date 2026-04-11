@@ -4,12 +4,11 @@ use crate::osb::subtitles::{SubtitlesRequest, subtitles};
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::app_state::AppState;
 use crate::ui::actions::Action::{
-    Exit, FetchSubtitles, LanguagesInitialized, LanguagesUpdated, Multi, NoOp,
-    SearchParamsUpdated, SearchQueryUpdated, SubtitlesFetched,
-    SwitchScreen, Tick,
+    Exit, FetchSubtitles, LanguagesUpdated, Multi, NoOp, SearchParamsUpdated,
+    SearchQueryUpdated, SubtitlesFetched, SwitchScreen, Tick,
 };
+use crate::ui::app_state::AppState;
 use crate::ui::component::Component;
 use crate::ui::languages_widget::LanguagesWidget;
 use crate::ui::main_widget::Screen::{About, Account, Language, Search};
@@ -51,7 +50,9 @@ impl Component for MainWidget {
         let mut current_state = state;
         let mut widget_actions = Vec::new();
         for component in self.widgets.values_mut() {
-            if let Some((widget_action, next_state)) = component.update(action, current_state.clone()) {
+            if let Some((widget_action, next_state)) =
+                component.update(action, current_state.clone())
+            {
                 widget_actions.push(widget_action);
                 current_state = next_state;
             }
@@ -62,7 +63,7 @@ impl Component for MainWidget {
                 let languages = current_state.languages.clone();
                 let _ = self.config_provider.modify(|c: &Config| {
                     let mut updated = c.clone();
-                    updated.languages.clone_from(&languages);
+                    updated.languages.clone_from(&Some(languages.clone()));
                     updated
                 });
 
@@ -70,11 +71,6 @@ impl Component for MainWidget {
                     Some(Multi(vec![SwitchScreen(Search), FetchSubtitles])),
                     current_state,
                 )
-            }
-
-            LanguagesInitialized(languages) => {
-                current_state.languages = Some(languages.clone());
-                (Some(FetchSubtitles), current_state)
             }
 
             SearchQueryUpdated => {
@@ -85,45 +81,32 @@ impl Component for MainWidget {
                 (Some(NoOp), current_state)
             }
 
-            SearchParamsUpdated => {
-                (Some(FetchSubtitles), current_state)
-            }
+            SearchParamsUpdated => (Some(FetchSubtitles), current_state),
 
             FetchSubtitles => {
-                let res = match (
-                    current_state.query.clone(),
-                    current_state.params.clone(),
-                    current_state.languages.clone(),
-                ) {
-                    (Some(query), Some(params), Some(languages)) => {
-                        info!(
-                        "Fetching subtitles for query: {query:?}, languages: {languages:?}, params: {params:?}"
-                    );
-                        let request = Self::subtitles_request(query, params, languages);
-                        let fetch_subs_task = Task::new("fetch subs", async move {
-                            if request.query.len() < 3 {
-                                Ok(SubtitlesFetched(vec![]))
-                            } else {
-                                let result = subtitles(OsbClient::default(), request).await;
-                                match result {
-                                    Ok(subtitles) => Ok(SubtitlesFetched(subtitles)),
-                                    Err(e) => {
-                                        error!("Error fetching subtitles {e}");
-                                        Err(Error::msg("Error fetching subtitles list, check logs"))
-                                    }
-                                }
+                let query = current_state.query.clone();
+                let params = current_state.params.clone();
+                let languages = current_state.languages.clone();
+                info!(
+                    "Fetching subtitles for query: {query:?}, languages: {languages:?}, params: {params:?}"
+                );
+                let request = Self::subtitles_request(query, params, languages);
+                let fetch_subs_task = Task::new("fetch subs", async move {
+                    if request.query.len() < 3 {
+                        Ok(SubtitlesFetched(vec![]))
+                    } else {
+                        let result = subtitles(OsbClient::default(), request).await;
+                        match result {
+                            Ok(subtitles) => Ok(SubtitlesFetched(subtitles)),
+                            Err(e) => {
+                                error!("Error fetching subtitles {e}");
+                                Err(Error::msg("Error fetching subtitles list, check logs"))
                             }
-                        });
-
-                        Some(RunTask(fetch_subs_task))
+                        }
                     }
+                });
 
-                    _ => {
-                        // not initialized yet
-                        None
-                    }
-                };
-                (res, current_state)
+                (Some(RunTask(fetch_subs_task)), current_state)
             }
 
             SwitchScreen(screen) => {
@@ -169,7 +152,8 @@ impl Component for MainWidget {
     }
 
     fn handle_key_event(&mut self, event: &Event, state: AppState) -> Option<(Action, AppState)> {
-        if let Some((res, next_state)) = self.active_widget().handle_key_event(event, state.clone()) {
+        if let Some((res, next_state)) = self.active_widget().handle_key_event(event, state.clone())
+        {
             return Some((res, next_state));
         }
 
