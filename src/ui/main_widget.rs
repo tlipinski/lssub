@@ -16,7 +16,7 @@ use crate::ui::status_widget::StatusWidget;
 use crate::ui::subs_list_widget::QueryParams;
 use crate::ui::task_runner::{Task, TaskRunner};
 use crate::ui::user_widget::UserWidget;
-use Action::RunTask;
+use Action::{LanguagesInitialized, RunTask};
 use KeyCode::{Char, Esc, F};
 use anyhow::Error;
 use log::{debug, error, info};
@@ -40,7 +40,7 @@ pub struct MainWidget {
 impl Component for MainWidget {
     fn update(&mut self, action: &Action, state: AppState) -> Option<(Action, AppState)> {
         match action {
-            Tick | Multi(_) => {}
+            Tick => {}
             SubtitlesFetched(_) => {
                 debug!("--- SubtitlesFetched(...) --- {:?}", state)
             }
@@ -62,6 +62,10 @@ impl Component for MainWidget {
         }
 
         let (new_action, next_state) = match action {
+            LanguagesInitialized => {
+                (Some(FetchSubtitles), current_state)
+            }
+
             LanguagesUpdated => {
                 let languages = current_state.languages.clone();
                 let _ = self.config_provider.modify(|c: &Config| {
@@ -76,6 +80,7 @@ impl Component for MainWidget {
                 )
             }
 
+            // run query updates through debouncer
             SearchQueryUpdated => {
                 let debouncer = self.debouncer_tx.clone();
                 tokio::spawn(async move {
@@ -84,6 +89,7 @@ impl Component for MainWidget {
                 (Some(NoOp), current_state)
             }
 
+            // fetch subs immediately
             SearchParamsUpdated => (Some(FetchSubtitles), current_state),
 
             FetchSubtitles => {

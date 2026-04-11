@@ -1,5 +1,5 @@
 use anyhow::Error;
-use log::{debug, error, info};
+use log::{error, info};
 use reqwest::{Method, RequestBuilder};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
