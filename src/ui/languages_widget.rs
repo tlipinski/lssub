@@ -69,7 +69,7 @@ impl Component for LanguagesWidget {
             match (key_event.code, key_event.modifiers) {
                 (Enter, KeyModifiers::NONE) => {
                     let new_state = AppState {
-                        languages_snapshot: Some(self.languages()),
+                        languages: Some(self.languages()),
                         ..state
                     };
                     Some((LanguagesUpdated, new_state))

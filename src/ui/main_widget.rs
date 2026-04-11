@@ -59,7 +59,7 @@ impl Component for MainWidget {
 
         let (new_action, next_state) = match action {
             LanguagesUpdated => {
-                let languages = current_state.languages_snapshot.clone();
+                let languages = current_state.languages.clone();
                 let _ = self.config_provider.modify(|c: &Config| {
                     let mut updated = c.clone();
                     updated.languages.clone_from(&languages);
@@ -73,7 +73,7 @@ impl Component for MainWidget {
             }
 
             LanguagesInitialized(languages) => {
-                current_state.languages_snapshot = Some(languages.clone());
+                current_state.languages = Some(languages.clone());
                 (Some(FetchSubtitles), current_state)
             }
 
@@ -91,9 +91,9 @@ impl Component for MainWidget {
 
             FetchSubtitles => {
                 let res = match (
-                    current_state.query_snapshot.clone(),
-                    current_state.params_snapshot.clone(),
-                    current_state.languages_snapshot.clone(),
+                    current_state.query.clone(),
+                    current_state.params.clone(),
+                    current_state.languages.clone(),
                 ) {
                     (Some(query), Some(params), Some(languages)) => {
                         info!(

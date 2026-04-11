@@ -76,9 +76,9 @@ impl App {
         let mut tick_interval = interval(Duration::from_secs_f64(1.0 / 4.0));
 
         let mut app_state = AppState {
-            query_snapshot: self.file_name,
-            params_snapshot: Some(QueryParams::default()),
-            languages_snapshot: None,
+            query: self.file_name,
+            params: Some(QueryParams::default()),
+            languages: None,
         };
         let mut message_opt = Some(Init);
 
