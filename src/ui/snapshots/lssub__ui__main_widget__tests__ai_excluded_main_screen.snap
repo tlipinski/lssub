@@ -1,12 +1,12 @@
 ---
-source: src/ui/app.rs
+source: src/ui/main_widget.rs
 expression: terminal.backend()
 ---
 "┌ Search ──────────────────────────────────────────────────────────────────────────────────────────┐"
 "│                                                                                                  │"
 "└──────────────────────────────────────────────────────────────────────────────────────────────────┘"
 "┌ Results: 0 (AI excluded) ────────────────────────────────────────────────────────────────────────┐"
-"│Title                        Language   Year       Uploaded     Downloads    AI         Votes     │"
+"│Title           Language   Year       Uploaded     Uploader     Downloads    AI         Votes     │"
 "│                                                                                                  │"
 "│                                                                                                  │"
 "│                                                                                                  │"
