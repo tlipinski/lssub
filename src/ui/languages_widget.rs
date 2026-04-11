@@ -68,7 +68,11 @@ impl Component for LanguagesWidget {
         if let Event::Key(key_event) = event {
             match (key_event.code, key_event.modifiers) {
                 (Enter, KeyModifiers::NONE) => {
-                    Some((LanguagesUpdated(self.languages()), state))
+                    let new_state = AppState {
+                        languages_snapshot: Some(self.languages()),
+                        ..state
+                    };
+                    Some((LanguagesUpdated, new_state))
                 }
                 (Char(' '), KeyModifiers::NONE) => {
                     self.toggle_focused();

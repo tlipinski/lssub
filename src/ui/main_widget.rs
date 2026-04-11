@@ -58,12 +58,11 @@ impl Component for MainWidget {
         }
 
         let (new_action, next_state) = match action {
-            LanguagesUpdated(languages) => {
-                current_state.languages_snapshot = Some(languages.clone());
-
+            LanguagesUpdated => {
+                let languages = current_state.languages_snapshot.clone();
                 let _ = self.config_provider.modify(|c: &Config| {
                     let mut updated = c.clone();
-                    updated.languages.clone_from(&Some(languages.clone()));
+                    updated.languages.clone_from(&languages);
                     updated
                 });
 
