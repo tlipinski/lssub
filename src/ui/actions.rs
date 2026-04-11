@@ -15,9 +15,7 @@ pub enum Action {
 
     SwitchScreen(Screen),
 
-    SearchQueryInitialized,
     SearchQueryUpdated,
-    SearchParamsInitialized,
     SearchParamsUpdated,
 
     FetchSubtitles,

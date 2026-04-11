@@ -6,8 +6,8 @@ use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
 use crate::ui::app_state::AppState;
 use crate::ui::actions::Action::{
-    Exit, FetchSubtitles, LanguagesInitialized, LanguagesUpdated, Multi, NoOp, SearchParamsInitialized,
-    SearchParamsUpdated, SearchQueryInitialized, SearchQueryUpdated, SubtitlesFetched,
+    Exit, FetchSubtitles, LanguagesInitialized, LanguagesUpdated, Multi, NoOp,
+    SearchParamsUpdated, SearchQueryUpdated, SubtitlesFetched,
     SwitchScreen, Tick,
 };
 use crate::ui::component::Component;
