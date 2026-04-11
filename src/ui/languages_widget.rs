@@ -35,7 +35,7 @@ impl Component for LanguagesWidget {
         match action {
             Init => Some((
                 Multi(vec![
-                    RunTask(Task::new("fetch languages", async {
+                    RunTask(Task::new("fetch osb languages", async {
                         let osb_languages = get_languages(OsbClient::default()).await?;
 
                         Ok(LanguagesFetched(osb_languages))

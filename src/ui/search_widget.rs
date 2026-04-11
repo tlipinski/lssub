@@ -116,10 +116,6 @@ impl Component for SearchWidget {
             .split(area);
 
         self.query_widget.render(frame, layout[0]);
-        frame.set_cursor_position((
-            layout[0].x + (self.query_widget.visual_cursor() + 1) as u16,
-            layout[0].y + 1,
-        ));
 
         self.subs_list_widget.render(frame, layout[1]);
 

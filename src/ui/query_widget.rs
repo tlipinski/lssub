@@ -29,33 +29,7 @@ impl Component for QueryWidget {
         }
     }
 
-    fn handle_key_event(&mut self, event: &Event, state: AppState) -> Option<(Action, AppState)> {
-        None
-    }
-
-    fn render(&mut self, frame: &mut Frame, area: Rect) {
-        let block = Block::bordered()
-            .title_pad("Search")
-            .border_set(border::PLAIN);
-
-        let par = Line::from(self.input.value().bold());
-
-        let view = Paragraph::new(par).block(block);
-
-        view.render(area, frame.buffer_mut());
-    }
-}
-
-impl QueryWidget {
-    pub fn query(&self) -> String {
-        self.input.value().into()
-    }
-
-    pub fn visual_cursor(&self) -> usize {
-        self.input.visual_cursor()
-    }
-
-    pub fn handle_key_event(&mut self, event: &Event, app_state: AppState) -> Option<(Action, AppState)> {
+    fn handle_key_event(&mut self, event: &Event, app_state: AppState) -> Option<(Action, AppState)> {
         if let Some(state_changed) = self.input.handle_event(event)
             && state_changed.value
         {
@@ -67,5 +41,22 @@ impl QueryWidget {
         } else {
             None
         }
+    }
+
+    fn render(&mut self, frame: &mut Frame, area: Rect) {
+        let block = Block::bordered()
+            .title_pad("Search")
+            .border_set(border::PLAIN);
+
+        let par = Line::from(self.input.value().bold());
+
+        let view = Paragraph::new(par).block(block);
+        
+        frame.set_cursor_position((
+            area.x + (self.input.visual_cursor() + 1) as u16,
+            area.y + 1,
+        ));
+
+        view.render(area, frame.buffer_mut());
     }
 }

@@ -42,7 +42,7 @@ impl Component for SubsListWidget {
     fn update(&mut self, action: &Action, state: AppState) -> Option<(Action, AppState)> {
         match action {
             Init => {
-                self.params = state.params_snapshot?;
+                self.params = state.params_snapshot.unwrap_or_default();
                 None
             }
             _ => {

@@ -72,14 +72,6 @@ impl Component for MainWidget {
                 )
             }
 
-            SearchQueryInitialized => {
-                (Some(FetchSubtitles), current_state)
-            }
-
-            SearchParamsInitialized => {
-                (Some(FetchSubtitles), current_state)
-            }
-
             LanguagesInitialized(languages) => {
                 current_state.languages_snapshot = Some(languages.clone());
                 (Some(FetchSubtitles), current_state)
