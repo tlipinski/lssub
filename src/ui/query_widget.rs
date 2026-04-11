@@ -1,4 +1,3 @@
-use ratatui::buffer::Buffer;
 use crate::ui::pad::BlockTitlePadExt;
 use ratatui::crossterm::event::Event;
 use ratatui::Frame;

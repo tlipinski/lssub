@@ -22,13 +22,14 @@ impl TaskRunner {
         let ui_tx = self.ui_tx.clone();
         tokio::spawn(async move {
             ui_tx.send(StartProgress).await.expect("UI channel closed");
+            let name = task.name;
             match task.run().await {
                 Ok(action) => {
                     ui_tx.send(action).await.expect("UI channel closed");
                     ui_tx.send(StopProgress).await.expect("UI channel closed");
                 }
                 Err(err) => {
-                    error!("Task failed: {}", err);
+                    error!("Task '{}' failed: {}", name, err);
                     ui_tx
                         .send(ChangeStatus(err.to_string()))
                         .await

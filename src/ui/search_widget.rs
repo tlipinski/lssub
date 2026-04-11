@@ -8,7 +8,7 @@ use crate::ui::component::Component;
 use crate::ui::downloader::Downloader;
 use crate::ui::handled::HandleResult::{Handled, Unhandled};
 use crate::ui::query_widget::QueryWidget;
-use crate::ui::subs_list_widget::{QueryParams, SubsListWidget};
+use crate::ui::subs_list_widget::SubsListWidget;
 use crate::ui::task_runner::Task;
 use KeyCode::{Enter, Esc, F};
 use crossterm::event::KeyModifiers;

@@ -48,7 +48,7 @@ impl OsbClient {
         let status = http_response.status();
         let text_body = http_response.text().await?;
 
-        debug!("Response: {}", text_body);
+        // debug!("Response: {}", text_body);
 
         match status {
             s if s.is_success() || s.is_redirection() => {

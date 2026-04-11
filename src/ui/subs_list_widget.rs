@@ -4,13 +4,12 @@ use crate::ui::handled::HandleResult;
 use crate::ui::handled::HandleResult::Unhandled;
 use crate::ui::pad::BlockTitlePadExt;
 use HandleResult::Handled;
-use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::KeyModifiers;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::prelude::StatefulWidget;
-use ratatui::prelude::{Style, Text, Widget};
+use ratatui::prelude::{Style, Text};
 use ratatui::style::Color;
 use ratatui::symbols::border;
 use ratatui::widgets::{
@@ -51,8 +50,8 @@ impl Component for SubsListWidget {
         }
     }
 
-    fn handle_key_event(&mut self, event: &Event, state: AppState) -> Option<(Action, AppState)> {
-        todo!()
+    fn handle_key_event(&mut self, _event: &Event, _state: AppState) -> Option<(Action, AppState)> {
+        None
     }
 
     fn render(&mut self, frame: &mut Frame, area: Rect) {
