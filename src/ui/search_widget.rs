@@ -32,13 +32,20 @@ pub struct SearchWidget {
 impl Component for SearchWidget {
     fn update(&mut self, action: &Action, state: AppState) -> Option<(Action, AppState)> {
         match action {
-            Init => Some((
-                Multi(vec![
-                    SearchQueryInitialized(self.query_widget.query()),
-                    SearchParamsInitialized(QueryParams::default()),
-                ]),
-                state,
-            )),
+            Init => {
+                if let Some((action1, state1)) = self.query_widget.update(action, state.clone()) {
+                    if let Some((action2, state2)) =
+                        self.subs_list_widget.update(action, state1.clone())
+                    {
+                        Some((Multi(vec![action1, action2]), state2))
+                    } else {
+                        Some((Multi(vec![action1]), state1))
+                    }
+                } else {
+                    self.subs_list_widget.update(action, state)
+                }
+            }
+
             SubtitlesFetched(subtitles) => {
                 self.update_subtitles(subtitles.clone());
                 None
@@ -108,13 +115,13 @@ impl Component for SearchWidget {
             .constraints([Constraint::Length(3), Constraint::Fill(1)])
             .split(area);
 
-        self.query_widget.render(layout[0], frame.buffer_mut());
+        self.query_widget.render(frame, layout[0]);
         frame.set_cursor_position((
             layout[0].x + (self.query_widget.visual_cursor() + 1) as u16,
             layout[0].y + 1,
         ));
 
-        self.subs_list_widget.render(layout[1], frame.buffer_mut());
+        self.subs_list_widget.render(frame, layout[1]);
 
         if self.help {
             let body = Text::from(vec![
@@ -135,7 +142,7 @@ impl Component for SearchWidget {
 impl SearchWidget {
     pub fn from(base_path: &Path, file_name: Option<&str>) -> SearchWidget {
         Self {
-            query_widget: QueryWidget::from(file_name.unwrap_or("").into()),
+            query_widget: QueryWidget::default(),
             subs_list_widget: SubsListWidget::default(),
             downloader: Downloader::new(base_path.to_owned(), file_name.map(String::from)),
             help: false,

@@ -1,3 +1,4 @@
+use crossterm::event::Event;
 use crate::osb::subtitles::Subtitle;
 use crate::ui::handled::HandleResult;
 use crate::ui::handled::HandleResult::Unhandled;
@@ -6,6 +7,7 @@ use HandleResult::Handled;
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::KeyModifiers;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
+use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::prelude::StatefulWidget;
 use ratatui::prelude::{Style, Text, Widget};
@@ -15,6 +17,10 @@ use ratatui::widgets::{
     Block, Cell, Row, ScrollDirection, Scrollbar, ScrollbarOrientation, ScrollbarState, Table,
     TableState,
 };
+use crate::ui::actions::Action;
+use crate::ui::actions::Action::Init;
+use crate::ui::app_state::AppState;
+use crate::ui::component::Component;
 
 #[derive(Default)]
 pub struct SubsListWidget {
@@ -32,11 +38,24 @@ pub struct QueryParams {
     pub exclude_ai: bool,
 }
 
-impl Widget for &mut SubsListWidget {
-    fn render(self, area: Rect, buf: &mut Buffer)
-    where
-        Self: Sized,
-    {
+impl Component for SubsListWidget {
+    fn update(&mut self, action: &Action, state: AppState) -> Option<(Action, AppState)> {
+        match action {
+            Init => {
+                self.params = state.params_snapshot?;
+                None
+            }
+            _ => {
+                None
+            }
+        }
+    }
+
+    fn handle_key_event(&mut self, event: &Event, state: AppState) -> Option<(Action, AppState)> {
+        todo!()
+    }
+
+    fn render(&mut self, frame: &mut Frame, area: Rect) {
         let wide = area.width > 90;
         let rows: Vec<Row> = self.subs.iter().map(Into::into).collect();
 
@@ -77,13 +96,13 @@ impl Widget for &mut SubsListWidget {
             .header(Row::from_iter(headers))
             .block(block_bot)
             .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
-        StatefulWidget::render(table, area, buf, &mut self.state);
+        StatefulWidget::render(table, area, frame.buffer_mut(), &mut self.state);
 
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
             .style(Style::default().fg(Color::DarkGray))
             .begin_symbol(Some("↑"))
             .end_symbol(Some("↓"));
-        StatefulWidget::render(scrollbar, area, buf, &mut self.scroll_state);
+        StatefulWidget::render(scrollbar, area, frame.buffer_mut(), &mut self.scroll_state);
     }
 }
 

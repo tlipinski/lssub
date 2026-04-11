@@ -72,13 +72,11 @@ impl Component for MainWidget {
                 )
             }
 
-            SearchQueryInitialized(query) => {
-                current_state.query_snapshot = Some(query.clone());
+            SearchQueryInitialized => {
                 (Some(FetchSubtitles), current_state)
             }
 
-            SearchParamsInitialized(params) => {
-                current_state.params_snapshot = Some(params.clone());
+            SearchParamsInitialized => {
                 (Some(FetchSubtitles), current_state)
             }
 

@@ -3,7 +3,6 @@ use crate::osb::subtitles::Subtitle;
 use crate::osb::user_info::User;
 use crate::ui::downloader::Downloaded;
 use crate::ui::main_widget::Screen;
-use crate::ui::subs_list_widget::QueryParams;
 use crate::ui::task_runner::Task;
 
 #[derive(Debug)]
@@ -16,9 +15,9 @@ pub enum Action {
 
     SwitchScreen(Screen),
 
-    SearchQueryInitialized(String),
+    SearchQueryInitialized,
     SearchQueryUpdated,
-    SearchParamsInitialized(QueryParams),
+    SearchParamsInitialized,
     SearchParamsUpdated,
 
     FetchSubtitles,

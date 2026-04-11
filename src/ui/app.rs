@@ -24,6 +24,7 @@ pub struct App {
     debouncer_rx: Receiver<()>,
     spinner: Arc<RwLock<Spinner>>,
     main_widget: Box<dyn Component>,
+    file_name: Option<String>
 }
 
 impl App {
@@ -50,6 +51,7 @@ impl App {
             debouncer_rx,
             spinner: spinner.clone(),
             main_widget: Box::new(main_widget),
+            file_name: file_name.map(String::from)
         }
     }
 
@@ -72,7 +74,11 @@ impl App {
         let mut event_stream = EventStream::new();
         let mut tick_interval = interval(Duration::from_secs_f64(1.0 / 4.0));
 
-        let mut app_state = AppState::default();
+        let mut app_state = AppState {
+            query_snapshot: self.file_name,
+            params_snapshot: None,
+            languages_snapshot: None,
+        };
         let mut message_opt = Some(Init);
 
         'main_loop: loop {
