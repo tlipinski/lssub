@@ -1,4 +1,5 @@
 use crate::ui::actions::Action;
+use crate::ui::app_state::AppState;
 use crate::ui::component::Component;
 use Action::{UserLoggedIn, UserLoggedOut};
 use crossterm::event::Event;
@@ -14,7 +15,7 @@ pub struct NavWidget {
 }
 
 impl Component for NavWidget {
-    fn update(&mut self, action: &Action) -> Option<Action> {
+    fn update(&mut self, action: &Action, _state: AppState) -> Option<(Action, AppState)> {
         match action {
             UserLoggedIn(user) => {
                 self.username = Some(user.username.clone());
@@ -28,7 +29,7 @@ impl Component for NavWidget {
         None
     }
 
-    fn handle_key_event(&mut self, _event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, _event: &Event, _state: AppState) -> Option<(Action, AppState)> {
         None
     }
 

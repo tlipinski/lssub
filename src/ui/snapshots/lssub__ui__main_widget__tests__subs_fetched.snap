@@ -1,14 +1,14 @@
 ---
-source: src/ui/app.rs
+source: src/ui/main_widget.rs
 expression: terminal.backend()
 ---
 "┌ Search ──────────────────────────────────────────────────────────────────────────────────────────┐"
 "│                                                                                                  │"
 "└──────────────────────────────────────────────────────────────────────────────────────────────────┘"
 "┌ Results: 2 ──────────────────────────────────────────────────────────────────────────────────────↑"
-"│Title                        Language   Year       Uploaded     Downloads    AI         Votes     █"
-"│release                      en         2004       2024-04-24   12           ✓          8         █"
-"│release 2                    pl                    2014-04-24   22                                █"
+"│Title           Language   Year       Uploaded     Uploader     Downloads    AI         Votes     █"
+"│release         en         2004       2024-04-24   uploader     12           ✓          8         █"
+"│release 2       pl                    2014-04-24   uploader     22                                █"
 "│                                                                                                  █"
 "│                                                                                                  █"
 "│                                                                                                  █"

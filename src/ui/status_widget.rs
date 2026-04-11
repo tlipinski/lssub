@@ -1,4 +1,5 @@
 use crate::ui::actions::Action;
+use crate::ui::app_state::AppState;
 use crate::ui::actions::Action::{ChangeStatus, StopProgress};
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
@@ -19,25 +20,23 @@ pub struct StatusWidget {
 }
 
 impl Component for StatusWidget {
-    fn update(&mut self, action: &Action) -> Option<Action> {
+    fn update(&mut self, action: &Action, _state: AppState) -> Option<(Action, AppState)> {
         match action {
             ChangeStatus(status) => {
                 self.info = status.clone();
-                None
             }
             StartProgress => {
                 self.in_progress = true;
-                None
             }
             StopProgress => {
                 self.in_progress = false;
-                None
             }
-            _ => None,
+            _ => {}
         }
+        None
     }
 
-    fn handle_key_event(&mut self, _event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, _event: &Event, _state: AppState) -> Option<(Action, AppState)> {
         None
     }
 

@@ -1,4 +1,5 @@
 use crate::ui::actions::Action;
+use crate::ui::app_state::AppState;
 use crate::ui::actions::Action::SubtitleDownloaded;
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
@@ -17,7 +18,7 @@ pub struct UserWidget {
 }
 
 impl Component for UserWidget {
-    fn update(&mut self, action: &Action) -> Option<Action> {
+    fn update(&mut self, action: &Action, _state: AppState) -> Option<(Action, AppState)> {
         match action {
             UserLoggedIn(user) => {
                 self.requests = user.downloads_count;
@@ -37,7 +38,7 @@ impl Component for UserWidget {
         None
     }
 
-    fn handle_key_event(&mut self, _event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, _event: &Event, _state: AppState) -> Option<(Action, AppState)> {
         None
     }
 

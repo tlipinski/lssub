@@ -4,8 +4,9 @@ use crate::osb::subtitles::{SubtitlesRequest, subtitles};
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
+use crate::ui::app_state::AppState;
 use crate::ui::actions::Action::{
-    Exit, FetchSubtitles, LanguagesInitialized, LanguagesUpdated, Multi, SearchParamsInitialized,
+    Exit, FetchSubtitles, LanguagesInitialized, LanguagesUpdated, Multi, NoOp, SearchParamsInitialized,
     SearchParamsUpdated, SearchQueryInitialized, SearchQueryUpdated, SubtitlesFetched,
     SwitchScreen, Tick,
 };
@@ -38,27 +39,27 @@ pub struct MainWidget {
     config_provider: ConfigProvider,
     widgets: HashMap<WidgetName, Box<dyn Component>>,
     task_runner: TaskRunner,
-    query_snapshot: Option<String>,
-    params_snapshot: Option<QueryParams>,
-    languages_snapshot: Option<Vec<String>>,
 }
 
 impl Component for MainWidget {
-    fn update(&mut self, action: &Action) -> Option<Action> {
+    fn update(&mut self, action: &Action, state: AppState) -> Option<(Action, AppState)> {
         match action {
             Tick | Multi(_) => {}
             _ => debug!("--- {:?}", action),
         }
 
-        let mut widget_actions = self
-            .widgets
-            .values_mut()
-            .map(|component| component.update(action))
-            .collect::<Vec<Option<Action>>>();
+        let mut current_state = state;
+        let mut widget_actions = Vec::new();
+        for component in self.widgets.values_mut() {
+            if let Some((widget_action, next_state)) = component.update(action, current_state.clone()) {
+                widget_actions.push(widget_action);
+                current_state = next_state;
+            }
+        }
 
-        let new_action = match action {
+        let (new_action, next_state) = match action {
             LanguagesUpdated(languages) => {
-                self.languages_snapshot = Some(languages.clone());
+                current_state.languages_snapshot = Some(languages.clone());
 
                 let _ = self.config_provider.modify(|c: &Config| {
                     let mut updated = c.clone();
@@ -66,124 +67,138 @@ impl Component for MainWidget {
                     updated
                 });
 
-                Some(Multi(vec![SwitchScreen(Search), FetchSubtitles]))
+                (
+                    Some(Multi(vec![SwitchScreen(Search), FetchSubtitles])),
+                    current_state,
+                )
             }
 
             SearchQueryInitialized(query) => {
-                self.query_snapshot = Some(query.clone());
-                Some(FetchSubtitles)
+                current_state.query_snapshot = Some(query.clone());
+                (Some(FetchSubtitles), current_state)
             }
 
             SearchParamsInitialized(params) => {
-                self.params_snapshot = Some(params.clone());
-                Some(FetchSubtitles)
+                current_state.params_snapshot = Some(params.clone());
+                (Some(FetchSubtitles), current_state)
             }
 
             LanguagesInitialized(languages) => {
-                self.languages_snapshot = Some(languages.clone());
-                Some(FetchSubtitles)
+                current_state.languages_snapshot = Some(languages.clone());
+                (Some(FetchSubtitles), current_state)
             }
 
             SearchQueryUpdated(query) => {
-                self.query_snapshot = Some(query.clone());
+                current_state.query_snapshot = Some(query.clone());
                 let debouncer = self.debouncer_tx.clone();
                 tokio::spawn(async move {
                     debouncer.send(()).await.expect("Sending to channel failed");
                 });
-                None
+                (Some(NoOp), current_state)
             }
 
             SearchParamsUpdated(params) => {
-                self.params_snapshot = Some(params.clone());
-                Some(FetchSubtitles)
+                current_state.params_snapshot = Some(params.clone());
+                (Some(FetchSubtitles), current_state)
             }
 
-            FetchSubtitles => match (
-                self.query_snapshot.clone(),
-                self.params_snapshot.clone(),
-                self.languages_snapshot.clone(),
-            ) {
-                (Some(query), Some(params), Some(languages)) => {
-                    info!(
+            FetchSubtitles => {
+                let res = match (
+                    current_state.query_snapshot.clone(),
+                    current_state.params_snapshot.clone(),
+                    current_state.languages_snapshot.clone(),
+                ) {
+                    (Some(query), Some(params), Some(languages)) => {
+                        info!(
                         "Fetching subtitles for query: {query:?}, languages: {languages:?}, params: {params:?}"
                     );
-                    let request = Self::subtitles_request(query, params, languages);
-                    let fetch_subs_task = Task::new("fetch subs", async move {
-                        if request.query.len() < 3 {
-                            Ok(SubtitlesFetched(vec![]))
-                        } else {
-                            let result = subtitles(OsbClient::default(), request).await;
-                            match result {
-                                Ok(subtitles) => Ok(SubtitlesFetched(subtitles)),
-                                Err(e) => {
-                                    error!("Error fetching subtitles {e}");
-                                    Err(Error::msg("Error fetching subtitles list, check logs"))
+                        let request = Self::subtitles_request(query, params, languages);
+                        let fetch_subs_task = Task::new("fetch subs", async move {
+                            if request.query.len() < 3 {
+                                Ok(SubtitlesFetched(vec![]))
+                            } else {
+                                let result = subtitles(OsbClient::default(), request).await;
+                                match result {
+                                    Ok(subtitles) => Ok(SubtitlesFetched(subtitles)),
+                                    Err(e) => {
+                                        error!("Error fetching subtitles {e}");
+                                        Err(Error::msg("Error fetching subtitles list, check logs"))
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
 
-                    Some(RunTask(fetch_subs_task))
-                }
+                        Some(RunTask(fetch_subs_task))
+                    }
 
-                _ => {
-                    // not initialized yet
-                    None
-                }
-            },
+                    _ => {
+                        // not initialized yet
+                        None
+                    }
+                };
+                (res, current_state)
+            }
 
             SwitchScreen(screen) => {
                 self.active_screen = *screen;
-                None
+                (None, current_state)
             }
 
             Multi(actions) => {
-                let mut next_action = None;
+                let mut last_action = None;
+                let mut temp_state = current_state;
                 for action in actions {
-                    if let Some(a) = self.update(action) {
-                        next_action = self.update(&a);
+                    if let Some((a, s)) = self.update(action, temp_state.clone()) {
+                        temp_state = s;
+                        if let Some((a2, s2)) = self.update(&a, temp_state.clone()) {
+                            temp_state = s2;
+                            last_action = Some(a2);
+                        } else {
+                            last_action = Some(a);
+                        }
                     }
                 }
 
-                next_action
+                (last_action, temp_state)
             }
 
             RunTask(task) => {
                 self.task_runner.run(task.clone());
-                None
+                (None, current_state)
             }
 
-            _ => None,
+            _ => (None, current_state),
         };
 
         if let Some(action) = new_action {
-            widget_actions.push(Some(action));
+            widget_actions.push(action);
         }
 
-        let actions: Vec<Action> = widget_actions.into_iter().flatten().collect();
-
-        match actions.len() {
-            0 => None,
-            1 => actions.into_iter().next(),
-            _ => Some(Multi(actions)),
+        match (widget_actions.len(), next_state) {
+            (0, _) => None,
+            (1, s) => Some((widget_actions.into_iter().next().unwrap(), s)),
+            (_, s) => Some((Multi(widget_actions), s)),
         }
     }
 
-    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
-        self.active_widget().handle_key_event(event).or_else(|| {
-            if let Event::Key(key_event) = event {
-                match (key_event.code, key_event.modifiers) {
-                    (Esc | F(2), KeyModifiers::NONE) => Some(SwitchScreen(Search)),
-                    (F(3), KeyModifiers::NONE) => Some(SwitchScreen(Account)),
-                    (F(4), KeyModifiers::NONE) => Some(SwitchScreen(Language)),
-                    (F(10), KeyModifiers::NONE) | (Char('c'), KeyModifiers::CONTROL) => Some(Exit),
-                    (F(12), KeyModifiers::NONE) => Some(SwitchScreen(About)),
-                    _ => None,
-                }
-            } else {
-                None
+    fn handle_key_event(&mut self, event: &Event, state: AppState) -> Option<(Action, AppState)> {
+        if let Some((res, next_state)) = self.active_widget().handle_key_event(event, state.clone()) {
+            return Some((res, next_state));
+        }
+
+        let res = if let Event::Key(key_event) = event {
+            match (key_event.code, key_event.modifiers) {
+                (Esc | F(2), KeyModifiers::NONE) => Some(SwitchScreen(Search)),
+                (F(3), KeyModifiers::NONE) => Some(SwitchScreen(Account)),
+                (F(4), KeyModifiers::NONE) => Some(SwitchScreen(Language)),
+                (F(10), KeyModifiers::NONE) | (Char('c'), KeyModifiers::CONTROL) => Some(Exit),
+                (F(12), KeyModifiers::NONE) => Some(SwitchScreen(About)),
+                _ => None,
             }
-        })
+        } else {
+            None
+        };
+        res.map(|action| (action, state))
     }
 
     fn render(&mut self, frame: &mut Frame, area: Rect) {
@@ -245,9 +260,6 @@ impl MainWidget {
             debouncer_tx,
             widgets: components,
             task_runner,
-            query_snapshot: None,
-            params_snapshot: None,
-            languages_snapshot: None,
         }
     }
 
@@ -353,8 +365,9 @@ mod tests {
     #[test]
     fn main_screen_help() {
         let mut app = MainWidget::default();
+        let state = AppState::default();
 
-        input_key(&mut app, F(1), KeyModifiers::NONE);
+        input_key(&mut app, state, F(1), KeyModifiers::NONE);
 
         let mut terminal = TestTerminal::default().0;
         terminal
@@ -367,12 +380,15 @@ mod tests {
     #[test]
     fn account_screen() {
         let mut app = MainWidget::default();
+        let mut state = AppState::default();
 
-        app.update(&SwitchScreen(Account));
+        if let Some((_, next_state)) = app.update(&SwitchScreen(Account), state.clone()) {
+            state = next_state;
+        }
 
-        input_text(&mut app, "test_user");
-        input_key(&mut app, Tab, KeyModifiers::NONE);
-        input_text(&mut app, "test_pass");
+        state = input_text(&mut app, state, "test_user");
+        state = input_key(&mut app, state, Tab, KeyModifiers::NONE);
+        state = input_text(&mut app, state, "test_pass");
 
         let mut terminal = TestTerminal::default().0;
         terminal
@@ -385,6 +401,7 @@ mod tests {
     #[test]
     fn main_screen_logged_in() {
         let mut app = MainWidget::default();
+        let state = AppState::default();
 
         let user = User {
             username: "user".to_string(),
@@ -394,7 +411,7 @@ mod tests {
             allowed_translations: 10,
             allowed_downloads: 10,
         };
-        app.update(&UserLoggedIn(user));
+        app.update(&UserLoggedIn(user), state);
 
         let mut terminal = TestTerminal::default().0;
         terminal
@@ -407,6 +424,7 @@ mod tests {
     #[test]
     fn account_screen_logged_in() {
         let mut app = MainWidget::default();
+        let mut state = AppState::default();
 
         let user = User {
             username: "user".to_string(),
@@ -417,8 +435,10 @@ mod tests {
             allowed_downloads: 10,
         };
 
-        app.update(&UserLoggedIn(user));
-        app.update(&SwitchScreen(Account));
+        if let Some((_, next_state)) = app.update(&UserLoggedIn(user), state.clone()) {
+            state = next_state;
+        }
+        app.update(&SwitchScreen(Account), state);
 
         let mut terminal = TestTerminal::default().0;
         terminal
@@ -431,8 +451,9 @@ mod tests {
     #[test]
     fn ai_excluded_main_screen() {
         let mut app = MainWidget::default();
+        let state = AppState::default();
 
-        input_key(&mut app, Char('t'), KeyModifiers::CONTROL);
+        input_key(&mut app, state, Char('t'), KeyModifiers::CONTROL);
 
         let mut terminal = TestTerminal::default().0;
         terminal
@@ -445,6 +466,7 @@ mod tests {
     #[test]
     fn subs_query() {
         let mut app = MainWidget::default();
+        let mut state = AppState::default();
 
         let subs = vec![Subtitle {
             id: "1234".to_string(),
@@ -472,9 +494,11 @@ mod tests {
                 },
             },
         }];
-        app.update(&SubtitlesFetched(subs));
-        input_text(&mut app, "title");
-        input_key(&mut app, KeyCode::Down, KeyModifiers::NONE);
+        if let Some((_, next_state)) = app.update(&SubtitlesFetched(subs), state.clone()) {
+            state = next_state;
+        }
+        state = input_text(&mut app, state, "title");
+        input_key(&mut app, state, KeyCode::Down, KeyModifiers::NONE);
 
         let mut terminal = TestTerminal::default().0;
         terminal
@@ -487,6 +511,7 @@ mod tests {
     #[test]
     fn subs_fetched() {
         let mut app = MainWidget::default();
+        let state = AppState::default();
 
         let subs = vec![
             Subtitle {
@@ -542,7 +567,7 @@ mod tests {
                 },
             },
         ];
-        app.update(&SubtitlesFetched(subs));
+        app.update(&SubtitlesFetched(subs), state);
 
         let mut terminal = TestTerminal::default().0;
         terminal
@@ -552,23 +577,42 @@ mod tests {
         assert_snapshot!(terminal.backend());
     }
 
-    fn input_text(app: &mut MainWidget, text: &str) {
-        text.chars().for_each(|c| {
-            app.handle_key_event(&Event::Key(KeyEvent {
-                code: Char(c),
-                modifiers: KeyModifiers::NONE,
-                kind: KeyEventKind::Press,
-                state: KeyEventState::NONE,
-            }));
-        });
+    fn input_text(app: &mut MainWidget, state: AppState, text: &str) -> AppState {
+        let mut current_state = state;
+        for c in text.chars() {
+            if let Some((_, next_state)) = app.handle_key_event(
+                &Event::Key(KeyEvent {
+                    code: Char(c),
+                    modifiers: KeyModifiers::NONE,
+                    kind: KeyEventKind::Press,
+                    state: KeyEventState::NONE,
+                }),
+                current_state.clone(),
+            ) {
+                current_state = next_state;
+            }
+        }
+        current_state
     }
 
-    fn input_key(app: &mut MainWidget, code: KeyCode, modifiers: KeyModifiers) {
-        app.handle_key_event(&Key(KeyEvent {
-            code,
-            modifiers,
-            kind: KeyEventKind::Press,
-            state: KeyEventState::NONE,
-        }));
+    fn input_key(
+        app: &mut MainWidget,
+        state: AppState,
+        code: KeyCode,
+        modifiers: KeyModifiers,
+    ) -> AppState {
+        if let Some((_, next_state)) = app.handle_key_event(
+            &Key(KeyEvent {
+                code,
+                modifiers,
+                kind: KeyEventKind::Press,
+                state: KeyEventState::NONE,
+            }),
+            state.clone(),
+        ) {
+            next_state
+        } else {
+            state
+        }
     }
 }

@@ -229,9 +229,9 @@ mod tests {
                     release: "release".to_string(),
                     files: vec![File { file_id: 9_535_264 }],
                     uploader: Uploader {
-                        name: "uploader".to_string(),
-                        rank: "trusted".to_string()
-                    }
+                        name: "Anonymous".to_string(),
+                        rank: "anonymous".to_string(),
+                    },
                 }
             }
         );

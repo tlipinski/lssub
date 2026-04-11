@@ -2,6 +2,7 @@ use crate::config::ConfigProvider;
 use crate::osb::languages::{Language, get_languages};
 use crate::osb::osb_client::OsbClient;
 use crate::ui::actions::Action;
+use crate::ui::app_state::AppState;
 use crate::ui::actions::Action::{
     LanguagesFetched, LanguagesUpdated, Multi, RunTask, UserLanguagesFetched,
 };
@@ -30,40 +31,45 @@ pub struct LanguagesWidget {
 }
 
 impl Component for LanguagesWidget {
-    fn update(&mut self, action: &Action) -> Option<Action> {
+    fn update(&mut self, action: &Action, state: AppState) -> Option<(Action, AppState)> {
         match action {
-            Init => Some(Multi(vec![
-                RunTask(Task::new("fetch languages", async {
-                    let osb_languages = get_languages(OsbClient::default()).await?;
+            Init => Some((
+                Multi(vec![
+                    RunTask(Task::new("fetch languages", async {
+                        let osb_languages = get_languages(OsbClient::default()).await?;
 
-                    Ok(LanguagesFetched(osb_languages))
-                })),
-                RunTask(Task::new("fetch user languages", async {
-                    let user_languages = ConfigProvider::default()
-                        .get_config()
-                        .unwrap()
-                        .languages
-                        .unwrap_or(Vec::new());
+                        Ok(LanguagesFetched(osb_languages))
+                    })),
+                    RunTask(Task::new("fetch user languages", async {
+                        let user_languages = ConfigProvider::default()
+                            .get_config()
+                            .unwrap()
+                            .languages
+                            .unwrap_or(Vec::new());
 
-                    Ok(UserLanguagesFetched(user_languages))
-                })),
-            ])),
+                        Ok(UserLanguagesFetched(user_languages))
+                    })),
+                ]),
+                state,
+            )),
             LanguagesFetched(languages) => {
                 self.osb_languages_opt = Some(languages.clone());
-                self.try_init()
+                self.try_init().map(|action| (action, state))
             }
             UserLanguagesFetched(user_languages) => {
                 self.user_languages_opt = Some(user_languages.clone());
-                self.try_init()
+                self.try_init().map(|action| (action, state))
             }
             _ => None,
         }
     }
 
-    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, event: &Event, state: AppState) -> Option<(Action, AppState)> {
         if let Event::Key(key_event) = event {
             match (key_event.code, key_event.modifiers) {
-                (Enter, KeyModifiers::NONE) => Some(LanguagesUpdated(self.languages())),
+                (Enter, KeyModifiers::NONE) => {
+                    Some((LanguagesUpdated(self.languages()), state))
+                }
                 (Char(' '), KeyModifiers::NONE) => {
                     self.toggle_focused();
                     None

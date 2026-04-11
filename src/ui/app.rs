@@ -1,5 +1,6 @@
 use crate::config::ConfigProvider;
 use crate::ui::actions::Action;
+use crate::ui::app_state::AppState;
 use crate::ui::actions::Action::{Exit, FetchSubtitles, Init, Tick};
 use crate::ui::component::Component;
 use crate::ui::debouncer::debouncer_task;
@@ -71,6 +72,7 @@ impl App {
         let mut event_stream = EventStream::new();
         let mut tick_interval = interval(Duration::from_secs_f64(1.0 / 4.0));
 
+        let mut app_state = AppState::default();
         let mut message_opt = Some(Init);
 
         'main_loop: loop {
@@ -80,24 +82,39 @@ impl App {
                         info!("Exiting application");
                         break 'main_loop;
                     }
-                    _ => message_opt = self.main_widget.update(&msg),
+                    _ => {
+                        if let Some((new_msg, next_state)) = self.main_widget.update(&msg, app_state.clone()) {
+                            message_opt = Some(new_msg);
+                            app_state = next_state;
+                        } else {
+                            message_opt = None;
+                        }
+                    }
                 }
             }
 
             terminal.draw(|frame| self.main_widget.render(frame, frame.area()))?;
 
-            message_opt = tokio::select! {
+            let (msg, next_state) = tokio::select! {
                 maybe_event = event_stream.next().fuse() => match maybe_event {
-                    Some(Ok(event)) => self.main_widget.handle_key_event(&event),
+                    Some(Ok(event)) => {
+                        if let Some((m, s)) = self.main_widget.handle_key_event(&event, app_state.clone()) {
+                            (Some(m), s)
+                        } else {
+                            (None, app_state)
+                        }
+                    }
                     Some(Err(err)) => {
                         error!("{err}");
                         return Err(err.into())
                     },
-                    None => break (),
+                    None => (None, app_state),
                 },
-                ui = self.ui_rx.recv().fuse() => ui,
-                _ = tick_interval.tick() => Some(Tick),
+                ui = self.ui_rx.recv().fuse() => (ui, app_state),
+                _ = tick_interval.tick() => (Some(Tick), app_state),
             };
+            message_opt = msg;
+            app_state = next_state;
         }
 
         Ok(())

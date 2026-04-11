@@ -1,5 +1,6 @@
 use crate::osb::subtitles::Subtitle;
 use crate::ui::actions::Action;
+use crate::ui::app_state::AppState;
 use crate::ui::actions::Action::{
     ChangeStatus, Init, Multi, RunTask, SearchParamsInitialized, SearchParamsUpdated,
     SearchQueryInitialized, SubtitlesFetched,
@@ -29,12 +30,15 @@ pub struct SearchWidget {
 }
 
 impl Component for SearchWidget {
-    fn update(&mut self, action: &Action) -> Option<Action> {
+    fn update(&mut self, action: &Action, state: AppState) -> Option<(Action, AppState)> {
         match action {
-            Init => Some(Multi(vec![
-                SearchQueryInitialized(self.query_widget.query()),
-                SearchParamsInitialized(QueryParams::default()),
-            ])),
+            Init => Some((
+                Multi(vec![
+                    SearchQueryInitialized(self.query_widget.query()),
+                    SearchParamsInitialized(QueryParams::default()),
+                ]),
+                state,
+            )),
             SubtitlesFetched(subtitles) => {
                 self.update_subtitles(subtitles.clone());
                 None
@@ -43,7 +47,7 @@ impl Component for SearchWidget {
         }
     }
 
-    fn handle_key_event(&mut self, event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, event: &Event, state: AppState) -> Option<(Action, AppState)> {
         if let Event::Key(key_event) = event {
             if self.help {
                 match (key_event.code, key_event.modifiers) {
@@ -66,21 +70,29 @@ impl Component for SearchWidget {
                             let file_id = selected_sub.attributes.files.first().unwrap().file_id;
                             let language = selected_sub.attributes.language.clone();
 
-                            Multi(vec![
-                                ChangeStatus(format!(
-                                    "Downloading {}",
-                                    selected_sub.attributes.release
-                                )),
-                                RunTask(Task::new("download subs", async move {
-                                    downloader.download(file_id, &language).await
-                                })),
-                            ])
+                            (
+                                Multi(vec![
+                                    ChangeStatus(format!(
+                                        "Downloading {}",
+                                        selected_sub.attributes.release
+                                    )),
+                                    RunTask(Task::new("download subs", async move {
+                                        downloader.download(file_id, &language).await
+                                    })),
+                                ]),
+                                state,
+                            )
                         })
                     }
 
                     _ => match self.subs_list_widget.handle_key_event(key_event) {
-                        Handled(result) => result.map(|params| SearchParamsUpdated(params)),
-                        Unhandled => self.query_widget.handle_key_event(event),
+                        Handled(result) => {
+                            result.map(|params| (SearchParamsUpdated(params), state))
+                        }
+                        Unhandled => self
+                            .query_widget
+                            .handle_key_event(event)
+                            .map(|action| (action, state)),
                     },
                 }
             }

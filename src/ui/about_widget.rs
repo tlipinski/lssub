@@ -1,4 +1,5 @@
 use crate::ui::actions::Action;
+use crate::ui::app_state::AppState;
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
 use crate::values::{APP_NAME, REPO_URL, VERSION};
@@ -12,11 +13,11 @@ use ratatui::widgets::{Block, Paragraph};
 pub struct AboutWidget {}
 
 impl Component for AboutWidget {
-    fn update(&mut self, _action: &Action) -> Option<Action> {
+    fn update(&mut self, _action: &Action, _state: AppState) -> Option<(Action, AppState)> {
         None
     }
 
-    fn handle_key_event(&mut self, _event: &Event) -> Option<Action> {
+    fn handle_key_event(&mut self, _event: &Event, _state: AppState) -> Option<(Action, AppState)> {
         None
     }
 

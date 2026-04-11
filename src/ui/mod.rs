@@ -2,6 +2,7 @@ mod about_widget;
 mod account_widget;
 mod actions;
 pub mod app;
+pub mod app_state;
 mod client;
 mod component;
 mod debouncer;
