@@ -95,8 +95,7 @@ impl Component for MainWidget {
                 (Some(NoOp), current_state)
             }
 
-            SearchParamsUpdated(params) => {
-                current_state.params_snapshot = Some(params.clone());
+            SearchParamsUpdated => {
                 (Some(FetchSubtitles), current_state)
             }
 

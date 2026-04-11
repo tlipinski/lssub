@@ -19,7 +19,7 @@ pub enum Action {
     SearchQueryInitialized(String),
     SearchQueryUpdated,
     SearchParamsInitialized(QueryParams),
-    SearchParamsUpdated(QueryParams),
+    SearchParamsUpdated,
 
     FetchSubtitles,
     SubtitlesFetched(Vec<Subtitle>),
