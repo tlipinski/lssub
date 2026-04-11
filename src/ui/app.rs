@@ -17,6 +17,7 @@ use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
+use crate::ui::subs_list_widget::QueryParams;
 
 pub struct App {
     ui_tx: Sender<Action>,
@@ -76,7 +77,7 @@ impl App {
 
         let mut app_state = AppState {
             query_snapshot: self.file_name,
-            params_snapshot: None,
+            params_snapshot: Some(QueryParams::default()),
             languages_snapshot: None,
         };
         let mut message_opt = Some(Init);

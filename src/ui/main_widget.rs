@@ -45,7 +45,7 @@ impl Component for MainWidget {
     fn update(&mut self, action: &Action, state: AppState) -> Option<(Action, AppState)> {
         match action {
             Tick | Multi(_) => {}
-            _ => debug!("--- {:?}", action),
+            _ => debug!("--- {:?} --- {:?}", action, state),
         }
 
         let mut current_state = state;
