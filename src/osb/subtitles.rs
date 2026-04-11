@@ -230,8 +230,8 @@ mod tests {
                     files: vec![File { file_id: 9_535_264 }],
                     uploader: Uploader {
                         name: "Anonymous".to_string(),
-                        rank: "anonymous".to_string(),
-                    },
+                        rank: "anonymous".to_string()
+                    }
                 }
             }
         );
