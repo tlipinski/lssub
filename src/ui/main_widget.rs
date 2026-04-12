@@ -39,15 +39,8 @@ pub struct MainWidget {
 
 impl Component for MainWidget {
     fn update(&mut self, action: &Action, state: AppState) -> Option<(Action, AppState)> {
-        match action {
-            Tick => {}
-            SubtitlesFetched(_) => {
-                debug!("--- SubtitlesFetched(...) --- {:?}", state)
-            }
-            LanguagesFetched(_) => {
-                debug!("--- LanguagesFetched(...) --- {:?}", state)
-            }
-            _ => debug!("--- {:?} --- {:?}", action, state),
+        if !matches!(action, Tick) {
+            debug!("--- {action:?} - {state:?}");
         }
 
         let mut current_state = state;
