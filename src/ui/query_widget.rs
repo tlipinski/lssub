@@ -1,16 +1,16 @@
+use crate::ui::actions::Action;
+use crate::ui::actions::Action::SearchQueryUpdated;
+use crate::ui::app_state::AppState;
+use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;
-use ratatui::crossterm::event::Event;
 use ratatui::Frame;
+use ratatui::crossterm::event::Event;
 use ratatui::layout::Rect;
 use ratatui::prelude::{Line, Stylize};
 use ratatui::symbols::border;
 use ratatui::widgets::{Block, Paragraph, Widget};
 use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
-use crate::ui::actions::Action;
-use crate::ui::actions::Action::SearchQueryUpdated;
-use crate::ui::app_state::AppState;
-use crate::ui::component::Component;
 
 #[derive(Debug, Default)]
 pub struct QueryWidget {
@@ -24,11 +24,15 @@ impl Component for QueryWidget {
                 self.input = Input::from(state.query);
                 None
             }
-            _ => None
+            _ => None,
         }
     }
 
-    fn handle_key_event(&mut self, event: &Event, app_state: AppState) -> Option<(Action, AppState)> {
+    fn handle_key_event(
+        &mut self,
+        event: &Event,
+        app_state: AppState,
+    ) -> Option<(Action, AppState)> {
         if let Some(state_changed) = self.input.handle_event(event)
             && state_changed.value
         {
@@ -51,10 +55,7 @@ impl Component for QueryWidget {
 
         let view = Paragraph::new(par).block(block);
 
-        frame.set_cursor_position((
-            area.x + (self.input.visual_cursor() + 1) as u16,
-            area.y + 1,
-        ));
+        frame.set_cursor_position((area.x + (self.input.visual_cursor() + 1) as u16, area.y + 1));
 
         view.render(area, frame.buffer_mut());
     }

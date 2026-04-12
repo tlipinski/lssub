@@ -59,7 +59,7 @@ impl Downloader {
             if tokio::fs::try_exists(output_file.clone()).await? {
                 index += 1;
             } else {
-                break
+                break;
             }
         }
 

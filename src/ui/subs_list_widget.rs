@@ -1,12 +1,16 @@
-use crossterm::event::Event;
 use crate::osb::subtitles::Subtitle;
+use crate::ui::actions::Action;
+use crate::ui::actions::Action::Init;
+use crate::ui::app_state::AppState;
+use crate::ui::component::Component;
 use crate::ui::handled::HandleResult;
 use crate::ui::handled::HandleResult::Unhandled;
 use crate::ui::pad::BlockTitlePadExt;
 use HandleResult::Handled;
+use crossterm::event::Event;
+use ratatui::Frame;
 use ratatui::crossterm::event::KeyModifiers;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
-use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::prelude::StatefulWidget;
 use ratatui::prelude::{Style, Text};
@@ -16,10 +20,6 @@ use ratatui::widgets::{
     Block, Cell, Row, ScrollDirection, Scrollbar, ScrollbarOrientation, ScrollbarState, Table,
     TableState,
 };
-use crate::ui::actions::Action;
-use crate::ui::actions::Action::Init;
-use crate::ui::app_state::AppState;
-use crate::ui::component::Component;
 
 #[derive(Default)]
 pub struct SubsListWidget {
@@ -44,9 +44,7 @@ impl Component for SubsListWidget {
                 self.params = state.params;
                 None
             }
-            _ => {
-                None
-            }
+            _ => None,
         }
     }
 

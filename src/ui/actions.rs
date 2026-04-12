@@ -53,17 +53,19 @@ impl Debug for Action {
             Action::SubtitlesFetched(subtitles) => {
                 write!(f, "SubtitlesFetched({} subtitles)", subtitles.len())
             }
-            Action::SubtitleDownloaded(downloaded) => {
-                f.debug_tuple("SubtitleDownloaded").field(downloaded).finish()
-            }
+            Action::SubtitleDownloaded(downloaded) => f
+                .debug_tuple("SubtitleDownloaded")
+                .field(downloaded)
+                .finish(),
             Action::LanguagesInitialized => write!(f, "LanguagesInitialized"),
             Action::LanguagesUpdated => write!(f, "LanguagesUpdated"),
             Action::LanguagesFetched(languages) => {
                 write!(f, "LanguagesFetched({} languages)", languages.len())
             }
-            Action::UserLanguagesFetched(languages) => {
-                f.debug_tuple("UserLanguagesFetched").field(languages).finish()
-            }
+            Action::UserLanguagesFetched(languages) => f
+                .debug_tuple("UserLanguagesFetched")
+                .field(languages)
+                .finish(),
             Action::UserLoggedIn(user) => f.debug_tuple("UserLoggedIn").field(user).finish(),
             Action::UserLoggedOut => write!(f, "UserLoggedOut"),
             Action::ChangeStatus(status) => f.debug_tuple("ChangeStatus").field(status).finish(),

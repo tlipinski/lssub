@@ -2,7 +2,9 @@ use crate::config::ConfigProvider;
 use crate::osb::languages::{Language, get_languages};
 use crate::osb::osb_client::OsbClient;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{LanguagesFetched, LanguagesInitialized, LanguagesUpdated, Multi, RunTask, UserLanguagesFetched};
+use crate::ui::actions::Action::{
+    LanguagesFetched, LanguagesInitialized, LanguagesUpdated, Multi, RunTask, UserLanguagesFetched,
+};
 use crate::ui::app_state::AppState;
 use crate::ui::component::Component;
 use crate::ui::pad::BlockTitlePadExt;

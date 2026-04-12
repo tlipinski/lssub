@@ -3,8 +3,8 @@ use crate::osb::osb_client::OsbClient;
 use crate::osb::user_info::{User, get_user_info};
 use crate::secret::{retrieve_credentials, retrieve_token, store_token};
 use crate::ui::actions::Action;
-use crate::ui::app_state::AppState;
 use crate::ui::actions::Action::{NoOp, RunTask, UserLoggedIn, UserLoggedOut};
+use crate::ui::app_state::AppState;
 use crate::ui::component::Component;
 use crate::ui::logged_in_widget::LoggedInWidget;
 use crate::ui::login_widget::LoginWidget;
@@ -45,7 +45,8 @@ impl Component for AccountWidget {
                                         store_token(&token).await?;
                                         info!("Token refreshed");
 
-                                        let user = get_user_info(OsbClient::default(), &token).await?;
+                                        let user =
+                                            get_user_info(OsbClient::default(), &token).await?;
                                         Ok(UserLoggedIn(user))
                                     }
                                 }

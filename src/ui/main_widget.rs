@@ -4,7 +4,10 @@ use crate::osb::subtitles::{SubtitlesRequest, subtitles};
 use crate::ui::about_widget::AboutWidget;
 use crate::ui::account_widget::AccountWidget;
 use crate::ui::actions::Action;
-use crate::ui::actions::Action::{Exit, FetchSubtitles, LanguagesFetched, LanguagesUpdated, Multi, NoOp, SearchParamsUpdated, SearchQueryUpdated, SubtitlesFetched, SwitchScreen, Tick};
+use crate::ui::actions::Action::{
+    Exit, FetchSubtitles, LanguagesUpdated, Multi, NoOp, SearchParamsUpdated, SearchQueryUpdated,
+    SubtitlesFetched, SwitchScreen, Tick,
+};
 use crate::ui::app_state::AppState;
 use crate::ui::component::Component;
 use crate::ui::languages_widget::LanguagesWidget;
@@ -55,9 +58,7 @@ impl Component for MainWidget {
         }
 
         let (new_action, next_state) = match action {
-            LanguagesInitialized => {
-                (Some(FetchSubtitles), current_state)
-            }
+            LanguagesInitialized => (Some(FetchSubtitles), current_state),
 
             LanguagesUpdated => {
                 let languages = current_state.languages.clone();

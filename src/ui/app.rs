@@ -1,11 +1,12 @@
 use crate::config::ConfigProvider;
 use crate::ui::actions::Action;
-use crate::ui::app_state::AppState;
 use crate::ui::actions::Action::{Exit, FetchSubtitles, Init, Tick};
+use crate::ui::app_state::AppState;
 use crate::ui::component::Component;
 use crate::ui::debouncer::debouncer_task;
 use crate::ui::main_widget::MainWidget;
 use crate::ui::spinner::{Spinner, spinner_task};
+use crate::ui::subs_list_widget::QueryParams;
 use crate::ui::task_runner::TaskRunner;
 use crossterm::event::EventStream;
 use futures_util::FutureExt;
@@ -17,7 +18,6 @@ use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
-use crate::ui::subs_list_widget::QueryParams;
 
 pub struct App {
     ui_tx: Sender<Action>,
@@ -25,7 +25,7 @@ pub struct App {
     debouncer_rx: Receiver<()>,
     spinner: Arc<RwLock<Spinner>>,
     main_widget: Box<dyn Component>,
-    file_name: Option<String>
+    file_name: Option<String>,
 }
 
 impl App {
@@ -52,7 +52,7 @@ impl App {
             debouncer_rx,
             spinner: spinner.clone(),
             main_widget: Box::new(main_widget),
-            file_name: file_name.map(String::from)
+            file_name: file_name.map(String::from),
         }
     }
 
@@ -90,7 +90,9 @@ impl App {
                         break 'main_loop;
                     }
                     _ => {
-                        if let Some((new_msg, next_state)) = self.main_widget.update(&msg, app_state.clone()) {
+                        if let Some((new_msg, next_state)) =
+                            self.main_widget.update(&msg, app_state.clone())
+                        {
                             message_opt = Some(new_msg);
                             app_state = next_state;
                         } else {
