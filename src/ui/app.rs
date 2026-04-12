@@ -105,8 +105,8 @@ impl App {
             let (msg, next_state) = tokio::select! {
                 maybe_event = event_stream.next().fuse() => match maybe_event {
                     Some(Ok(event)) => {
-                        if let Some((m, s)) = self.main_widget.handle_key_event(&event, app_state.clone()) {
-                            (Some(m), s)
+                        if let Some((action, new_state)) = self.main_widget.handle_key_event(&event, app_state.clone()) {
+                            (Some(action), new_state)
                         } else {
                             (None, app_state)
                         }
