@@ -1,7 +1,7 @@
 [package]
 name = "lssub"
+version = "1.0.0"
 edition = "2024"
-build = "build.rs"
 license-file = "LICENSE"
 description = "Teminal UI app for searching and downloading subtitles via the OpenSubtitles API."
 repository = "https://github.com/tlipinski/lssub"
@@ -36,3 +36,8 @@ codegen-units = 1
 lto = true
 opt-level = "s"
 strip = true
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
